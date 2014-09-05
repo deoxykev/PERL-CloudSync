@@ -15,20 +15,22 @@ use constant FOLDER_SUBFOLDER => 3;
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 #my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 
-sub new(r) {
+sub new(r$$) {
 
   my $self = {_gdrive => undef,
               _listURL => undef,
               _dbm => undef};
 
-  bless $self, $_[0];
+  my $self = shift;
+  my $username = shift;
+  my $password = shift;
 
   # initialize web connections
   $self->{_gdrive} = pDrive::GoogleDocsAPI3->new();
 
   # login into google
   if (ONLINE){
-    $self->{_gdrive}->authenticate();
+    $self->{_gdrive}->authenticate($username,$password);
   }
 
 my $dbm = pDrive::DBM->new();
@@ -45,12 +47,13 @@ my $maxTimestamp = $dbm->getLastUpdated($dbase);
 print STDOUT "maximum timestamp = ".$$maxTimestamp[pDrive::Time->A_DATE]." ".$$maxTimestamp[pDrive::Time->A_TIMESTAMP]."\n" if (pDrive::Config->DEBUG);
 
 
-if ($$maxTimestamp[pDrive::Time->A_TIMESTAMP] > 0){
+if (0 and $$maxTimestamp[pDrive::Time->A_TIMESTAMP] > 0){
   $self->{_listURL} = $self->{_gdrive}->getListURL($$maxTimestamp[pDrive::Time->A_DATE]);
 #  $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:2012-08-10';
 }else{
   $self->{_listURL} = $self->{_gdrive}->getListURL();
 }
+
 
 
 my %newDocuments;
@@ -65,13 +68,14 @@ while ($self->{_listURL} ne ''){
 if (ONLINE){
   ($driveListings) = $self->{_gdrive}->getList($self->{_listURL});
 
-  my ($nextlistURL) = $self->{_gdrive}->getNextURL($driveListings);
+  my $nextlistURL = $self->{_gdrive}->getNextURL($driveListings);
   $nextlistURL =~ s%\&amp\;%\&%g;
   $nextlistURL =~ s%\%3A%\:%g;
   
   if ($nextlistURL eq $self->{_listURL}){
     print STDERR "reset fetch\n";
     $self->{_listURL} = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
+    last;
   }else{
     $self->{_listURL} = $nextlistURL;
   }
@@ -92,23 +96,23 @@ $self->{_listURL} =~ s%\%3A%\:%g;
 #my $uploadURL = $self->{_gdrive}->createFile($createFileURL);
 #pDrive::gDrive::uploadFile('/tmp/test_receipt.pdf',$createFileURL);
 #exit(0);
-print STDERR "xxxx = $driveListings\n";
+
 %newDocuments = $self->{_gdrive}->readDriveListings($driveListings,$folders);
 
 
 
 # DEBUG -- print folders
-if (0 and pDrive::Config->DEBUG){
+if ( pDrive::Config->DEBUG){
+
   foreach my $resourceID (keys %{$folders}){
 
     if ($$folders{$resourceID}[FOLDER_ROOT] == IS_ROOT){
 
       print STDOUT $$folders{$resourceID}[FOLDER_TITLE]. "\n";
-
       for (my $i=FOLDER_SUBFOLDER; $i <= $#{${$folders}{$resourceID}}; $i++){
 
-#      print STDOUT "\t $$folders{${$folders}{$resourceID}[$i]}[FOLDER_TITLE]\n";
-       pDrive::gDrive::traverseFolder($$folders{$resourceID}[$i]);
+      print STDOUT "\t $$folders{${$folders}{$resourceID}[$i]}[FOLDER_TITLE]\n";
+      pDrive::gDrive::traverseFolder($$folders{$resourceID}[$i]);
 
       }
 
@@ -116,7 +120,7 @@ if (0 and pDrive::Config->DEBUG){
   }
 }
 
-if (0 and pDrive::Config->DEBUG){
+if (pDrive::Config->DEBUG){
   foreach my $resourceID (keys %newDocuments){
 
     print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
@@ -124,14 +128,14 @@ if (0 and pDrive::Config->DEBUG){
   }
 }
 
-} ####
+
 
 my $count=0;
 foreach my $resourceID (keys %newDocuments){
 
 
   my @parentArray = (0);
-  my $path =  pDrive::gDrive::getPath($newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]).$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}];
+  my $path =  pDrive::gDrive::getPath($folders,$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]).$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}];
 
   print STDOUT "path = $path\n";
 
@@ -150,9 +154,42 @@ foreach my $resourceID (keys %newDocuments){
         $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'published'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'published'}];
         $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'title'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'title'}];
 
+        # file exists locally
+        if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] eq '' and -e pDrive::Config->LOCAL_PATH.'/'.$path){
+
+          my $md5 = pDrive::FileIO::getMD5(pDrive::Config->LOCAL_PATH.'/'.$path);
+          #is it the same as the server? -- skip file
+          if ($newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq $md5 and $md5 ne '0'){
+            print STDOUT 'skipping (found file on local)'. "\n" if (pDrive::Config->DEBUG);
+            $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}];
+            $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}];
+            $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] = $md5;
+        if ($#{$updatedList} >= 0){
+          $updatedList[$#{$updatedList}++] = $path;
+        }else{
+          $updatedList[0] = $path;
+        }
+            $count++;
+          #download the file -- potential conflict
+          }else{
+            print STDOUT 'potential conflict'  . "\n" if (pDrive::Config->DEBUG);
+            pDrive::masterLog("$path $resourceID - potential conflict -- $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] - $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}]");
+            eval {
+            $self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
+            1;
+            } or do {
+              pDrive::masterLog("$path $resourceID - download failedlict -- $@");
+            };
+
+          }
         # download file
-        if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] eq '' or $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] eq ''or pDrive::Time::isNewerTimestamp($newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}])){
+        }elsif ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] eq '' or $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] eq ''or pDrive::Time::isNewerTimestamp($newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}])){
+          eval {
           $self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
+            1;
+            } or do {
+              pDrive::masterLog("$path $resourceID - download failedlict -- $@");
+            };
           $count++;
         }
       }else{
@@ -165,6 +202,12 @@ foreach my $resourceID (keys %newDocuments){
     # file is newer on the server; download
     }elsif (pDrive::Time::isNewerTimestamp($newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],${$dbase}{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}])){
       print STDOUT "newer on server ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]."\n";
+      $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
+      $self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
+      $count++;
+    # file is newer on the local; upload
+    }elsif (pDrive::Time::isNewerTimestamp(${$dbase}{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}])){
+      print STDOUT "newer on local ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]."\n";
       $self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
       $count++;
 
@@ -179,7 +222,7 @@ if ($#updatedList >= 0){
   print STDOUT "updating values DB\n" if (pDrive::Config->DEBUG);
   $self->{_dbm}->writeHash($dbase,$folders) if (ONLINE);
 }
-
+} ####
 
   return $self;
 
@@ -241,9 +284,9 @@ sub traverseFolder($){
 }
 
 
-sub getPath($$){
+sub getPath($$$){
 
-  my ($resourceID,@parentArray) = @_;
+  my ($folders,$resourceID,@parentArray) = @_;
 
   if (containsFolder($resourceID,@parentArray)){
 
@@ -251,8 +294,6 @@ sub getPath($$){
     return '';
 
   }
-
- 
   # end of recurrsion -- root
   if ($$folders{$resourceID}[FOLDER_ROOT] == IS_ROOT){
 
@@ -260,13 +301,12 @@ sub getPath($$){
     return '/'.$$folders{$resourceID}[FOLDER_TITLE].'/';
 
   }elsif ($$folders{$resourceID}[FOLDER_PARENT] eq ''){
-
     return '/';
 
   } else{
 
     $parentArray[$#parentArray+1] = $resourceID;
-    return getPath($$folders{$resourceID}[FOLDER_PARENT],@parentArray) . $$folders{$resourceID}[FOLDER_TITLE].'/';
+    return getPath($folders,$$folders{$resourceID}[FOLDER_PARENT],@parentArray) . $$folders{$resourceID}[FOLDER_TITLE].'/';
 
   }
 
@@ -343,7 +383,13 @@ sub downloadFile(r$$$$$$r){
           }
 #wise
           $returnStatus = $self->{_gdrive}->downloadFile($link.'&exportFormat='.$types->{$resourceType},$path,$types->{$resourceType},$appendex,$updated) if (ONLINE);
-        }       
+        }
+
+        #ignore export if fails; just try to download
+        # noticed some spreadsheets in XLSX will fail with exportFormat, but download fine (and in XSLX otherwise)
+        if ($returnStatus == 0)       {
+          $returnStatus = $self->{_gdrive}->downloadFile($link,$path,$types->{$resourceType},$appendex,$updated) if (ONLINE);
+        }
       }
 
       # successful?  update the db
@@ -352,6 +398,11 @@ sub downloadFile(r$$$$$$r){
         $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] = $updated;
         $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
         $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] = pDrive::FileIO::getMD5(pDrive::Config->LOCAL_PATH.'/'.$finalPath);
+
+        if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] ne $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}]){
+          print STDOUT "MD5 check failed!!!\n";
+          pDrive::masterLog("$finalPath $resourceID - MD5 check failed -- $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] - $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}]");
+        }
 
         if (pDrive::Config->REVISIONS){
           $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}]++;

@@ -1,5 +1,5 @@
 package pDrive::DBM;
-use SDBM_File;
+use DB_File ;
 use Fcntl; 
 use strict;
 
@@ -42,7 +42,7 @@ sub readHash(r){
   my %returnContainerHash;
   my %returnFolderHash;
 
-  tie(my %dbase, 'SDBM_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, 'DB_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
 
   foreach my $key (keys %dbase) {
 
@@ -141,7 +141,7 @@ sub constructResourceIDHash(rr){
 sub writeHash(rrr){
   my ($self,$memoryContainerHash,$memoryFolderHash) = @_;
 
-  tie(my %dbase, 'SDBM_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, 'DB_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
 
   foreach my $path (keys %{$memoryContainerHash}) {
 
@@ -182,7 +182,7 @@ sub writeValueContainerHash(rrrr){
 
   my ($self,$path,$resourceID, $memoryHash) = @_;
 
-  tie(my %dbase, 'SDBM_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, 'DB_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
 
   foreach my $key (keys %{pDrive::DBM->D}){
 
@@ -202,7 +202,7 @@ sub printHash(r$){
   print "(filter = $filter) Database ".pDrive::Config->DBM_CONTAINER_FILE." consists of the following key value pairs...\n";
 
 
-  tie(my %dbase, 'SDBM_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, 'DB_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
 
   if ($filter ne ''){
 

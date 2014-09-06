@@ -251,7 +251,7 @@ sub getLastUpdated(**){
 #      $timestamp =~ s%\D+%%g;
 #      ($timestamp) = $timestamp =~ m%^(\d{14})%;
 #      my $EPOC = pDrive::Time::getEPOC($timestamp);
-      if (defined $timestamp and defined $maxTimestamp[pDrive::Time->A_TIMESTAMP] and $timestamp > $maxTimestamp[pDrive::Time->A_TIMESTAMP]){
+      if (defined $timestamp and (not defined $maxTimestamp[pDrive::Time->A_TIMESTAMP] or $timestamp > $maxTimestamp[pDrive::Time->A_TIMESTAMP])){
         $maxTimestamp[pDrive::Time->A_TIMESTAMP] = $timestamp;
         $maxTimestamp[pDrive::Time->A_DATE] = pDrive::Time::getDateEPOC($timestamp,-60*60*24);
        }

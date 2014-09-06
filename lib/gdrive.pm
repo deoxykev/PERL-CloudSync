@@ -46,7 +46,7 @@ my $maxTimestamp = $dbm->getLastUpdated($dbase);
 print STDOUT 'maximum timestamp = '.(defined $$maxTimestamp[pDrive::Time->A_DATE]?$$maxTimestamp[pDrive::Time->A_DATE]:'').' '.(defined $$maxTimestamp[pDrive::Time->A_TIMESTAMP]?$$maxTimestamp[pDrive::Time->A_TIMESTAMP]:'')."\n" if (pDrive::Config->DEBUG);
 
 
-if (0 and $$maxTimestamp[pDrive::Time->A_TIMESTAMP] > 0){
+if ($$maxTimestamp[pDrive::Time->A_TIMESTAMP] > 0){
   $self->{_listURL} = $self->{_gdrive}->getListURL($$maxTimestamp[pDrive::Time->A_DATE]);
 #  $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:2012-08-10';
 }else{
@@ -437,7 +437,7 @@ sub downloadFile(*$$$$$$*){
 sub isNewResourceID($*){
   my ($resourceID,$dbase) = @_;
 
-  if ($$dbase{$resourceID} eq ''){
+  if (not defined $resourceID or $$dbase{$resourceID} eq ''){
     return 1;
   }else{
     return 0;

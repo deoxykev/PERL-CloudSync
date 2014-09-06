@@ -36,14 +36,14 @@ sub new(*$$) {
   $self->{_dbm} = $dbm;
   my ($dbase,$folders) = $dbm->readHash();
 
-my %resourceIDHash = $dbm->constructResourceIDHash($dbase);
+my $resourceIDHash = $dbm->constructResourceIDHash($dbase);
 
 
 my $driveListings;
 my $createFileURL;
 
 my $maxTimestamp = $dbm->getLastUpdated($dbase);
-print STDOUT "maximum timestamp = ".$$maxTimestamp[pDrive::Time->A_DATE]." ".$$maxTimestamp[pDrive::Time->A_TIMESTAMP]."\n" if (pDrive::Config->DEBUG);
+print STDOUT 'maximum timestamp = '.(defined $$maxTimestamp[pDrive::Time->A_DATE]?$$maxTimestamp[pDrive::Time->A_DATE]:'').' '.(defined $$maxTimestamp[pDrive::Time->A_TIMESTAMP]?$$maxTimestamp[pDrive::Time->A_TIMESTAMP]:'')."\n" if (pDrive::Config->DEBUG);
 
 
 if (0 and $$maxTimestamp[pDrive::Time->A_TIMESTAMP] > 0){
@@ -67,10 +67,11 @@ while ($self->{_listURL} ne ''){
   ($driveListings) = $self->{_gdrive}->getList($self->{_listURL});
 
   my $nextlistURL = $self->{_gdrive}->getNextURL($driveListings);
-  $nextlistURL =~ s%\&amp\;%\&%g;
-  $nextlistURL =~ s%\%3A%\:%g;
-
-  if ($nextlistURL eq $self->{_listURL}){
+  if (defined $nextlistURL){
+    $nextlistURL =~ s%\&amp\;%\&%g;
+    $nextlistURL =~ s%\%3A%\:%g;
+  }
+  if (defined $nextlistURL and $nextlistURL eq $self->{_listURL}){
     print STDERR "reset fetch\n";
     $self->{_listURL} = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
     last;
@@ -79,11 +80,14 @@ while ($self->{_listURL} ne ''){
   }
 
 
-($createFileURL) = $self->{_gdrive}->getCreateURL($driveListings) if ($createFileURL eq '');
-print STDOUT "create URL = $createFileURL\n" if (pDrive::Config->DEBUG);
-$self->{_listURL} .= '&showfolders=true' if ($self->{_listURL} ne '' and !($self->{_listURL} =~ m%showfolders%));
-$self->{_listURL} =~ s%\&amp\;%\&%g;
-$self->{_listURL} =~ s%\%3A%\:%g;
+($createFileURL) = $self->{_gdrive}->getCreateURL($driveListings) if (defined $createFileURL and $createFileURL eq '');
+print STDOUT 'create URL = '.(defined $$createFileURL?$createFileURL:'')."\n" if (pDrive::Config->DEBUG);
+$self->{_listURL} .= '&showfolders=true' if (defined $self->{_listURL} and $self->{_listURL} ne '' and !($self->{_listURL} =~ m%showfolders%));
+
+if (defined $self->{_listURL}){
+  $self->{_listURL} =~ s%\&amp\;%\&%g;
+  $self->{_listURL} =~ s%\%3A%\:%g;
+}
 
 
 # test upload file
@@ -100,7 +104,7 @@ if ( pDrive::Config->DEBUG){
 
   foreach my $resourceID (keys %{$folders}){
 
-    if ($$folders{$resourceID}[FOLDER_ROOT] == IS_ROOT){
+    if (defined $resourceID and defined $$folders{$resourceID}[FOLDER_ROOT] and $$folders{$resourceID}[FOLDER_ROOT] == IS_ROOT){
 
       print STDOUT $$folders{$resourceID}[FOLDER_TITLE]. "\n";
       for (my $i=FOLDER_SUBFOLDER; $i <= $#{${$folders}{$resourceID}}; $i++){
@@ -211,8 +215,9 @@ foreach my $resourceID (keys %newDocuments){
 
 }
 $self->{_dbm}->writeHash($dbase,$folders);
+
 # new values to post to db
-if (@updatedList and $#updatedList >= 0){
+if ($#updatedList >= 0){
   print STDOUT "updating values DB\n" if (pDrive::Config->DEBUG);
   $self->{_dbm}->writeHash($dbase,$folders);
 }
@@ -223,7 +228,7 @@ if (@updatedList and $#updatedList >= 0){
 }
 
 
-sub uploadFile(r$$){
+sub uploadFile(*$$){
 
   my $self = shift;
   my $file = shift;
@@ -289,18 +294,22 @@ sub getPath($$$){
 
   }
   # end of recurrsion -- root
-  if ($$folders{$resourceID}[FOLDER_ROOT] == IS_ROOT){
+  if (defined $resourceID and defined $$folders{$resourceID}[FOLDER_ROOT] and $$folders{$resourceID}[FOLDER_ROOT] == IS_ROOT){
 
     $parentArray[$#parentArray+1] = $resourceID;
     return '/'.$$folders{$resourceID}[FOLDER_TITLE].'/';
 
-  }elsif ($$folders{$resourceID}[FOLDER_PARENT] eq ''){
+  }elsif (defined $resourceID and defined $$folders{$resourceID}[FOLDER_PARENT] and $$folders{$resourceID}[FOLDER_PARENT] eq ''){
     return '/';
 
   } else{
 
     $parentArray[$#parentArray+1] = $resourceID;
-    return &getPath($folders,$$folders{$resourceID}[FOLDER_PARENT],@parentArray) . $$folders{$resourceID}[FOLDER_TITLE].'/';
+    if (defined $resourceID and defined $$folders{$resourceID}[FOLDER_TITLE]){
+      return &getPath($folders,$$folders{$resourceID}[FOLDER_PARENT],@parentArray) . $$folders{$resourceID}[FOLDER_TITLE].'/';
+    }else{
+      return '/';
+    }
 
   }
 
@@ -381,7 +390,17 @@ sub downloadFile(*$$$$$$*){
 
         #ignore export if fails; just try to download
         # noticed some spreadsheets in XLSX will fail with exportFormat, but download fine (and in XSLX otherwise)
-        if ($returnStatus == 0)       {
+        if ($returnStatus == 0){
+          my $appendex='';
+          if (scalar (keys %{${$dbase}{$path}}) > 1){
+            $appendex .= '.'.$resourceID;
+            $finalPath .= '.'.$resourceID;
+          }
+          if (pDrive::Config->REVISIONS and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
+            $appendex .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
+            $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
+          }
+#wise
           $returnStatus = $self->{_gdrive}->downloadFile($link,$path,$types->{$resourceType},$appendex,$updated);
         }
       }

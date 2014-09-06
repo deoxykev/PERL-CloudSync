@@ -208,7 +208,7 @@ sub getNextURL(*$){
   my $listing = shift;
 
   my ($URL) = $$listing =~ m%\<link\s+rel\=\'next\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
-  print STDOUT "NEXT URL = $URL\n";
+  print STDOUT 'NEXT URL = '.(defined $URL?$URL:'')."\n";
 #exit(0);
   return $URL;
 
@@ -219,7 +219,7 @@ sub getListURL(*$){
   my $self = shift;
   my $timestamp = shift;
 
-  if ($timestamp ne ''){
+  if (defined $timestamp and $timestamp ne ''){
     return 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:'.$timestamp;
   #  $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:2012-08-10';
   }else{
@@ -532,7 +532,7 @@ my $count=0;
       $$folders{$resourceID}[FOLDER_TITLE] = $title;
 
       # is not a root folder
-      if ($folder ne ''){
+      if (defined $folder and $folder ne ''){
 
         $$folders{$resourceID}[FOLDER_ROOT] = NOT_ROOT;
         $$folders{$resourceID}[FOLDER_PARENT] = $parentID;
@@ -554,7 +554,7 @@ my $count=0;
         $$folders{$resourceID}[FOLDER_ROOT] = IS_ROOT;
 
       }
-      print STDOUT "folder = $title $resourceID *$parentID  \n";
+      print STDOUT 'folder = '.(defined $title? $title:'').' '. (defined $resourceID? $resourceID:'').' *'.(defined $parentID? $parentID: '')."  \n";
 
     }else{
 

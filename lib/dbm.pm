@@ -58,9 +58,11 @@ sub readHash(*){
 
       if ($key =~ m%^F\|[^\|]+\|[^\|]+\|[^\|]+\|[^\|]+\|\d+$%){
       my ($resourceID,$title,$isRoot,$parentID,$count) = $key =~ m%^F\|([^\|]+)\|([^\|]+)\|([^\|]+)\|([^\|]+)([^\|]+)$%;
-      $returnFolderHash{$resourceID}[FOLDER_TITLE] = $title;
-      $returnFolderHash{$resourceID}[FOLDER_ROOT] = $isRoot;
-      $returnFolderHash{$resourceID}[FOLDER_PARENT] = $parentID;
+      if (defined $resourceID){
+        $returnFolderHash{$resourceID}[FOLDER_TITLE] = $title;
+        $returnFolderHash{$resourceID}[FOLDER_ROOT] = $isRoot;
+        $returnFolderHash{$resourceID}[FOLDER_PARENT] = $parentID;
+      }
       my $subFolders = $dbase{$key};
 
       while (my ($subFolder) = $subFolders =~ m%^([^\|]+)\|?%){
@@ -148,7 +150,7 @@ sub writeHash(***){
     foreach my $resourceID (keys %{${$memoryContainerHash}{$path}}) {
 
       foreach my $key (keys %{pDrive::DBM->D}){
-        $dbase{'C|'.$path.'|'.$resourceID.'|'.$key} = $$memoryContainerHash{$path}{$resourceID}[pDrive::DBM->D->{$key}] if ($$memoryContainerHash{$path}{$resourceID}[pDrive::DBM->D->{$key}] ne $dbase{'C|'.$path.'|'.$resourceID.'|'.$key});
+        $dbase{'C|'.$path.'|'.$resourceID.'|'.$key} = $$memoryContainerHash{$path}{$resourceID}[pDrive::DBM->D->{$key}] if (defined $key and defined $resourceID and defined $path and defined $$memoryContainerHash{$path}{$resourceID}[pDrive::DBM->D->{$key}] and $$memoryContainerHash{$path}{$resourceID} and %dbase and $$memoryContainerHash{$path}{$resourceID}[pDrive::DBM->D->{$key}] ne $dbase{'C|'.$path.'|'.$resourceID.'|'.$key});
       }
 
     }
@@ -169,7 +171,8 @@ sub writeHash(***){
       }
     }
 
-    $dbase{'F|'.$resourceID.'|'.$$memoryFolderHash{$resourceID}[FOLDER_TITLE].'|'.$$memoryFolderHash{$resourceID}[FOLDER_ROOT].'|'.$$memoryFolderHash{$resourceID}[FOLDER_PARENT].'|'.$count} = $subFolders if ($subFolders ne $dbase{'F|'.$resourceID.'|'.$$memoryFolderHash{$resourceID}[FOLDER_TITLE].'|'.$$memoryFolderHash{$resourceID}[FOLDER_ROOT].'|'.$$memoryFolderHash{$resourceID}[FOLDER_PARENT].'|'.$count});
+
+    $dbase{'F|'.$resourceID.'|'.$$memoryFolderHash{$resourceID}[FOLDER_TITLE].'|'.$$memoryFolderHash{$resourceID}[FOLDER_ROOT].'|'.$$memoryFolderHash{$resourceID}[FOLDER_PARENT].'|'.$count} = $subFolders if (defined $resourceID and defined $$memoryFolderHash{$resourceID} and defined $count and defined $subFolders and defined $$memoryFolderHash{$resourceID}[FOLDER_TITLE] and $$memoryFolderHash{$resourceID}[FOLDER_ROOT] and $$memoryFolderHash{$resourceID}[FOLDER_PARENT] and $subFolders ne $dbase{'F|'.$resourceID.'|'.$$memoryFolderHash{$resourceID}[FOLDER_TITLE].'|'.$$memoryFolderHash{$resourceID}[FOLDER_ROOT].'|'.$$memoryFolderHash{$resourceID}[FOLDER_PARENT].'|'.$count});
 
   }
 
@@ -233,7 +236,7 @@ sub getLastUpdated(**){
 #      $timestamp =~ s%\D+%%g;
 #      ($timestamp) = $timestamp =~ m%^(\d{14})%;
 #      my $EPOC = pDrive::Time::getEPOC($timestamp);
-      if ($timestamp > $maxTimestamp[pDrive::Time->A_TIMESTAMP]){
+      if (defined $timestamp and defined $maxTimestamp[pDrive::Time->A_TIMESTAMP] and $timestamp > $maxTimestamp[pDrive::Time->A_TIMESTAMP]){
         $maxTimestamp[pDrive::Time->A_TIMESTAMP] = $timestamp;
         $maxTimestamp[pDrive::Time->A_DATE] = pDrive::Time::getDateEPOC($timestamp,-60*60*24);
        }

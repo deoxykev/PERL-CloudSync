@@ -4,6 +4,11 @@ use strict;
 use Digest::MD5;
 use File::stat;
 
+
+####
+#retrieve MD5 of the local stored file
+#
+####
 sub getMD5($){
   my $file = shift;
 
@@ -42,6 +47,10 @@ sub traverseMKDIR($){
 
 }
 
+
+#
+# Scan a directory recursively
+#
 sub scanDir($){
 
 my $directory = shift;
@@ -70,6 +79,10 @@ foreach my $item (@dirContents)
 closedir(IMD);
 }
 
+
+#
+# Return a list of files in the directory provided (don't recursively scan / don't tranverse)
+#
 sub getFilesDir($){
 
 my $directory = shift;

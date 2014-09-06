@@ -36,6 +36,9 @@ sub new(*) {
 }
 
 
+#
+# Create the memory has from the DBM
+#
 sub readHash(*){
 
   my $self = shift;
@@ -140,6 +143,11 @@ sub constructResourceIDHash(**){
 
 }
 
+
+#
+# Dump and write from memory hash to the DBM
+#
+
 sub writeHash(***){
   my ($self,$memoryContainerHash,$memoryFolderHash) = @_;
 
@@ -197,6 +205,10 @@ sub writeValueContainerHash(****){
 
 }
 
+
+#
+# Dump the DBM Hash to the screen
+#
 sub printHash(*$){
 
   my $self = shift;
@@ -223,6 +235,9 @@ sub printHash(*$){
 
 }
 
+#
+# Retrieve the timestamp of the most recent record
+#
 sub getLastUpdated(**){
   my ($self,$memoryHash) = @_;
   my @maxTimestamp;
@@ -248,6 +263,10 @@ sub getLastUpdated(**){
 
 }
 
+
+# TEMPORARY:
+# correct corrupt timestamps
+#
 sub fixTimestamps(**){
   my ($self,$memoryHash) = @_;
 
@@ -272,6 +291,9 @@ sub fixTimestamps(**){
 
 }
 
+# TEMPORARY:
+# correct corrupt local MD5
+#
 sub fixLocalMD5(**){
   my ($self,$memoryHash) = @_;
 
@@ -285,6 +307,9 @@ sub fixLocalMD5(**){
   }
 }
 
+# TEMPORARY:
+# correct corrupt server MD5
+#
 sub fixServerMD5(**){
   my ($self,$memoryHash) = @_;
 
@@ -298,6 +323,10 @@ sub fixServerMD5(**){
   }
 }
 
+
+# TEMPORARY:
+# clear all local MD5 values
+#
 sub clearMD5(**){
   my ($self,$memoryHash) = @_;
 

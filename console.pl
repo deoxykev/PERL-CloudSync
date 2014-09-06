@@ -15,16 +15,7 @@ require 'lib/fileio.pm';
 require 'lib/gdrive.pm';
 require './lib/googledocsapi3.pm';
 
-# configuration
-use constant DEBUG => 1;
-use constant TRACE => 0;
-use constant DEBUG_LOG => 'debug.log';
-use constant SAMPLE_LIST => 'samplelist.txt';
-use constant REVISIONS => 1;
-use constant LOCAL_PATH => '/u01/pdrive/';
-use constant TMP_PATH => '/tmp/';
 
-#use constant DBM_CONTAINER_FILE => LOCAL_PATH . '.pdrive.catalog.db';
 
 my $filetype = {
 '3gp' => 'video/3gpp',
@@ -39,7 +30,7 @@ my $filetype = {
 
 
 # magic numbers
-use constant IS_ROOT => 1; 
+use constant IS_ROOT => 1;
 use constant NOT_ROOT => 0;
 
 use constant FOLDER_TITLE => 0;
@@ -148,7 +139,7 @@ while (my $input = <STDIN>){
   my ($nextlistURL) = $gdrive->getNextURL($driveListings);
   $nextlistURL =~ s%\&amp\;%\&%g;
   $nextlistURL =~ s%\%3A%\:%g;
-  
+
   if ($nextlistURL eq $listURL){
     print STDERR "reset fetch\n";
     $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
@@ -178,7 +169,7 @@ while (my $input = <STDIN>){
   my $nextlistURL = $gdrive->getNextURL($driveListings);
   $nextlistURL =~ s%\&amp\;%\&%g;
   $nextlistURL =~ s%\%3A%\:%g;
-  
+
     $listURL = $nextlistURL;
 
 
@@ -189,11 +180,11 @@ while (my $input = <STDIN>){
   foreach my $resourceID (keys %newDocuments){
     $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
   }
-  last if ($listURL eq ''); 
+  last if ($listURL eq '');
 
   }
 
-  open(OUTPUT, '>' . TMP_PATH . '/download.list') or die ('Cannot save to ' . TMP_PATH . '/download.list');
+  open(OUTPUT, '>' . pDrive::Config->TMP_PATH . '/download.list') or die ('Cannot save to ' . pDrive::Config->TMP_PATH . '/download.list');
   foreach my $resourceID (sort keys %sortedDocuments){
     print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
 #    print OUTPUT $resourceID. "\n" . $sortedDocuments{$resourceID} . "\n";
@@ -323,7 +314,7 @@ while (my $input = <STDIN>){
     my ($dir) = $input =~ m%^upload dir\s([^\n]+)\n%;
     print STDOUT "directory = $dir\n";
     pDrive::FileIO::scanDir($dir);
-  
+
   }elsif($input =~ m%^get edit\s[^\s]+\s[^\n]+\n%i){
     my ($resourceID,$path) = $input =~ m%^get edit\s([^\s]+)\s([^\n]+)\n%;
     print STDOUT "resource $resourceID, path = $path\n";
@@ -421,7 +412,7 @@ while (my $input = <STDIN>){
   print STDOUT "\n";
     }
 
-    
+
 
   }elsif($input =~ m%^set listurl%i){
 

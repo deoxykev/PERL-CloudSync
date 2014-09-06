@@ -8,8 +8,6 @@ if (!(-e './config.cfg')){
   open(CONFIG, '>./config.cfg') or die ('cannot create config.cfg');
   print CONFIG <<EOF;
 package pDrive::Config;
-use SDBM_File;
-use Fcntl;
 
 
 

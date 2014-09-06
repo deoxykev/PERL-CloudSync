@@ -194,7 +194,7 @@ sub writeValueContainerHash(****){
 
 }
 
-sub printHash(r$){
+sub printHash(*$){
 
   my $self = shift;
   my $filter = shift;
@@ -220,7 +220,7 @@ sub printHash(r$){
 
 }
 
-sub getLastUpdated(rr){
+sub getLastUpdated(**){
   my ($self,$memoryHash) = @_;
   my @maxTimestamp;
 
@@ -245,7 +245,7 @@ sub getLastUpdated(rr){
 
 }
 
-sub fixTimestamps(rr){
+sub fixTimestamps(**){
   my ($self,$memoryHash) = @_;
 
   foreach my $path (keys %{$memoryHash}) {
@@ -269,7 +269,7 @@ sub fixTimestamps(rr){
 
 }
 
-sub fixLocalMD5(rr){
+sub fixLocalMD5(**){
   my ($self,$memoryHash) = @_;
 
   foreach my $path (keys %{$memoryHash}) {
@@ -282,7 +282,7 @@ sub fixLocalMD5(rr){
   }
 }
 
-sub fixServerMD5(rr){
+sub fixServerMD5(**){
   my ($self,$memoryHash) = @_;
 
   foreach my $path (keys %{$memoryHash}) {
@@ -295,7 +295,7 @@ sub fixServerMD5(rr){
   }
 }
 
-sub clearMD5(rr){
+sub clearMD5(**){
   my ($self,$memoryHash) = @_;
 
   foreach my $path (keys %{$memoryHash}) {

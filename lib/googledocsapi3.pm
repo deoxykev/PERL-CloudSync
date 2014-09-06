@@ -17,7 +17,7 @@ use constant FOLDER_SUBFOLDER => 3;
 
 
 
-sub new(r) {
+sub new() {
 
   my $self = {_ident => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; Q312461)",
               _ua => undef,
@@ -58,7 +58,7 @@ sub new(r) {
 
 
 
-sub authenticate(r$$){
+sub authenticate(*$$){
   my $self = shift;
   my $username = shift;
   my $password = shift;
@@ -153,7 +153,7 @@ die("Login failed") unless $self->{_authwise} ne '';
 
 }
 
-sub getList(r$){
+sub getList(*$){
 
   my $self = shift;
   my $URL = shift;
@@ -191,7 +191,7 @@ die($res->as_string."error in loading page");}
 
 }
 
-sub getCreateURL(r$){
+sub getCreateURL(*$){
 
   my $self = shift;
   my $listing = shift;
@@ -202,7 +202,7 @@ sub getCreateURL(r$){
 
 }
 
-sub getNextURL(r$){
+sub getNextURL(*$){
 
   my $self = shift;
   my $listing = shift;
@@ -214,7 +214,7 @@ sub getNextURL(r$){
 
 }
 
-sub getListURL(r$){
+sub getListURL(*$){
 
   my $self = shift;
   my $timestamp = shift;
@@ -229,7 +229,7 @@ sub getListURL(r$){
 }
 
 
-sub downloadFile(r$$$$$$){
+sub downloadFile(*$$$$$$){
 
   my $self = shift;
   my $URL = shift;
@@ -324,7 +324,7 @@ if($res->is_success){
 }
 
 
-sub uploadFile(r$$$$){
+sub uploadFile(*$$$$){
 
   my $self = shift;
   my $URL = shift;
@@ -374,7 +374,7 @@ if($res->is_success or $res->code == 308){
 
 
 
-sub createFile(r$$$$){
+sub createFile(*$$$$){
 
   my $self = shift;
   my $URL = shift;
@@ -435,7 +435,7 @@ if($res->is_success){
 
 }
 
-sub editFile(r$$$$){
+sub editFile(*$$$$){
 
   my $self = shift;
   my $URL = shift;
@@ -493,13 +493,13 @@ if($res->is_success){
 }
 
 
-sub fixServerMD5(r*){
+sub fixServerMD5(**){
   my $self = shift;
   my $memoryHash = shift;
 
 }
 
-sub readDriveListings(rrr){
+sub readDriveListings(***){
 
 my $self = shift;
 my $driveListings = shift;

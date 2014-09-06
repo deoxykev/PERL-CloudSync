@@ -21,7 +21,8 @@ sub new(*$$) {
               _listURL => undef,
               _dbm => undef};
 
-  my $self = shift;
+  my $class = shift;
+  bless $self, $class;
   my $username = shift;
   my $password = shift;
 

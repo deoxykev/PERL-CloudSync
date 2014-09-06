@@ -67,7 +67,7 @@ my  $URL = 'https://www.google.com/accounts/ClientLogin';
 my $req = new HTTP::Request POST => $URL;
 $req->content_type("application/x-www-form-urlencoded");
 $req->protocol('HTTP/1.1');
-$req->content('Email='.$username.'&Passwd='.$password.'&accountType=HOSTED_OR_GOOGLE&source=dmdgddperl&service=writely');
+$req->content('Email='.$username.'&Passwd='.$password.'&accountType=HOSTED_OR_GOOGLE&source='.pDrive::Config->APP_NAME.'&service=writely');
 my $res = $self->{_ua}->request($req);
 
 
@@ -107,7 +107,7 @@ die("Login failed") unless $self->{_authwritely} ne '';
 $req = new HTTP::Request POST => $URL;
 $req->content_type("application/x-www-form-urlencoded");
 $req->protocol('HTTP/1.1');
-$req->content('Email='.$username.'&Passwd='.$password.'&accountType=HOSTED_OR_GOOGLE&source=dmdgddperl&service=wise');
+$req->content('Email='.$username.'&Passwd='.$password.'&accountType=HOSTED_OR_GOOGLE&source='.pDrive::Config->APP_NAME.'&service=wise');
 $res = $self->{_ua}->request($req);
 
 if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){

@@ -7,7 +7,35 @@ use strict;
 use Fcntl ':flock';
 
 use FindBin;
+
+if (!(-e './config.cfg')){
+  print STDOUT "no config file found... creating config.cfg\nYou will want to modify this file (including adding a username and password)\n";
+  open(CONFIG, '>./config.cfg') or die ('cannot create config.cfg');
+  print CONFIG <<EOF;
+package pDrive::Config;
+
+
+
+# configuration
+use constant DEBUG => 1;
+use constant DEBUG_LOG => '/tmp/debug.log';
+use constant LOGFILE => '/tmp/pDrive.log';
+use constant SAMPLE_LIST => 'samplelist.txt';
+use constant REVISIONS => 1;
+use constant LOCAL_PATH => '/u01/pdrive/';
+use constant USERNAME => '';
+use constant PASSWORD => '';
+use constant DBM_CONTAINER_FILE => LOCAL_PATH . '.pdrive.catalog.db';
+
+use constant APP_NAME => 'dmdgddperl';
+
+1;
+EOF
+  close(CONFIG);
+}
+
 require './config.cfg';
+
 use lib "$FindBin::Bin/../lib";
 require 'lib/dbm.pm';
 require 'lib/time.pm';

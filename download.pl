@@ -22,6 +22,7 @@ use constant USERNAME => '';
 use constant PASSWORD => '';
 use constant DBM_CONTAINER_FILE => LOCAL_PATH . '.pdrive.catalog.db';
 
+use constant APP_NAME => 'dmdgddperl';
 
 1;
 EOF

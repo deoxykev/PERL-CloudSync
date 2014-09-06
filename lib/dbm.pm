@@ -1,7 +1,9 @@
 package pDrive::DBM;
-use DB_File ;
+
 use Fcntl;
 use strict;
+
+pDrive::Config->DBM_TYPE;
 
 # magic numbers
 use constant FOLDER_TITLE => 0;
@@ -45,7 +47,9 @@ sub readHash(*){
   my %returnContainerHash;
   my %returnFolderHash;
 
-  tie(my %dbase, 'DB_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, pDrive::Config->DBM_TYPE, pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+
+  print STDOUT "reading readHash...\n" if (pDrive::Config->DEBUG);
 
   foreach my $key (keys %dbase) {
 
@@ -119,6 +123,8 @@ sub readHash(*){
 
   untie(%dbase);
 
+  print STDOUT "done\n" if (pDrive::Config->DEBUG);
+
   return (\%returnContainerHash,\%returnFolderHash);
 
 }
@@ -151,7 +157,7 @@ sub constructResourceIDHash(**){
 sub writeHash(***){
   my ($self,$memoryContainerHash,$memoryFolderHash) = @_;
 
-  tie(my %dbase, 'DB_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, pDrive::Config->DBM_TYPE, pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
 
   foreach my $path (keys %{$memoryContainerHash}) {
 
@@ -193,7 +199,7 @@ sub writeValueContainerHash(****){
 
   my ($self,$path,$resourceID, $memoryHash) = @_;
 
-  tie(my %dbase, 'DB_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, pDrive::Config->DBM_TYPE, pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
 
   foreach my $key (keys %{pDrive::DBM->D}){
 
@@ -217,7 +223,7 @@ sub printHash(*$){
   print "(filter = $filter) Database ".pDrive::Config->DBM_CONTAINER_FILE." consists of the following key value pairs...\n";
 
 
-  tie(my %dbase, 'DB_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, pDrive::Config->DBM_TYPE, pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
 
   if ($filter ne ''){
 

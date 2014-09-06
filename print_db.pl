@@ -56,71 +56,7 @@ sub init(){
 
 }
 
-sub readDBHash(){
 
-  my %returnHash;
-
-  tie(%dbase, 'DB_File', $dbm,O_RDWR|O_CREAT, 0666) or die "can't open $dbm: $!";
-
-
-  foreach my $key (keys %dbase) {
-
-
-    my ($path,$resourceID,$type) = $key =~ m%([^\|]+)\|([^\|]+)\|([^\|]+)%;
-
-
-    if ($type eq PDRIVE::DB_SERVER_UPDATED){
-      $returnHash{$path}{$resourceID}[PDRIVE::SERVER_UPDATED] = $dbase{$key};
-    } elsif ($type eq PDRIVE::DB_SERVER_LINK){
-      $returnHash{$path}{$resourceID}[PDRIVE::SERVER_LINK] = $dbase{$key};
-    } elsif ($type eq PDRIVE::DB_TYPE){
-      $returnHash{$path}{$resourceID}[PDRIVE::TYPE] = $dbase{$key};
-    } elsif ($type eq PDRIVE::DB_LOCAL_UPDATED){
-      $returnHash{$path}{$resourceID}[PDRIVE::LOCAL_UPDATED] = $dbase{$key};
-    }
-
-
-  }
-
-
-  untie(%dbase);
-
-
-  return %returnHash;
-
-}
-
-
-
-sub writeDBHash(*){
-
-  my %memoryHash = %{$_[0]};
-
-  tie(%dbase, 'SDBM_File', $dbm,O_RDWR|O_CREAT, 0666) or die "can't open $dbm: $!";
-
-  foreach my $path (keys %memoryHash) {
-
-    foreach my $resourceID (keys %{$memoryHash{$path}}) {
-
-      if ($memoryHash{$path}{$resourceID}[PDRIVE::SERVER_UPDATED] ne $dbase{$path.'|'.$resourceID.'|'.PDRIVE::DB_SERVER_UPDATED}){
-        $dbase{$path.'|'.$resourceID.'|'.PDRIVE::DB_SERVER_UPDATED} = $memoryHash{$path}{$resourceID}[PDRIVE::SERVER_UPDATED];
-      } elsif ($memoryHash{$path}{$resourceID}[PDRIVE::SERVER_LINK] ne $dbase{$path.'|'.$resourceID.'|'.PDRIVE::DB_SERVER_LINK}){
-         $dbase{$path.'|'.$resourceID.'|'.PDRIVE::DB_SERVER_LINK} = $memoryHash{$path}{$resourceID}[PDRIVE::SERVER_LINK];
-      } elsif ($memoryHash{$path}{$resourceID}[PDRIVE::TYPE] ne $dbase{$path.'|'.$resourceID.'|'.PDRIVE::DB_TYPE}){
-         $dbase{$path.'|'.$resourceID.'|'.PDRIVE::DB_TYPE} = $memoryHash{$path}{$resourceID}[PDRIVE::TYPE];
-      } elsif ($memoryHash{$path}{$resourceID}[PDRIVE::LOCAL_UPDATED] ne $dbase{$path.'|'.$resourceID.'|'.PDRIVE::DB_LOCAL_UPDATED}){
-         $dbase{$path.'|'.$resourceID.'|'.PDRIVE::DB_LOCAL_UPDATED} = $memoryHash{$path}{$resourceID}[PDRIVE::LOCAL_UPDATED];
-      }
-
-
-    }
-
-
-  }
-
-  untie(%dbase);
-
-}
 
 
 sub printDBHash(){

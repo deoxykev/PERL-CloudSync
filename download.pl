@@ -11,19 +11,32 @@ package pDrive::Config;
 
 
 
-# configuration
-use constant DEBUG => 1;
-use constant DEBUG_LOG => '/tmp/debug.log';
-use constant LOGFILE => '/tmp/pDrive.log';
-use constant SAMPLE_LIST => 'samplelist.txt';
-use constant REVISIONS => 1;
-use constant LOCAL_PATH => '/u01/pdrive/';
+# must change these
+use constant LOCAL_PATH => '/u01/pdrive/'; #where to download / upload from
 use constant USERNAME => '';
 use constant PASSWORD => '';
+
+# configuration
+use constant LOGFILE => '/tmp/pDrive.log';
+use constant SAMPLE_LIST => 'samplelist.txt';
+
+# when there is a new server version, save the current local as a "local_revision"
+use constant REVISIONS => 1;
+
+
+#for debugging
+use constant DEBUG => 1;
+use constant DEBUG_TRN => 1;
+use constant DEBUG_LOG => '/tmp/debug.log';
+
+#
+# shouldn't need to change the values below:
+#
 use constant DBM_CONTAINER_FILE => LOCAL_PATH . '.pdrive.catalog.db';
+use constant DBM_TYPE => 'DB_File';
+use DB_File;
 
 use constant APP_NAME => 'dmdgddperl';
-
 1;
 EOF
   close(CONFIG);
@@ -61,25 +74,6 @@ my $pDrive = pDrive::gDrive->new(pDrive::Config->USERNAME,pDrive::Config->PASSWO
 
 
 exit;
-
-
-
-
-####
-# file i/o
-####
-
-
-sub readTestListings(){
-
-  open(INPUT, pDrive::Config->SAMPLE_LIST) or die ('cannot read file '.pDrive::Config->SAMPLE_LIST);
-  binmode(INPUT);
-  my $fileContents = do { local $/; <INPUT> };
-  close(INPUT);
-
-  return \$fileContents;
-
-}
 
 
 

@@ -1,6 +1,6 @@
 package pDrive::DBM;
 use DB_File ;
-use Fcntl; 
+use Fcntl;
 use strict;
 
 # magic numbers
@@ -25,7 +25,7 @@ use constant D => {
 };
 
 
-sub new(r) {
+sub new(*) {
 
   my $self = {_dbase => undef};
 
@@ -36,7 +36,7 @@ sub new(r) {
 }
 
 
-sub readHash(r){
+sub readHash(*){
 
   my $self = shift;
   my %returnContainerHash;
@@ -64,7 +64,7 @@ sub readHash(r){
       my $subFolders = $dbase{$key};
 
       while (my ($subFolder) = $subFolders =~ m%^([^\|]+)\|?%){
- 
+
         $subFolders =~ s%^[^\|]+\|?%%;
         if ($#{$returnFolderHash{$parentID}} >= FOLDER_SUBFOLDER){
 
@@ -86,7 +86,7 @@ sub readHash(r){
       $returnFolderHash{$resourceID}[FOLDER_PARENT] = $parentID;
 
       while (my ($subFolder) = $subFolders =~ m%^([^\|]+)\|?%){
- 
+
         $subFolders =~ s%^[^\|]+\|?%%;
         if ($#{$returnFolderHash{$parentID}} >= FOLDER_SUBFOLDER){
 
@@ -120,7 +120,7 @@ sub readHash(r){
 
 
 
-sub constructResourceIDHash(rr){
+sub constructResourceIDHash(**){
 
   my $self = shift;
   my $memoryHash = shift;
@@ -138,7 +138,7 @@ sub constructResourceIDHash(rr){
 
 }
 
-sub writeHash(rrr){
+sub writeHash(***){
   my ($self,$memoryContainerHash,$memoryFolderHash) = @_;
 
   tie(my %dbase, 'DB_File', pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
@@ -156,7 +156,7 @@ sub writeHash(rrr){
   }
 
   foreach my $resourceID (keys %{$memoryFolderHash}) {
-   
+
     my $subFolders;
     my $count=0;
     for (my $i=3; $i <= $#{$$memoryFolderHash{$resourceID}};$i++){
@@ -166,7 +166,7 @@ sub writeHash(rrr){
         $dbase{'F|'.$resourceID.'|'.$$memoryFolderHash{$resourceID}[FOLDER_TITLE].'|'.$$memoryFolderHash{$resourceID}[FOLDER_ROOT].'|'.$$memoryFolderHash{$resourceID}[FOLDER_PARENT].'|'.$count} = $subFolders if ($subFolders ne $dbase{'F|'.$resourceID.'|'.$$memoryFolderHash{$resourceID}[FOLDER_TITLE].'|'.$$memoryFolderHash{$resourceID}[FOLDER_ROOT].'|'.$$memoryFolderHash{$resourceID}[FOLDER_PARENT].'|'.$count});
         $subFolders = '';
         $count++;
-      } 
+      }
     }
 
     $dbase{'F|'.$resourceID.'|'.$$memoryFolderHash{$resourceID}[FOLDER_TITLE].'|'.$$memoryFolderHash{$resourceID}[FOLDER_ROOT].'|'.$$memoryFolderHash{$resourceID}[FOLDER_PARENT].'|'.$count} = $subFolders if ($subFolders ne $dbase{'F|'.$resourceID.'|'.$$memoryFolderHash{$resourceID}[FOLDER_TITLE].'|'.$$memoryFolderHash{$resourceID}[FOLDER_ROOT].'|'.$$memoryFolderHash{$resourceID}[FOLDER_PARENT].'|'.$count});
@@ -178,7 +178,7 @@ sub writeHash(rrr){
 }
 
 
-sub writeValueContainerHash(rrrr){
+sub writeValueContainerHash(****){
 
   my ($self,$path,$resourceID, $memoryHash) = @_;
 
@@ -208,11 +208,11 @@ sub printHash(r$){
 
     foreach my $key (keys %dbase) {
       next unless ($key =~ m%$filter%);
-      print "$key: $dbase{$key}\n"; 
+      print "$key: $dbase{$key}\n";
     }
   }else{
     foreach my $key (keys %dbase) {
-      print "$key: $dbase{$key}\n"; 
+      print "$key: $dbase{$key}\n";
     }
   }
 
@@ -231,7 +231,7 @@ sub getLastUpdated(rr){
       my $timestamp = $$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}];
 #print STDERR "$timestamp vs $$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}]\n";
 #      $timestamp =~ s%\D+%%g;
-#      ($timestamp) = $timestamp =~ m%^(\d{14})%; 
+#      ($timestamp) = $timestamp =~ m%^(\d{14})%;
 #      my $EPOC = pDrive::Time::getEPOC($timestamp);
       if ($timestamp > $maxTimestamp[pDrive::Time->A_TIMESTAMP]){
         $maxTimestamp[pDrive::Time->A_TIMESTAMP] = $timestamp;
@@ -254,13 +254,13 @@ sub fixTimestamps(rr){
       if ($$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] =~ m%\D+%){
         my $timestamp = $$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}];
         $timestamp =~ s%\D+%%g;
-        ($timestamp) = $timestamp =~ m%^(\d{14})%; 
+        ($timestamp) = $timestamp =~ m%^(\d{14})%;
         $$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($timestamp);
       }
       if ($$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] =~ m%\D+%){
         my $timestamp = $$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}];
         $timestamp =~ s%\D+%%g;
-        ($timestamp) = $timestamp =~ m%^(\d{14})%; 
+        ($timestamp) = $timestamp =~ m%^(\d{14})%;
         $$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] = pDrive::Time::getEPOC($timestamp);
       }
 

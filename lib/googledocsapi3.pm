@@ -7,7 +7,7 @@ use LWP::UserAgent;
 use LWP;
 use strict;
 
-use constant IS_ROOT => 1; 
+use constant IS_ROOT => 1;
 use constant NOT_ROOT => 0;
 
 use constant FOLDER_TITLE => 0;
@@ -39,10 +39,10 @@ sub new(r) {
   $self->{_ua}->timeout(30);		# set the timeout
 
 
-  $self->{_cookiejar} = HTTP::Cookies->new(); 
+  $self->{_cookiejar} = HTTP::Cookies->new();
   $self->{_ua}->cookie_jar($self->{_cookiejar});
-#  $self->{_ua}->max_redirect(0); 
-#  $self->{_ua}->requests_redirectable([]); 
+#  $self->{_ua}->max_redirect(0);
+#  $self->{_ua}->requests_redirectable([]);
 
   $self->{_ua}->default_headers->push_header('Accept' => "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword, application/xaml+xml, application/vnd.ms-xpsdocument, application/x-ms-xbap, application/x-ms-application, */*");
   $self->{_ua}->default_headers->push_header('Accept-Language' => "en-us");
@@ -108,7 +108,7 @@ $req = new HTTP::Request POST => $URL;
 $req->content_type("application/x-www-form-urlencoded");
 $req->protocol('HTTP/1.1');
 $req->content('Email='.$username.'&Passwd='.$password.'&accountType=HOSTED_OR_GOOGLE&source=dmdgddperl&service=wise');
-my $res = $self->{_ua}->request($req);
+$res = $self->{_ua}->request($req);
 
 if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
   open (LOG, '>'.pDrive::Config->DEBUG_LOG);
@@ -263,7 +263,7 @@ my $res;
   close(FILE);
   print STDOUT "saved\n";
 
-# reduce memory consumption from slurping the entire download file in memory 
+# reduce memory consumption from slurping the entire download file in memory
 #downloadChunk adapted from: http://www.perlmonks.org/?node_id=953833
 # all rights reserved from original author
 sub downloadChunk {
@@ -516,7 +516,7 @@ my $count=0;
     $$driveListings =~ s%\<entry[^\>]+[^\n]+\n\</entry\>%\.%;
 
 
-    my ($title) = $entry =~ m%\<title\>([^\<]+)\</title\>%;   
+    my ($title) = $entry =~ m%\<title\>([^\<]+)\</title\>%;
     my ($updated) = $entry =~ m%\<updated\>([^\<]+)\</updated\>%;
     my ($published) = $entry =~ m%\<published\>([^\<]+)\</published\>%;
     my ($resourceType,$resourceID) = $entry =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
@@ -530,10 +530,10 @@ my $count=0;
 
       # save the title
       $$folders{$resourceID}[FOLDER_TITLE] = $title;
-      
+
       # is not a root folder
       if ($folder ne ''){
-        
+
         $$folders{$resourceID}[FOLDER_ROOT] = NOT_ROOT;
         $$folders{$resourceID}[FOLDER_PARENT] = $parentID;
 
@@ -547,11 +547,11 @@ my $count=0;
           $$folders{$parentID}[FOLDER_SUBFOLDER] = $resourceID;
 
         }
- 
+
       # is a root folder
       }else{
 
-        $$folders{$resourceID}[FOLDER_ROOT] = IS_ROOT;        
+        $$folders{$resourceID}[FOLDER_ROOT] = IS_ROOT;
 
       }
       print STDOUT "folder = $title $resourceID *$parentID  \n";
@@ -559,7 +559,7 @@ my $count=0;
     }else{
 
       $updated =~ s%\D+%%g;
-      ($updated) = $updated =~ m%^(\d{14})%; 
+      ($updated) = $updated =~ m%^(\d{14})%;
       $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
 #      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
 

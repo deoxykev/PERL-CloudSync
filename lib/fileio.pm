@@ -13,7 +13,7 @@ sub getMD5($){
   open(FILE, $file);
   binmode(FILE);
 
-  my $md5sum = $md5->addfile(*FILE)->hexdigest; 
+  my $md5sum = $md5->addfile(*FILE)->hexdigest;
   close(FILE);
 
   return $md5sum;
@@ -21,7 +21,7 @@ sub getMD5($){
 }
 
 ####
-# mkdir 
+# mkdir
 # /dir1/dir2/dir3
 ####
 sub traverseMKDIR($){
@@ -30,10 +30,10 @@ sub traverseMKDIR($){
 
   #strip filenames
   $path =~ s%[^/]+$%%;
-print STDOUT "mkdir test path $path\n";
+  print STDOUT "mkdir test path $path\n";
   if (!(-e $path) and ($path =~ m%/.*/[^/]+/%)){
 #    my ($newPath) = ;
-    traverseMKDIR($path =~ m%(/.*/)[^/]+/%);
+    &traverseMKDIR($path =~ m%(/.*/)[^/]+/%);
 
     mkdir $path;
   }elsif (!(-e $path)){
@@ -60,7 +60,7 @@ foreach my $item (@dirContents)
 
   #item is a directory
   }elsif (-d $fullPath and ($item ne '.' and $item ne '..') ){
-    scanDir($fullPath);
+    &scanDir($fullPath);
 
   }else{
     print STDOUT 'file '. $fullPath."\n";

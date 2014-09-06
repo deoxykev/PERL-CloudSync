@@ -2,7 +2,7 @@ package pDrive::gDrive;
 
 
 # magic numbers
-use constant IS_ROOT => 1; 
+use constant IS_ROOT => 1;
 use constant NOT_ROOT => 0;
 
 use constant FOLDER_TITLE => 0;
@@ -15,7 +15,7 @@ use constant FOLDER_SUBFOLDER => 3;
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 #my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 
-sub new(r$$) {
+sub new(*$$) {
 
   my $self = {_gdrive => undef,
               _listURL => undef,
@@ -29,13 +29,11 @@ sub new(r$$) {
   $self->{_gdrive} = pDrive::GoogleDocsAPI3->new();
 
   # login into google
-  if (ONLINE){
-    $self->{_gdrive}->authenticate($username,$password);
-  }
+  $self->{_gdrive}->authenticate($username,$password);
 
-my $dbm = pDrive::DBM->new();
+  my $dbm = pDrive::DBM->new();
   $self->{_dbm} = $dbm;
-my ($dbase,$folders) = $dbm->readHash();
+  my ($dbase,$folders) = $dbm->readHash();
 
 my %resourceIDHash = $dbm->constructResourceIDHash($dbase);
 
@@ -65,13 +63,12 @@ my @updatedList;
 # 2) gather files to download
 while ($self->{_listURL} ne ''){
 
-if (ONLINE){
   ($driveListings) = $self->{_gdrive}->getList($self->{_listURL});
 
   my $nextlistURL = $self->{_gdrive}->getNextURL($driveListings);
   $nextlistURL =~ s%\&amp\;%\&%g;
   $nextlistURL =~ s%\%3A%\:%g;
-  
+
   if ($nextlistURL eq $self->{_listURL}){
     print STDERR "reset fetch\n";
     $self->{_listURL} = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
@@ -79,11 +76,7 @@ if (ONLINE){
   }else{
     $self->{_listURL} = $nextlistURL;
   }
-  
-}else{
-  ($driveListings) = pDrive::readTestListings();
-  $self->{_listURL} = '';
-}
+
 
 ($createFileURL) = $self->{_gdrive}->getCreateURL($driveListings) if ($createFileURL eq '');
 print STDOUT "create URL = $createFileURL\n" if (pDrive::Config->DEBUG);
@@ -218,9 +211,9 @@ foreach my $resourceID (keys %newDocuments){
 }
 $self->{_dbm}->writeHash($dbase,$folders);
 # new values to post to db
-if ($#updatedList >= 0){
+if (@updatedList and $#updatedList >= 0){
   print STDOUT "updating values DB\n" if (pDrive::Config->DEBUG);
-  $self->{_dbm}->writeHash($dbase,$folders) if (ONLINE);
+  $self->{_dbm}->writeHash($dbase,$folders);
 }
 } ####
 
@@ -270,16 +263,16 @@ sub uploadFile(r$$){
 sub traverseFolder($){
 
   my $resourceID = shift;
- 
+
   for (my $i=FOLDER_SUBFOLDER; $i <= $#{${$folders}{$resourceID}}; $i++){
 
     print STDOUT "\t $$folders{$$folders{$resourceID}[$i]}[FOLDER_TITLE]\n";
 
     if ( $#{${$folders}{${$folders}{$resourceID}}} >= FOLDER_SUBFOLDER ){
-      traverseFolder($$folders{$resourceID}[$i]);
+      &traverseFolder($$folders{$resourceID}[$i]);
     }
 
-  } 
+  }
 
 }
 
@@ -306,7 +299,7 @@ sub getPath($$$){
   } else{
 
     $parentArray[$#parentArray+1] = $resourceID;
-    return getPath($folders,$$folders{$resourceID}[FOLDER_PARENT],@parentArray) . $$folders{$resourceID}[FOLDER_TITLE].'/';
+    return &getPath($folders,$$folders{$resourceID}[FOLDER_PARENT],@parentArray) . $$folders{$resourceID}[FOLDER_TITLE].'/';
 
   }
 
@@ -328,7 +321,7 @@ sub containsFolder($$){
 
 
 
-sub downloadFile(r$$$$$$r){
+sub downloadFile(*$$$$$$*){
 
       my ($self,$path,$link,$updated,$resourceType,$resourceID,$dbase,$updatedList) = @_;
       print STDOUT "downloading $path...\n";
@@ -345,12 +338,12 @@ sub downloadFile(r$$$$$$r){
           $appendex .= '.'.$resourceID;
           $finalPath .= '.'.$resourceID;
         }
-        if (pDrive::Config->REVISIONS and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
+        if (pDrive::Config->REVISIONS and defined $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
           $appendex .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
           $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
         }
 
-        $returnStatus = $self->{_gdrive}->downloadFile($link,$path,'',$appendex,$updated) if (ONLINE);
+        $returnStatus = $self->{_gdrive}->downloadFile($link,$path,'',$appendex,$updated);
       # a google-doc file
       }else{
         print STDOUT 'download using '.$types->{$resourceType}.' wise - '. $resourceType  if (pDrive::Config->DEBUG);
@@ -369,7 +362,7 @@ sub downloadFile(r$$$$$$r){
               $finalPath .= '.local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}];
             }
 #wise
-            $returnStatus = $self->{_gdrive}->downloadFile($link.'&exportFormat='.$types->{$resourceType}[$i],$path,$types->{$resourceType}[$i],$appendex,$updated) if (ONLINE);
+            $returnStatus = $self->{_gdrive}->downloadFile($link.'&exportFormat='.$types->{$resourceType}[$i],$path,$types->{$resourceType}[$i],$appendex,$updated);
           }
         }else{
           my $appendex='';
@@ -382,13 +375,13 @@ sub downloadFile(r$$$$$$r){
             $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
           }
 #wise
-          $returnStatus = $self->{_gdrive}->downloadFile($link.'&exportFormat='.$types->{$resourceType},$path,$types->{$resourceType},$appendex,$updated) if (ONLINE);
+          $returnStatus = $self->{_gdrive}->downloadFile($link.'&exportFormat='.$types->{$resourceType},$path,$types->{$resourceType},$appendex,$updated);
         }
 
         #ignore export if fails; just try to download
         # noticed some spreadsheets in XLSX will fail with exportFormat, but download fine (and in XSLX otherwise)
         if ($returnStatus == 0)       {
-          $returnStatus = $self->{_gdrive}->downloadFile($link,$path,$types->{$resourceType},$appendex,$updated) if (ONLINE);
+          $returnStatus = $self->{_gdrive}->downloadFile($link,$path,$types->{$resourceType},$appendex,$updated);
         }
       }
 
@@ -414,7 +407,7 @@ sub downloadFile(r$$$$$$r){
           $$updatedList[0] = $path;
         }
 
-        $self->{_dbm}->writeValueContainerHash($path,$resourceID,$dbase) if (ONLINE);
+        $self->{_dbm}->writeValueContainerHash($path,$resourceID,$dbase);
       }elsif($returnStatus == 0){
         #TBD
       }

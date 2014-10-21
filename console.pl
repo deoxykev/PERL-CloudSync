@@ -14,8 +14,6 @@ if (!(-e './config.cfg')){
   print CONFIG <<EOF;
 package pDrive::Config;
 
-
-
 # must change these
 use constant LOCAL_PATH => '/u01/pdrive/'; #where to download / upload from
 use constant USERNAME => '';
@@ -178,61 +176,58 @@ while (my $input = <STDIN>){
     my $listURL;
     ($driveListings) = $gdrive->getList($gdrive->getListURL());
 
-  my ($nextlistURL) = $gdrive->getNextURL($driveListings);
-  $nextlistURL =~ s%\&amp\;%\&%g;
-  $nextlistURL =~ s%\%3A%\:%g;
+  	my ($nextlistURL) = $gdrive->getNextURL($driveListings);
+  	$nextlistURL =~ s%\&amp\;%\&%g;
+  	$nextlistURL =~ s%\%3A%\:%g;
 
-  if ($nextlistURL eq $listURL){
-    print STDERR "reset fetch\n";
-    $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
-  }else{
-    $listURL = $nextlistURL;
-  }
+  	if ($nextlistURL eq $listURL){
+	    print STDERR "reset fetch\n";
+	    $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
+  	}else{
+	    $listURL = $nextlistURL;
+  	}
 
-  ($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
-  my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
+  	($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
+  	my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
 
-  foreach my $resourceID (keys %newDocuments){
-
-    print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
-
-  }
+  	foreach my $resourceID (keys %newDocuments){
+    	print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
+	}
 
  }elsif($input =~ m%^get download list%i){
-  my %sortedDocuments;
+  	my %sortedDocuments;
     my $listURL;
     $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
 
-   while(1){
+   	while(1){
+
+   		($driveListings) = $gdrive->getList($listURL);
+
+  		my $nextlistURL = $gdrive->getNextURL($driveListings);
+  		$nextlistURL =~ s%\&amp\;%\&%g;
+  		$nextlistURL =~ s%\%3A%\:%g;
+
+	    $listURL = $nextlistURL;
 
 
-    ($driveListings) = $gdrive->getList($listURL);
 
-  my $nextlistURL = $gdrive->getNextURL($driveListings);
-  $nextlistURL =~ s%\&amp\;%\&%g;
-  $nextlistURL =~ s%\%3A%\:%g;
+  		($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
+  		my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
 
-    $listURL = $nextlistURL;
+  		foreach my $resourceID (keys %newDocuments){
+		    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
+	  	}
+	  	last if ($listURL eq '');
 
+  	}
 
-
-  ($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
-  my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
-
-  foreach my $resourceID (keys %newDocuments){
-    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
-  }
-  last if ($listURL eq '');
-
-  }
-
-  open(OUTPUT, '>' . pDrive::Config->TMP_PATH . '/download.list') or die ('Cannot save to ' . pDrive::Config->TMP_PATH . '/download.list');
-  foreach my $resourceID (sort keys %sortedDocuments){
-    print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
-#    print OUTPUT $resourceID. "\n" . $sortedDocuments{$resourceID} . "\n";
-    print OUTPUT $resourceID. "\n" ;
-  }
-  close(OUTPUT);
+  	open(OUTPUT, '>' . pDrive::Config->TMP_PATH . '/download.list') or die ('Cannot save to ' . pDrive::Config->TMP_PATH . '/download.list');
+  	foreach my $resourceID (sort keys %sortedDocuments){
+	    print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
+#    	print OUTPUT $resourceID. "\n" . $sortedDocuments{$resourceID} . "\n";
+    	print OUTPUT $resourceID. "\n" ;
+  	}
+  	close(OUTPUT);
 
   }elsif($input =~ m%^authenticate\s[^\s]+\s[^\s]+%i){
     my ($username, $password) = $input =~ m%^authenticate\s([^\s]+)\s([^\s]+)%i;
@@ -279,13 +274,13 @@ while (my $input = <STDIN>){
 
     open (LIST, "<./list.txt") or  die ('cannot read file list.txt');
     while (my $line = <LIST>){
-      my ($path,$file,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;
-      print STDOUT "file = $file, type = $filetype\n";
+		my ($path,$file,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;
+      	print STDOUT "file = $file, type = $filetype\n";
 
-      if ($file eq ''){
-        print STDOUT "no files\n";
-        next;
-      }
+      	if ($file eq ''){
+	        print STDOUT "no files\n";
+        	next;
+      	}
 
 #  open(INPUT, "<".$path.'/'.$file) or die ('cannot read file '.$path.'/'.$file);
 #  binmode(INPUT);
@@ -313,43 +308,42 @@ while (my $input = <STDIN>){
 #    $pointerInFile += $chunkSize;
 #  }
 
-  my $fileSize =  -s "$path/$file";
-  print STDOUT "file size for $file is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
+	  	my $fileSize =  -s "$path/$file";
+	  	print STDOUT "file size for $file is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
 
-  my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$file,$filetype);
+  		my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$file,$filetype);
 
-  my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
-  my $pointerInFile=0;
-  print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  open(INPUT, "<".$path.'/'.$file) or die ('cannot read file '.$path.'/'.$file);
-  binmode(INPUT);
+  		my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
+  		my $pointerInFile=0;
+  		print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
+  		open(INPUT, "<".$path.'/'.$file) or die ('cannot read file '.$path.'/'.$file);
+  		binmode(INPUT);
 
-  print STDERR 'uploading chunks [' . $chunkNumbers.  "]...";
-  for (my $i=0; $i < $chunkNumbers; $i++){
-    my $chunkSize = CHUNKSIZE;
+	  	print STDERR 'uploading chunks [' . $chunkNumbers.  "]...";
+	  	for (my $i=0; $i < $chunkNumbers; $i++){
+		    my $chunkSize = CHUNKSIZE;
 
-    my $chunk;
-    if ($i == $chunkNumbers-1){
-      $chunkSize = $fileSize - $pointerInFile;
-    }
-    sysread INPUT, $chunk, CHUNKSIZE;
-    print STDERR $i;
-    my $status=0;
-    while ($status == 0){
-      $status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      if ($status == 0){
-        print STDERR "retry\n";
-        sleep (5);
-      }
-    }
-#    print STDOUT 'next location = '.$uploadURL."\n";
-    $pointerInFile += $chunkSize;
-  }
-  close(INPUT);
-  print STDOUT "\n";
+	    	my $chunk;
+	    	if ($i == $chunkNumbers-1){
+	      		$chunkSize = $fileSize - $pointerInFile;
+    		}
+    		sysread INPUT, $chunk, CHUNKSIZE;
+    		print STDERR $i;
+    		my $status=0;
+    		while ($status == 0){
+	      		$status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+    	  		if ($status == 0){
+        			print STDERR "retry\n";
+        			sleep (5);
+		    	}
+    		}
 
+	    	$pointerInFile += $chunkSize;
+  		}
+  		close(INPUT);
+  		print STDOUT "\n";
 
-    }
+	}
     close (LIST);
 
   }elsif($input =~ m%^scan dir\s[^\n]+\n%i){
@@ -367,41 +361,40 @@ while (my $input = <STDIN>){
     my $fullPath = pDrive::Config->LOCAL_PATH . $path;
     print STDOUT "resource $resourceID, path = $fullPath\n";
     print STDOUT "value = $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_edit'}]\n";
-  my $fileSize =  -s $fullPath;
-  my $filetype = 'text/plain';
-  print STDOUT "file size for $fullPath is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
+  	my $fileSize =  -s $fullPath;
+  	my $filetype = 'text/plain';
+  	print STDOUT "file size for $fullPath is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
 
-  my $uploadURL = $gdrive->editFile($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_edit'}],$fileSize,$fullPath,$filetype);
+  	my $uploadURL = $gdrive->editFile($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_edit'}],$fileSize,$fullPath,$filetype);
 
-  my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
-  my $pointerInFile=0;
-  print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  open(INPUT, "<".$fullPath) or die ('cannot read file '.$fullPath);
-  binmode(INPUT);
+  	my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
+  	my $pointerInFile=0;
+  	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
+  	open(INPUT, "<".$fullPath) or die ('cannot read file '.$fullPath);
+  	binmode(INPUT);
 
-  print STDERR 'uploading chunks [' . $chunkNumbers.  "]...";
-  for (my $i=0; $i < $chunkNumbers; $i++){
-    my $chunkSize = CHUNKSIZE;
+  	print STDERR 'uploading chunks [' . $chunkNumbers.  "]...";
+  	for (my $i=0; $i < $chunkNumbers; $i++){
+	    my $chunkSize = CHUNKSIZE;
 
-    my $chunk;
-    if ($i == $chunkNumbers-1){
-      $chunkSize = $fileSize - $pointerInFile;
-    }
-    sysread INPUT, $chunk, CHUNKSIZE;
-    print STDERR $i;
-    my $status=0;
-    while ($status == 0){
-      $status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      if ($status == 0){
-        print STDERR "retry\n";
-        sleep (5);
-      }
-    }
-#    print STDOUT 'next location = '.$uploadURL."\n";
-    $pointerInFile += $chunkSize;
-  }
-  close(INPUT);
-  print STDOUT "\n";
+	    my $chunk;
+	    if ($i == $chunkNumbers-1){
+      		$chunkSize = $fileSize - $pointerInFile;
+    	}
+    	sysread INPUT, $chunk, CHUNKSIZE;
+    	print STDERR $i;
+    	my $status=0;
+    	while ($status == 0){
+      		$status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+      		if ($status == 0){
+        		print STDERR "retry\n";
+        		sleep (5);
+      		}
+    	}
+	    $pointerInFile += $chunkSize;
+  	}
+  	close(INPUT);
+  	print STDOUT "\n";
 
 
   }elsif($input =~ m%^upload dir\s[^\n]+\n%i){
@@ -414,21 +407,21 @@ while (my $input = <STDIN>){
 
   	my $fileSize =  -s $fileList[$i];
   	my $filetype = 'text/plain';
-  print STDOUT "file size for $fileList[$i] is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
+  	print STDOUT "file size for $fileList[$i] is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
 
-  my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$fileList[$i],$filetype);
+  	my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$fileList[$i],$filetype);
 
 
-  my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
-  my $pointerInFile=0;
-  print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  open(INPUT, "<".$fileList[$i]) or die ('cannot read file '.$fileList[$i]);
+  	my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
+	my $pointerInFile=0;
+  	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
+  	open(INPUT, "<".$fileList[$i]) or die ('cannot read file '.$fileList[$i]);
 
-  binmode(INPUT);
+  	binmode(INPUT);
 
-  print STDERR 'uploading chunks [' . $chunkNumbers.  "]...";
-  for (my $i=0; $i < $chunkNumbers; $i++){
-    my $chunkSize = CHUNKSIZE;
+  	print STDERR 'uploading chunks [' . $chunkNumbers.  "]...";
+  	for (my $i=0; $i < $chunkNumbers; $i++){
+	    my $chunkSize = CHUNKSIZE;
 
 
     my $chunk;
@@ -466,6 +459,8 @@ while (my $input = <STDIN>){
       $currentURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
     }
     print STDOUT "list list URL = $currentURL\n";
+
+
 
   }elsif($input =~ m%^get current%i){
 

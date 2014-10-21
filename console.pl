@@ -412,8 +412,8 @@ while (my $input = <STDIN>){
     for (my $i=0; $i <= $#fileList; $i++){
       print STDOUT $fileList[$i] . "\n";
 
-  my $fileSize =  -s $fileList[$i];
-  my $filetype = 'text/plain';
+  	my $fileSize =  -s $fileList[$i];
+  	my $filetype = 'text/plain';
   print STDOUT "file size for $fileList[$i] is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
 
   my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$fileList[$i],$filetype);

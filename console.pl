@@ -188,6 +188,7 @@ while (my $input = <STDIN>){
   	}
 
   	($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
+  	print "Create File URL = ".$createFileURL . "\n";
   	my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
 
   	foreach my $resourceID (keys %newDocuments){
@@ -233,6 +234,13 @@ while (my $input = <STDIN>){
     my ($username, $password) = $input =~ m%^authenticate\s([^\s]+)\s([^\s]+)%i;
     $gdrive = pDrive::GoogleDocsAPI3->new();
     $gdrive->authenticate($username,$password);
+
+  }elsif($input =~ m%^create dir\s[^\n]+\n%i){
+    my ($dir) = $input =~ m%^create dir\s([^\n]+)\n%;
+
+  	my $result = $gdrive->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$dir);
+    print "RESULT = " . $result . "\n";
+
 
   }elsif($input =~ m%^upload test%i){
 
@@ -347,7 +355,7 @@ while (my $input = <STDIN>){
     close (LIST);
 
   }elsif($input =~ m%^scan dir\s[^\n]+\n%i){
-    my ($dir) = $input =~ m%^upload dir\s([^\n]+)\n%;
+    my ($dir) = $input =~ m%^scan dir\s([^\n]+)\n%;
     print STDOUT "directory = $dir\n";
     pDrive::FileIO::scanDir($dir);
 
@@ -432,10 +440,11 @@ while (my $input = <STDIN>){
     sysread INPUT, $chunk, CHUNKSIZE;
     print STDERR $i;
     my $status=0;
-    while ($status == 0){
+    while ($status eq '0'){
 
       $status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      if ($status == 0){
+      print STDOUT $status . "\n";
+      if ($status eq '0'){
         print STDERR "retry\n";
         sleep (5);
       }

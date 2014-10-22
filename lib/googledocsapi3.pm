@@ -348,20 +348,20 @@ my $res = $self->{_ua}->request($req);
 
 if($res->is_success or $res->code == 308){
 
-  my $block = $res->as_string;
+  	my $block = $res->as_string;
+	my ($resourceType,$resourceID);
+	while (my ($line) = $block =~ m%([^\n]*)\n%){
 
-#  while (my ($line) = $block =~ m%([^\n]*)\n%){
+		$block =~ s%[^\n]*\n%%;
 
-#    $block =~ s%[^\n]*\n%%;
-#
-#    if ($line =~ m%^Location:%){
-#      ($URL) = $line =~ m%^Location:\s+(\S+)%;
-#    }
+	    if ($line =~ m%\<gd\:resourceId\>%){
+	    	($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
+	    }
 
-#  }
+	}
 
   print STDERR ".";
-  return 1;
+  return $resourceID;
 }else{
   print STDERR "error";
   print STDOUT $req->headers_as_string;
@@ -376,62 +376,117 @@ if($res->is_success or $res->code == 308){
 
 sub createFile(*$$$$){
 
-  my $self = shift;
-  my $URL = shift;
-  my $fileSize = shift;
-  my $file = shift;
-  my $fileType = shift;
+	my $self = shift;
+  	my $URL = shift;
+  	my $fileSize = shift;
+  	my $file = shift;
+  	my $fileType = shift;
 
 
-my $content = '<?xml version="1.0" encoding="UTF-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom" xmlns:docs="http://schemas.google.com/docs/2007">
-  <title>'.$file.'</title>
-</entry>'."\n\n";
+  	my $content = '<?xml version="1.0" encoding="UTF-8"?>
+	<entry xmlns="http://www.w3.org/2005/Atom" xmlns:docs="http://schemas.google.com/docs/2007">
+  	<title>'.$file.'</title>
+	</entry>'."\n\n";
 
-#convert=false prevents plain/text from becoming docs
-my $req = new HTTP::Request POST => $URL.'?convert=false';
-$req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-$req->header('GData-Version' => '3.0');
-#$req->header('X-Upload-Content-Type' => 'application/pdf');
-$req->header('X-Upload-Content-Type' => $fileType);
-$req->header('X-Upload-Content-Length' => $fileSize);
-$req->content_length(length $content);
-$req->content_type('application/atom+xml');
-$req->content($content);
+#  convert=false prevents plain/text from becoming docs
+	my $req = new HTTP::Request POST => $URL.'?convert=false';
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
+#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
+	$req->header('GData-Version' => '3.0');
+#	$req->header('X-Upload-Content-Type' => 'application/pdf');
+	$req->header('X-Upload-Content-Type' => $fileType);
+	$req->header('X-Upload-Content-Length' => $fileSize);
+	$req->content_length(length $content);
+	$req->content_type('application/atom+xml');
+	$req->content($content);
 
-my $res = $self->{_ua}->request($req);
+	my $res = $self->{_ua}->request($req);
 
-if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  print LOG $req->as_string;
-  print LOG $res->as_string;
-  close(LOG);
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+
+  		my $block = $res->as_string;
+
+  		while (my ($line) = $block =~ m%([^\n]*)\n%){
+
+    		$block =~ s%[^\n]*\n%%;
+
+		    if ($line =~ m%^Location:%){
+      			($URL) = $line =~ m%^Location:\s+(\S+)%;
+	      		return $URL;
+    		}
+
+  		}
+
+	}else{
+		print STDOUT $req->as_string;
+  		print STDOUT $res->as_string;
+  		return 0;
+	}
+
 }
 
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
+sub createFolder(*$$){
 
-  my $block = $res->as_string;
+	my $self = shift;
+  	my $URL = shift;
+  	my $folder = shift;
 
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
 
-    $block =~ s%[^\n]*\n%%;
+  	my $content = '<?xml version="1.0" encoding="UTF-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom">
+  <category scheme="http://schemas.google.com/g/2005#kind"
+      term="http://schemas.google.com/docs/2007#folder"/>
+        		<title>'.$folder.'</title>
+	</entry>'."\n\n";
 
-    if ($line =~ m%^Location:%){
-      ($URL) = $line =~ m%^Location:\s+(\S+)%;
-      return $URL;
-    }
+	my $req = new HTTP::Request POST => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
+#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
+	$req->header('GData-Version' => '3.0');
+	$req->content_length(length $content);
+	$req->content_type('application/atom+xml');
+	$req->content($content);
 
-  }
+	my $res = $self->{_ua}->request($req);
 
-}else{
-  print STDOUT $req->as_string;
-  print STDOUT $res->as_string;
-  return 0;
-}
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
 
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+
+  		my $block = $res->as_string;
+
+  		while (my ($line) = $block =~ m%([^\n]*)\n%){
+
+    		$block =~ s%[^\n]*\n%%;
+
+		    if ($line =~ m%^Location:%){
+      			($URL) = $line =~ m%^Location:\s+(\S+)%;
+	      		return $URL;
+    		}
+
+  		}
+
+	}else{
+		print STDOUT $req->as_string;
+  		print STDOUT $res->as_string;
+  		return 0;
+	}
 
 }
 

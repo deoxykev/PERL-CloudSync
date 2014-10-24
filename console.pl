@@ -8,6 +8,11 @@ use Fcntl ':flock';
 
 use FindBin;
 
+# fetch hostname
+use Sys::Hostname;
+use constant HOSTNAME => hostname;
+
+
 if (!(-e './config.cfg')){
   print STDOUT "no config file found... creating config.cfg\nYou will want to modify this file (including adding a username and password)\n";
   open(CONFIG, '>./config.cfg') or die ('cannot create config.cfg');
@@ -145,7 +150,7 @@ print STDERR '>';
 while (my $input = <STDIN>){
 
   if($input =~ m%^exit%i or$input =~ m%^quit%i){
-    last;
+  	last;
   }elsif($input =~ m%^help%i or $input =~ m%\?%i){
     print STDERR HELP;
   }elsif($input =~ m%^fix server md5%i){
@@ -429,7 +434,83 @@ while (my $input = <STDIN>){
   	print STDOUT "\n";
 
 
+  }elsif($input =~ m%^upload dir list%i){
+
+    open (LIST, "<./list.dir") or  die ('cannot read file list.dir');
+    while (my $line = <LIST>){
+		my ($dir,$folder,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;
+      	print STDOUT "folder = $folder, type = $filetype\n";
+
+      	if ($folder eq ''){
+	        print STDOUT "no files\n";
+        	next;
+      	}
+  		$dir = $dir . '/' . $folder;
+    	print STDOUT "directory = $dir\n";
+    	my @fileList = pDrive::FileIO::getFilesDir($dir);
+
+	    print STDOUT "folder = $folder\n";
+	  	my $folderID = $gdrive->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
+	    print "resource ID = " . $folderID . "\n";
+
+    	for (my $i=0; $i <= $#fileList; $i++){
+			print STDOUT $fileList[$i] . "\n";
+
+    		my ($fileName) = $fileList[$i] =~ m%\/([^\/]+)$%;
+
+  			my $fileSize =  -s $fileList[$i];
+  			my $filetype = 'application/octet-stream';
+  			print STDOUT "file size for $fileList[$i] is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
+
+  			my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$fileName,$filetype);
+
+
+  			my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
+			my $pointerInFile=0;
+  			print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
+  			open(INPUT, "<".$fileList[$i]) or die ('cannot read file '.$fileList[$i]);
+
+  			binmode(INPUT);
+
+  			print STDERR 'uploading chunks [' . $chunkNumbers.  "]...";
+  			my $fileID=0;
+  			for (my $i=0; $i < $chunkNumbers; $i++){
+			    my $chunkSize = CHUNKSIZE;
+		    	my $chunk;
+    			if ($i == $chunkNumbers-1){
+	      			$chunkSize = $fileSize - $pointerInFile;
+    			}
+
+    			sysread INPUT, $chunk, CHUNKSIZE;
+    			print STDERR $i;
+    			my $status=0;
+    			my $retrycount=0;
+    			while ($status eq '0' and $retrycount < 5){
+				    $status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+      				print STDOUT $status . "\n";
+	      			if ($status eq '0'){
+	        			print STDERR "retry\n";
+        				sleep (5);
+        				$retrycount++;
+	      			}
+
+    			}
+	    		masterLog("retry failed $fileList[$i]\n") if ($retrycount >= 5);
+
+    			$fileID=$status;
+		    	$pointerInFile += $chunkSize;
+  			}
+  			close(INPUT);
+  	    	$gdrive->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
+  	    	$gdrive->deleteFile('root',$fileID);
+
+	  		print STDOUT "\n";
+	    }
+    }
   }elsif($input =~ m%^upload dir\s[^\n]+\n%i){
+
+
+
     my ($dir) = $input =~ m%^upload dir\s([^\n]+)\n%;
     my ($folder) = $dir =~ m%\/([^\/]+)$%;
     print STDOUT "directory = $dir\n";
@@ -524,11 +605,21 @@ while (my $input = <STDIN>){
 
 }
 
-
-
 exit(0);
 
+sub masterLog($){
 
+  my $event = shift;
+
+  my $timestamp = pDrive::Time::getTimestamp(time, 'YYYYMMDDhhmmss');
+#  my $datestamp = substr($timestamp, 0, 8);
+
+  print STDERR $event . "\n" if (pDrive::Config->DEBUG);
+  open (SYSTEMLOG, '>>' . pDrive::Config->LOGFILE) or die('Cannot access application log ' . pDrive::Config->LOGFILE);
+  print SYSTEMLOG HOSTNAME . ' (' . $$ . ') - ' . $timestamp . ' -  ' . $event . "\n";
+  close (SYSTEMLOG);
+
+}
 __END__
 
 =head1 AUTHORS

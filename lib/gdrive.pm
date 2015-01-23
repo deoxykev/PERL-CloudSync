@@ -90,11 +90,6 @@ if (defined $self->{_listURL}){
 }
 
 
-# test upload file
-#my $uploadURL = $self->{_gdrive}->createFile($createFileURL);
-#pDrive::gDrive::uploadFile('/tmp/test_receipt.pdf',$createFileURL);
-#exit(0);
-
 %newDocuments = $self->{_gdrive}->readDriveListings($driveListings,$folders);
 
 

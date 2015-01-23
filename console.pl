@@ -298,6 +298,14 @@ while (my $input = <STDIN>){
 
 
   ##
+  # bind to IP address
+  ###
+  }elsif($input =~ m%^bind\s[^\s]+%i){
+    my ($IP) = $input =~ m%^bind\s([^\s]+)%i;
+    $gdrive->bindIP($IP);
+    $loggedInUser .= '-' .$IP;
+
+  ##
   # authenticate user account
   ###
   }elsif($input =~ m%^authenticate\s[^\s]+\s[^\s]+%i){

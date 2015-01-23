@@ -35,7 +35,6 @@ sub new() {
 
   # Create a user agent object
   $self->{_ua} = new LWP::UserAgent;	# call the constructor method for this object
-  $self->{_ua}->local_address('192.168.1.116');
 
   $self->{_ua}->agent($self->{_ident});		# set the identity
   $self->{_ua}->timeout(30);		# set the timeout
@@ -375,7 +374,7 @@ if($res->is_success or $res->code == 308){
 
 	}
 
-  print STDERR ".";
+
   return $resourceID;
 }else{
   print STDERR "error";

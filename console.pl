@@ -146,8 +146,11 @@ my $currentURL;
 my $nextURL;
 my $driveListings;
 my $createFileURL;
+my $loggedInUser = '';
+
 
 print STDERR '>';
+
 while (my $input = <STDIN>){
 
   if($input =~ m%^exit%i or$input =~ m%^quit%i){
@@ -260,10 +263,62 @@ while (my $input = <STDIN>){
   	}
   	close(OUTPUT);
 
+
+ }elsif($input =~ m%^download all%i){
+  	my %sortedDocuments;
+    my $listURL;
+    $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
+
+   	while(1){
+
+   		($driveListings) = $gdrive->getList($listURL);
+
+  		my $nextlistURL = $gdrive->getNextURL($driveListings);
+  		$nextlistURL =~ s%\&amp\;%\&%g;
+  		$nextlistURL =~ s%\%3A%\:%g;
+
+	    $listURL = $nextlistURL;
+
+
+
+  		($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
+  		my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
+
+  		foreach my $resourceID (keys %newDocuments){
+		    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
+	  	}
+	  	last if ($listURL eq '');
+
+  	}
+
+  	foreach my $resourceID (sort keys %sortedDocuments){
+	    print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
+	    $gdrive->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
+  	}
+
+
+  ##
+  # authenticate user account
+  ###
   }elsif($input =~ m%^authenticate\s[^\s]+\s[^\s]+%i){
     my ($username, $password) = $input =~ m%^authenticate\s([^\s]+)\s([^\s]+)%i;
     $gdrive = pDrive::GoogleDocsAPI3->new();
     $gdrive->authenticate($username,$password);
+
+    ($driveListings) = $gdrive->getList($gdrive->getListURL());
+
+    #
+    # for creating new files
+    ##
+  	my ($nextlistURL) = $gdrive->getNextURL($driveListings);
+  	$nextlistURL =~ s%\&amp\;%\&%g;
+  	$nextlistURL =~ s%\%3A%\:%g;
+
+  	($createFileURL) = $gdrive->getCreateURL($driveListings);
+  	print "Create File URL = ".$createFileURL . "\n";
+
+    ##
+	$loggedInUser = $username;
 
   }elsif($input =~ m%^create dir\s[^\n]+\n%i){
     my ($dir) = $input =~ m%^create dir\s([^\n]+)\n%;
@@ -473,7 +528,7 @@ while (my $input = <STDIN>){
 
   			binmode(INPUT);
 
-  			print STDERR 'uploading chunks [' . $chunkNumbers.  "]...";
+  			print STDERR 'uploading chunks [' . $chunkNumbers.  "]...\n";
   			my $fileID=0;
   			for (my $i=0; $i < $chunkNumbers; $i++){
 			    my $chunkSize = CHUNKSIZE;
@@ -483,14 +538,14 @@ while (my $input = <STDIN>){
     			}
 
     			sysread INPUT, $chunk, CHUNKSIZE;
-    			print STDERR $i;
+    			print STDERR "\r".$i . '/'.$chunkNumbers;
     			my $status=0;
     			my $retrycount=0;
     			while ($status eq '0' and $retrycount < 5){
 				    $status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      				print STDOUT $status . "\n";
+      				print STDOUT "\r"  . $status;
 	      			if ($status eq '0'){
-	        			print STDERR "retry\n";
+	        			print STDERR "...retry\n";
         				sleep (5);
         				$retrycount++;
 	      			}
@@ -602,7 +657,11 @@ while (my $input = <STDIN>){
 
   }
 
-  print STDERR '>';
+  if ($loggedInUser ne ''){
+	print STDERR $loggedInUser.'>';
+  }else{
+	print STDERR '>';
+  }
 
 }
 

@@ -84,7 +84,8 @@ use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
 #use constant CHUNKSIZE => (256*1024);
-use constant CHUNKSIZE => 524288;
+#use constant CHUNKSIZE => 524288;
+use constant CHUNKSIZE => (8*256*1024);
 
 #use Getopt::Std;
 #use constant USAGE => " usage: $0 [-c file.config]\n";

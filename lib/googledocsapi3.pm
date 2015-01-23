@@ -35,6 +35,8 @@ sub new() {
 
   # Create a user agent object
   $self->{_ua} = new LWP::UserAgent;	# call the constructor method for this object
+  $self->{_ua}->local_address('192.168.1.116');
+
   $self->{_ua}->agent($self->{_ident});		# set the identity
   $self->{_ua}->timeout(30);		# set the timeout
 
@@ -55,9 +57,22 @@ sub new() {
 
 }
 
+##
+# multiple NIC cards:
+# bind to a specific IP
+##
+sub bindIP(*$){
 
+  my $self = shift;
+  my $IP = shift;
 
+  $self->{_ua}->local_address($IP);
 
+}
+
+#
+# authenticate (writely and wise)
+##
 sub authenticate(*$$){
   my $self = shift;
   my $username = shift;

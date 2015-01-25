@@ -1,5 +1,6 @@
-PERL-pDrive
-===========
+PERL-CloudSync
+(previously known as PERL-pDrive)
+=================================
 
 A PERL implementation of Google Drive for cross-platform
 

@@ -263,6 +263,39 @@ while (my $input = <STDIN>){
   	}
   	close(OUTPUT);
 
+ #download only all mine documents
+ #
+ }elsif($input =~ m%^download mine%i){
+  	my %sortedDocuments;
+    my $listURL;
+    $listURL = 'https://docs.google.com/feeds/default/private/full/-/mine';
+
+   	while(1){
+
+   		($driveListings) = $gdrive->getList($listURL);
+
+  		my $nextlistURL = $gdrive->getNextURL($driveListings);
+  		$nextlistURL =~ s%\&amp\;%\&%g;
+  		$nextlistURL =~ s%\%3A%\:%g;
+
+	    $listURL = $nextlistURL;
+
+
+
+  		($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
+  		my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
+
+  		foreach my $resourceID (keys %newDocuments){
+		    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
+	  	}
+	  	last if ($listURL eq '');
+
+  	}
+
+  	foreach my $resourceID (sort keys %sortedDocuments){
+	    print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
+	    $gdrive->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
+  	}
 
  }elsif($input =~ m%^download all%i){
   	my %sortedDocuments;

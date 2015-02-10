@@ -225,41 +225,50 @@ if ($#updatedList >= 0){
 
 sub uploadFile(*$$){
 
-  my $self = shift;
-  my $file = shift;
-  my $URL = shift;
+	my $self = shift;
+	my $file = shift;
+	my $URL = shift;
 
+	# get filesize
+	my $fileSize = -s $file;
 
+	open(INPUT, "<".$file) or die ('cannot read file '.$file);
+	binmode(INPUT);
+	my $fileContents;
 
-  open(INPUT, "<".$file) or die ('cannot read file '.$file);
-  binmode(INPUT);
-  my $fileContents = do { local $/; <INPUT> };
-  close(INPUT);
-  my $fileSize = length $fileContents;
-  print STDOUT "file size for $file is $fileSize\n" if (pDrive::Config->DEBUG);
+  	# - don't slurp the entire file
+	#my $fileContents = do { local $/; <INPUT> };
+	#my $fileSize = length $fileContents;
+	print STDOUT "file size for $file is $fileSize\n" if (pDrive::Config->DEBUG);
 
-  my $uploadURL = $self->{_gdrive}->createFile($URL,$fileSize);
+	# create file on server
+	my $uploadURL = $self->{_gdrive}->createFile($URL,$fileSize);
 
-  my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
-  my $pointerInFile=0;
-  print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  for (my $i=0; $i < $chunkNumbers; $i++){
-    my $chunkSize = CHUNKSIZE;
-#my $chunkSize = (256*1024);
-    my $chunk;
-    if ($i == $chunkNumbers-1){
-      $chunkSize = $fileSize - $pointerInFile;
-    }
-    $chunk = substr($fileContents, $pointerInFile, $chunkSize);
+	# calculate the number of chunks
+	my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
+	my $pointerInFile=0;
+	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
+	for (my $i=0; $i < $chunkNumbers; $i++){
+		my $chunkSize = CHUNKSIZE;
+    	my $chunk;
+    	if ($i == $chunkNumbers-1){
+      		$chunkSize = $fileSize - $pointerInFile;
+    	}
+	# read chunk from file
+    read INPUT, $chunk, $chunkSize;
+
+   	# - don't slurp the entire file
+	#$chunk = substr($fileContents, $pointerInFile, $chunkSize);
+
     print STDOUT 'uploading chunk ' . $i.  "\n";
     $self->{_gdrive}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
     print STDOUT 'next location = '.$uploadURL."\n";
     $pointerInFile += $chunkSize;
-  }
 
+  }
+  close(INPUT);
 
 }
-
 
 sub traverseFolder($){
 

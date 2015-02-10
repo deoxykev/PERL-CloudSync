@@ -87,15 +87,16 @@ use constant FOLDER_SUBFOLDER => 3;
 #use constant CHUNKSIZE => 524288;
 use constant CHUNKSIZE => (8*256*1024);
 
-#use Getopt::Std;
-#use constant USAGE => " usage: $0 [-c file.config]\n";
+use Getopt::Std;
+use constant USAGE => " usage: $0 [-c file.config]\n";
 
-#my %opt;
-#die (USAGE) unless (getopts ('c:',\%opt));
+my %opt;
+die (USAGE) unless (getopts ('c:u:p:',\%opt));
 
 #die("missing parameter\n". USAGE) unless($opt{c} ne '');
 
 #die("config file $opt{c} doesn't exit\n") unless (-e $opt{c});
+
 
 
 ######
@@ -149,9 +150,49 @@ my $createFileURL;
 my $loggedInUser = '';
 
 
+# authenticate as provided as argument
+if ($opt{u} ne '' and $opt{p} ne ''){
+
+	my $username = $opt{u};
+	my $password;
+    open (INPUT, "<". $opt{p}) or  die ('cannot read file '.$opt{p});
+  	$password = <INPUT>;
+    close(INPUT);
+
+    $gdrive = pDrive::GoogleDocsAPI3->new();
+    $gdrive->authenticate($username,$password);
+
+    ($driveListings) = $gdrive->getList($gdrive->getListURL());
+
+    #
+    # for creating new files
+    ##
+  	my ($nextlistURL) = $gdrive->getNextURL($driveListings);
+  	$nextlistURL =~ s%\&amp\;%\&%g;
+  	$nextlistURL =~ s%\%3A%\:%g;
+
+  	($createFileURL) = $gdrive->getCreateURL($driveListings);
+  	print "Create File URL = ".$createFileURL . "\n";
+
+    ##
+	$loggedInUser = $username;
+}
+
+
+# scripted input
+my $userInput;
+if ($opt{c} ne ''){
+
+	my $command = $opt{c};
+    open ($userInput, "<".$command) or  die ('cannot read file list.dir');
+
+}else{
+	$userInput = *STDIN;
+}
+
 print STDERR '>';
 
-while (my $input = <STDIN>){
+while (my $input = <$userInput>){
 
   if($input =~ m%^exit%i or$input =~ m%^quit%i){
   	last;
@@ -165,6 +206,13 @@ while (my $input = <STDIN>){
 
     $dbm->clearLocalMD5($dbase);
     $dbm->writeHash($dbase,$folders);
+
+  # run system os commands
+  }elsif($input =~ m%^run\s[^\n]+\n%i){
+
+    my ($os_command) = $input =~ m%^run\s([^\n]+)\n%;
+    print STDOUT "running $os_command\n";
+    print STDOUT `$os_command`;
 
   }elsif($input =~ m%^fix timestamps%i){
 
@@ -704,6 +752,11 @@ while (my $input = <STDIN>){
 	print STDERR '>';
   }
 
+}
+
+# scripted input
+if ($opt{c} ne ''){
+	close($userInput);
 }
 
 exit(0);

@@ -15,31 +15,52 @@ use constant FOLDER_SUBFOLDER => 3;
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 #my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 
-sub new(*$$$$$) {
+sub new(*$$$) {
 
-  my $self = {_oneDrive => undef,
+	my $self = {_oneDrive => undef,
               _listURL => undef,
+              _login_dbm => undef,
               _dbm => undef};
 
-  my $class = shift;
-  bless $self, $class;
-  my $clientID = shift;
-  my $clientSecret = shift;
-  my $code = shift;
-  my $token = shift;
+  	my $class = shift;
+  	bless $self, $class;
+  	my $username  = shift;
+  	my $clientID = shift;
+  	my $clientSecret = shift;
 
-  # initialize web connections
-  $self->{_oneDrive} = pDrive::OneDriveAPI1->new();
+  	# initialize web connections
+  	$self->{_oneDrive} = pDrive::OneDriveAPI1->new($clientID,$clientSecret);
 
-  # login into google
-  $self->{_oneDrive}->authenticate($clientID,$clientSecret,$code,$token);
-  $self->{_oneDrive}->getList('https://api.onedrive.com/v1.0/drive/root/children');#?access_token='.$token);
+  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
+  	$self->{_login_dbm} = $loginsDBM;
+  	my ($token,$refreshToken) = $loginsDBM->readLogin($username);
 
-  my $dbm = pDrive::DBM->new();
-  $self->{_dbm} = $dbm;
-  my ($dbase,$folders) = $dbm->readHash();
+	# no token defined
+	if ($token eq '' or  $refreshToken  eq ''){
+		my $code;
+		my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.$clientID . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
+		print STDOUT "visit $URL\n";
+		print STDOUT 'Input Code:';
+		$code = <>;
+		print STDOUT "code = $code\n";
+ 	  	($token,$refreshToken) = $self->{_oneDrive}->getToken($code);
+	}else{
+		$self->{_oneDrive}->setToken($token,$refreshToken);
+	}
 
-my $resourceIDHash = $dbm->constructResourceIDHash($dbase);
+  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
+
+  	# get contents
+  	$self->{_oneDrive}->getList('https://api.onedrive.com/v1.0/drive/root/children');#?access_token='.$token);
+	return;
+
+
+
+  	my $dbm = pDrive::DBM->new(pDrive::Config->DBM_CONTAINER_FILE);
+  	$self->{_dbm} = $dbm;
+  	my ($dbase,$folders) = $dbm->readHash();
+
+	my $resourceIDHash = $dbm->constructResourceIDHash($dbase);
 
 
 my $driveListings;

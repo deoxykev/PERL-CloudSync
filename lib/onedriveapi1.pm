@@ -19,39 +19,47 @@ use constant FOLDER_SUBFOLDER => 3;
 
 sub new() {
 
-  my $self = {_ident => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; Q312461)",
+	my $self = {_ident => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; Q312461)",
               _ua => undef,
               _cookiejar => undef,
+              _clientID => undef,
+              _clientSecret => undef,
+              _refreshToken  => undef,
               _token => undef};
 
-  bless $self, $_[0];
+  	my $class = shift;
+  	bless $self, $class;
+	my $clientID = shift;
+	my $clientSecret = shift;
+	$self->{_clientID} = $clientID;
+	$self->{_clientSecret} = $clientSecret;
 
-  ######
-  #  Useragent
-  ###
+ 	######
+	 #  Useragent
+	 ###
 
-  # this gets logged, so it should be representative
+	 # this gets logged, so it should be representative
 
-  # Create a user agent object
-  $self->{_ua} = new LWP::UserAgent;	# call the constructor method for this object
+  	# Create a user agent object
+  	$self->{_ua} = new LWP::UserAgent;	# call the constructor method for this object
 
-  $self->{_ua}->agent($self->{_ident});		# set the identity
-  $self->{_ua}->timeout(30);		# set the timeout
+  	$self->{_ua}->agent($self->{_ident});		# set the identity
+  	$self->{_ua}->timeout(30);		# set the timeout
 
 
-  $self->{_cookiejar} = HTTP::Cookies->new();
-  $self->{_ua}->cookie_jar($self->{_cookiejar});
-#  $self->{_ua}->max_redirect(0);
-#  $self->{_ua}->requests_redirectable([]);
+  	$self->{_cookiejar} = HTTP::Cookies->new();
+  	$self->{_ua}->cookie_jar($self->{_cookiejar});
+	#  $self->{_ua}->max_redirect(0);
+	#  $self->{_ua}->requests_redirectable([]);
 
-  $self->{_ua}->default_headers->push_header('Accept' => "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword, application/xaml+xml, application/vnd.ms-xpsdocument, application/x-ms-xbap, application/x-ms-application, */*");
-  $self->{_ua}->default_headers->push_header('Accept-Language' => "en-us");
-  #$ua->default_headers->push_header('Connection' => "close");
-  $self->{_ua}->default_headers->push_header('Connection' => "keep-alive");
-  $self->{_ua}->default_headers->push_header('Keep-Alive' => "300");
-  #$cookie_jar->load();
+  	$self->{_ua}->default_headers->push_header('Accept' => "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword, application/xaml+xml, application/vnd.ms-xpsdocument, application/x-ms-xbap, application/x-ms-application, */*");
+  	$self->{_ua}->default_headers->push_header('Accept-Language' => "en-us");
+	  #$ua->default_headers->push_header('Connection' => "close");
+  	$self->{_ua}->default_headers->push_header('Connection' => "keep-alive");
+  	$self->{_ua}->default_headers->push_header('Keep-Alive' => "300");
+	  #$cookie_jar->load();
 
-  return $self;
+  	return $self;
 
 }
 
@@ -69,91 +77,59 @@ sub bindIP(*$){
 }
 
 #
-# authenticate (writely and wise)
+# setTokens: access & refresh
 ##
-sub authenticate(*$$$$){
+sub setToken(*$$){
 	my $self = shift;
-	my $clientID = shift;
-	my $clientSecret = shift;
-	my $code = shift;
 	my $token = shift;
+	my $refreshToken = shift;
+
+	$self->{_refreshToken} = $refreshToken;
 	$self->{_token} = $token;
 
-	if (0){
-	my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.$clientID . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
+}
 
-	my $req = new HTTP::Request GET => $URL;
+#
+# getTokens (writely and wise)
+##
+sub getToken(*$){
+	my $self = shift;
+	my $code = shift;
+
+#	my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.$self->{_clientID} . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
+	my  $URL = 'https://login.live.com/oauth20_token.srf';
+	my $req = new HTTP::Request POST => $URL;
+	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
-
+	$req->content('client_id='.$self->{_clientID}.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$self->{_clientSecret}.'&code='.$code.'&grant_type=authorization_code');
 	my $res = $self->{_ua}->request($req);
 
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+ 	 open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+ 	 print LOG $req->as_string;
+ 	 print LOG $res->as_string;
+ 	 close(LOG);
+	}
+
+	my $token;
+	my $refreshToken;
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n";
-  		my $block = $res->as_string;
-		print STDERR $block;
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
 
-		    $block =~ s%[^\n]*\n%%;
+	  	my $block = $res->as_string;
 
-  		}
+		($token) = $block =~ m%\"access_token\"\:\"([^\"]+)\"%;
+		($refreshToken) = $block =~ m%\"refresh_token\"\:\"([^\"]+)\"%;
 
 	}else{
 		#print STDOUT $res->as_string;
-		die($res->as_string."error in loading page");}
+		die ($res->as_string."error in loading page");}
 
-	}
+	$self->{_token} = $token;
+	$self->{_refreshToken} = $refreshToken;
+	return ($token,$refreshToken);
 
-	if ($token eq ''){
-		my  $URL = 'https://login.live.com/oauth20_token.srf';
-		my $req = new HTTP::Request POST => $URL;
-		$req->content_type("application/x-www-form-urlencoded");
-		$req->protocol('HTTP/1.1');
-		$req->content('client_id='.$clientID.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$clientSecret.'&code='.$code.'&grant_type=authorization_code');
-		my $res = $self->{_ua}->request($req);
-
-
-		print STDERR 'client_id='.$clientID.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$clientSecret.'&code='.$code.'&grant_type=authorization_code';
-		if($res->is_success){
-  			print STDOUT "success --> $URL\n\n";
-
-	  		my $block = $res->as_string;
-
-  			while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    			$block =~ s%[^\n]*\n%%;
-				print STDERR $block;
-
-			}
-
-		}else{
-			#print STDOUT $res->as_string;
-			die ($res->as_string."error in loading page");}
-
-	}
-if(0){		my  $URL = 'https://login.live.com/oauth20_token.srf';
-		my $req = new HTTP::Request POST => $URL;
-		$req->content_type("application/x-www-form-urlencoded");
-		$req->protocol('HTTP/1.1');
-		$req->content('client_id='.$clientID.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$clientSecret.'&refresh_token='.$token.'&grant_type=refresh_token');
-		my $res = $self->{_ua}->request($req);
-
-		if($res->is_success){
-  			print STDOUT "success --> $URL\n\n";
-
-	  		my $block = $res->as_string;
-
-  			while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    			$block =~ s%[^\n]*\n%%;
-				print STDERR $block;
-
-			}
-
-		}else{
-			#print STDOUT $res->as_string;
-			die ($res->as_string."error in loading page");}
-
-}
 
 }
 

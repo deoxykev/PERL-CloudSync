@@ -1,7 +1,7 @@
 package pDrive::DBM;
 
 use Fcntl;
-use strict;
+#use strict;
 
 pDrive::Config->DBM_TYPE;
 
@@ -29,14 +29,35 @@ use constant D => {
 
 sub new(*) {
 
-  my $self = {_dbase => undef};
+  	my $self = {_dbase => undef, _container => pDrive::Config->DBM_CONTAINER_FILE};
 
-  bless $self, $_[0];
+ 	my $class = shift;
+  	bless $self, $class;
+	my $containerFile = shift;
+  	if ($containerFile ne ''){
+  		$self->{_container} = $containerFile;
+  	}
 
-  return $self;
+  	return $self;
 
 }
 
+
+
+#
+# Create the memory logins from the DBM
+#
+sub readLogin(*$){
+
+	my $self = shift;
+  	my $username = shift;
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_container},O_RDWR|O_CREAT, 0666) or die "can't open ".$self->{_container}.": $!";
+	my $token = $dbase{$username . '|token'};
+	my $refreshToken = $dbase{$username . '|refresh'};
+	untie(%dbase);
+    return ($token,$refreshToken);
+
+}
 
 #
 # Create the memory has from the DBM
@@ -47,7 +68,7 @@ sub readHash(*){
   my %returnContainerHash;
   my %returnFolderHash;
 
-  tie(my %dbase, pDrive::Config->DBM_TYPE, pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_container},O_RDWR|O_CREAT, 0666) or die "can't open ".$self->{_container} .": $!";
 
   print STDOUT "reading readHash...\n" if (pDrive::Config->DEBUG);
 
@@ -157,7 +178,7 @@ sub constructResourceIDHash(**){
 sub writeHash(***){
   my ($self,$memoryContainerHash,$memoryFolderHash) = @_;
 
-  tie(my %dbase, pDrive::Config->DBM_TYPE, pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_container},O_RDWR|O_CREAT, 0666) or die "can't open ".$self->{_container}.": $!";
 
   foreach my $path (keys %{$memoryContainerHash}) {
 
@@ -194,12 +215,30 @@ sub writeHash(***){
 
 }
 
+#
+# Write login informations to DBM
+#
+
+sub writeLogin(*$$$){
+	my $self = shift;
+	my $username = shift;
+	my $token = shift;
+	my $refreshToken = shift;
+
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_container},O_RDWR|O_CREAT, 0666) or die "can't open ".$self->{_container}.": $!";
+
+	$dbase{$username . '|token'} = $token if $token ne $dbase{$username . '|token'};
+	$dbase{$username . '|refresh'} = $refreshToken if $refreshToken ne $dbase{$username . '|refresh'};
+
+	 untie(%dbase);
+
+}
 
 sub writeValueContainerHash(****){
 
   my ($self,$path,$resourceID, $memoryHash) = @_;
 
-  tie(my %dbase, pDrive::Config->DBM_TYPE, pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_container},O_RDWR|O_CREAT, 0666) or die "can't open ".$self->{_container}.": $!";
 
   foreach my $key (keys %{pDrive::DBM->D}){
 
@@ -220,10 +259,10 @@ sub printHash(*$){
   my $self = shift;
   my $filter = shift;
 
-  print "(filter = $filter) Database ".pDrive::Config->DBM_CONTAINER_FILE." consists of the following key value pairs...\n";
+  print "(filter = $filter) Database ".$self->{_container}." consists of the following key value pairs...\n";
 
 
-  tie(my %dbase, pDrive::Config->DBM_TYPE, pDrive::Config->DBM_CONTAINER_FILE,O_RDWR|O_CREAT, 0666) or die "can't open ".pDrive::Config->DBM_CONTAINER_FILE.": $!";
+  tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_container},O_RDWR|O_CREAT, 0666) or die "can't open ".$self->{_container}.": $!";
 
   if ($filter ne ''){
 

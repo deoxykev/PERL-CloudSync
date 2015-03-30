@@ -15,7 +15,7 @@ use constant FOLDER_SUBFOLDER => 3;
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 #my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 
-sub new(*$$) {
+sub new(*$$$$$) {
 
   my $self = {_oneDrive => undef,
               _listURL => undef,
@@ -23,14 +23,17 @@ sub new(*$$) {
 
   my $class = shift;
   bless $self, $class;
-  my $username = shift;
-  my $password = shift;
+  my $clientID = shift;
+  my $clientSecret = shift;
+  my $code = shift;
+  my $token = shift;
 
   # initialize web connections
-  $self->{_oneDrive} = pDrive::GoogleDocsAPI3->new();
+  $self->{_oneDrive} = pDrive::OneDriveAPI1->new();
 
   # login into google
-  $self->{_oneDrive}->authenticate($username,$password);
+  $self->{_oneDrive}->authenticate($clientID,$clientSecret,$code,$token);
+  $self->{_oneDrive}->getList('https://api.onedrive.com/v1.0/drive/root/children');#?access_token='.$token);
 
   my $dbm = pDrive::DBM->new();
   $self->{_dbm} = $dbm;

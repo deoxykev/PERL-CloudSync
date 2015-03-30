@@ -22,8 +22,7 @@ sub new() {
   my $self = {_ident => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; Q312461)",
               _ua => undef,
               _cookiejar => undef,
-              _authwise => undef,
-              _authwritely => undef};
+              _token => undef};
 
   bless $self, $_[0];
 
@@ -72,98 +71,89 @@ sub bindIP(*$){
 #
 # authenticate (writely and wise)
 ##
-sub authenticate(*$$){
-  my $self = shift;
-  my $username = shift;
-  my $password = shift;
+sub authenticate(*$$$$){
+	my $self = shift;
+	my $clientID = shift;
+	my $clientSecret = shift;
+	my $code = shift;
+	my $token = shift;
+	$self->{_token} = $token;
 
-my  $URL = 'https://www.google.com/accounts/ClientLogin';
-my $req = new HTTP::Request POST => $URL;
-$req->content_type("application/x-www-form-urlencoded");
-$req->protocol('HTTP/1.1');
-$req->content('Email='.$username.'&Passwd='.$password.'&accountType=HOSTED_OR_GOOGLE&source='.pDrive::Config->APP_NAME.'&service=writely');
-my $res = $self->{_ua}->request($req);
+	if (0){
+	my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.$clientID . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
 
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
 
-my $SID;
-my $LSID;
+	my $res = $self->{_ua}->request($req);
 
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+  		my $block = $res->as_string;
+		print STDERR $block;
+  		while (my ($line) = $block =~ m%([^\n]*)\n%){
 
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
+		    $block =~ s%[^\n]*\n%%;
 
-  my $block = $res->as_string;
+  		}
 
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
+	}else{
+		#print STDOUT $res->as_string;
+		die($res->as_string."error in loading page");}
 
-    $block =~ s%[^\n]*\n%%;
+	}
 
-    if ($line =~ m%^SID%){
-      ($SID) = $line =~ m%SID\=(.*)%;
-    }elsif ($line =~ m%^LSID%){
-      ($LSID) = $line =~ m%LSID\=(.*)%;
-    }elsif ($line =~ m%^Auth%){
-      ($self->{_authwritely}) = $line =~ m%Auth\=(.*)%;
-    }
-
-  }
-  print STDOUT "SID = $SID\n" if pDrive::Config->DEBUG;
-  print STDOUT "LSID = $LSID\n" if pDrive::Config->DEBUG;
-  print STDOUT "AUTH = $self->{_authwritely}\n" if pDrive::Config->DEBUG;
-
-}else{
-#print STDOUT $res->as_string;
-die ($res->as_string."error in loading page");}
+	if ($token eq ''){
+		my  $URL = 'https://login.live.com/oauth20_token.srf';
+		my $req = new HTTP::Request POST => $URL;
+		$req->content_type("application/x-www-form-urlencoded");
+		$req->protocol('HTTP/1.1');
+		$req->content('client_id='.$clientID.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$clientSecret.'&code='.$code.'&grant_type=authorization_code');
+		my $res = $self->{_ua}->request($req);
 
 
-die("Login failed") unless $self->{_authwritely} ne '';
+		print STDERR 'client_id='.$clientID.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$clientSecret.'&code='.$code.'&grant_type=authorization_code';
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n";
 
-$req = new HTTP::Request POST => $URL;
-$req->content_type("application/x-www-form-urlencoded");
-$req->protocol('HTTP/1.1');
-$req->content('Email='.$username.'&Passwd='.$password.'&accountType=HOSTED_OR_GOOGLE&source='.pDrive::Config->APP_NAME.'&service=wise');
-$res = $self->{_ua}->request($req);
+	  		my $block = $res->as_string;
 
-if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  open (LOG, '>'.pDrive::Config->DEBUG_LOG);
-  print LOG $req->as_string;
-  print LOG $res->as_string;
-  close(LOG);
+  			while (my ($line) = $block =~ m%([^\n]*)\n%){
+
+    			$block =~ s%[^\n]*\n%%;
+				print STDERR $block;
+
+			}
+
+		}else{
+			#print STDOUT $res->as_string;
+			die ($res->as_string."error in loading page");}
+
+	}
+if(0){		my  $URL = 'https://login.live.com/oauth20_token.srf';
+		my $req = new HTTP::Request POST => $URL;
+		$req->content_type("application/x-www-form-urlencoded");
+		$req->protocol('HTTP/1.1');
+		$req->content('client_id='.$clientID.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$clientSecret.'&refresh_token='.$token.'&grant_type=refresh_token');
+		my $res = $self->{_ua}->request($req);
+
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n";
+
+	  		my $block = $res->as_string;
+
+  			while (my ($line) = $block =~ m%([^\n]*)\n%){
+
+    			$block =~ s%[^\n]*\n%%;
+				print STDERR $block;
+
+			}
+
+		}else{
+			#print STDOUT $res->as_string;
+			die ($res->as_string."error in loading page");}
+
 }
-
-my $SID_wise;
-my $LSID_wise;
-
-
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
-  my $block = $res->as_string;
-
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    $block =~ s%[^\n]*\n%%;
-
-    if ($line =~ m%^SID%){
-      ($SID_wise) = $line =~ m%SID\=(.*)%;
-    }elsif ($line =~ m%^LSID%){
-      ($LSID_wise) = $line =~ m%LSID\=(.*)%;
-    }elsif ($line =~ m%^Auth%){
-
-      ($self->{_authwise}) = $line =~ m%Auth\=(.*)%;
-    }
-
-  }
-  print STDOUT "SID = $SID_wise\n" if pDrive::Config->DEBUG;
-  print STDOUT "LSID = $LSID_wise\n" if pDrive::Config->DEBUG;
-  print STDOUT "AUTH = $self->{_authwise}\n" if pDrive::Config->DEBUG;
-
-}else{
-#print STDOUT $res->as_string;
-die($res->as_string."error in loading page");}
-
-
-die("Login failed") unless $self->{_authwise} ne '';
-
 
 }
 
@@ -175,9 +165,7 @@ sub getList(*$){
 
 my $req = new HTTP::Request GET => $URL;
 $req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-
-$req->header('GData-Version' => '3.0');
+$req->header('Authorization' => 'bearer '.$self->{_token});
 my $res = $self->{_ua}->request($req);
 
 if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){

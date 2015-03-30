@@ -43,14 +43,14 @@ EOF
 }
 
 
-require './config.cfg';
+require './config_od.cfg';
 use strict;
 
-require './lib/googledocsapi3.pm';
+require './lib/onedriveapi1.pm';
 require './lib/dbm.pm';
 require './lib/time.pm';
 require './lib/fileio.pm';
-require './lib/gdrive.pm';
+require './lib/onedrive.pm';
 
 
 
@@ -69,7 +69,7 @@ use constant HOSTNAME => hostname;
 
 
 
-my $pDrive = pDrive::gDrive->new(pDrive::Config->USERNAME,pDrive::Config->PASSWORD);
+my $pDrive = pDrive::oneDrive->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET, pDrive::Config->CODE, pDrive::Config->TOKEN);
 
 
 

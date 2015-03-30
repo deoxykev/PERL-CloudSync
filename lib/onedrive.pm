@@ -48,10 +48,14 @@ sub new(*$$$) {
 		$self->{_oneDrive}->setToken($token,$refreshToken);
 	}
 
+ 	 #($token,$refreshToken) = $self->{_oneDrive}->refreshToken($code);
+
   	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
 
   	# get contents
   	$self->{_oneDrive}->getList('https://api.onedrive.com/v1.0/drive/root/children');#?access_token='.$token);
+
+  	$self->uploadFile('/tmp/TEST.txt');
 	return;
 
 
@@ -246,12 +250,12 @@ if ($#updatedList >= 0){
 
 }
 
+use constant CHUNKSIZE => (8*256*1024);
 
-sub uploadFile(*$$){
+sub uploadFile(*$){
 
 	my $self = shift;
 	my $file = shift;
-	my $URL = shift;
 
 	# get filesize
 	my $fileSize = -s $file;
@@ -265,8 +269,6 @@ sub uploadFile(*$$){
 	#my $fileSize = length $fileContents;
 	print STDOUT "file size for $file is $fileSize\n" if (pDrive::Config->DEBUG);
 
-	# create file on server
-	my $uploadURL = $self->{_oneDrive}->createFile($URL,$fileSize);
 
 	# calculate the number of chunks
 	my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
@@ -285,8 +287,7 @@ sub uploadFile(*$$){
 	#$chunk = substr($fileContents, $pointerInFile, $chunkSize);
 
     print STDOUT 'uploading chunk ' . $i.  "\n";
-    $self->{_oneDrive}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
-    print STDOUT 'next location = '.$uploadURL."\n";
+    $self->{_oneDrive}->uploadFile(\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
     $pointerInFile += $chunkSize;
 
   }

@@ -15,7 +15,8 @@ use constant FOLDER_ROOT => 1;
 use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
-
+use constant API_URL => 'https://api.onedrive.com/v1.0/';
+use constant API_VER => 1;
 
 sub new() {
 
@@ -128,11 +129,54 @@ sub getToken(*$){
 
 	$self->{_token} = $token;
 	$self->{_refreshToken} = $refreshToken;
-	return ($token,$refreshToken);
-
+	return ($self->{_token},$self->{_refreshToken});
 
 }
 
+
+#
+# refreshToken (writely and wise)
+##
+sub refreshToken(*){
+	my $self = shift;
+
+	my  $URL = 'https://login.live.com/oauth20_token.srf';
+	my $req = new HTTP::Request POST => $URL;
+	$req->content_type("application/x-www-form-urlencoded");
+	$req->protocol('HTTP/1.1');
+	$req->content('client_id='.$self->{_clientID}.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
+	my $res = $self->{_ua}->request($req);
+
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+ 	 open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+ 	 print LOG $req->as_string;
+ 	 print LOG $res->as_string;
+ 	 close(LOG);
+	}
+
+	my $token;
+	my $refreshToken;
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+
+	  	my $block = $res->as_string;
+
+		($token) = $block =~ m%\"access_token\"\:\"([^\"]+)\"%;
+		($refreshToken) = $block =~ m%\"refresh_token\"\:\"([^\"]+)\"%;
+
+	}else{
+		#print STDOUT $res->as_string;
+		die ($res->as_string."error in loading page");}
+
+	if ($token ne '' and $refreshToken ne ''){
+		$self->{_token} = $token;
+		$self->{_refreshToken} = $refreshToken;
+	}
+		return ($self->{_token},$self->{_refreshToken});
+
+
+}
 sub getList(*$){
 
   my $self = shift;
@@ -305,21 +349,18 @@ if($res->is_success){
 sub uploadFile(*$$$$){
 
   my $self = shift;
-  my $URL = shift;
   my $chunk = shift;
   my $chunkSize = shift;
   my $chunkRange = shift;
   my $filetype = shift;
 
 
-my $req = new HTTP::Request PUT => $URL;
+my $req = new HTTP::Request PUT => 'https://api.onedrive.com/v1.0/drive/root:/TEST.txt:/content';
 $req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-$req->header('GData-Version' => '3.0');
-$req->content_type($filetype);
+$req->header('Authorization' => 'bearer '.$self->{_token});
+$req->content_type('application/octet-stream');
 $req->content_length($chunkSize);
-$req->header('Content-Range' => $chunkRange);
+#$req->header('Content-Range' => $chunkRange);
 $req->content($$chunk);
 my $res = $self->{_ua}->request($req);
 

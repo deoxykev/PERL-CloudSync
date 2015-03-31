@@ -145,6 +145,9 @@ sub uploadLargeFile(*$$$){
       	print STDOUT "\r"  . $status;
 	    if ($status eq '0'){
 	    	print STDERR "...retry\n";
+ 	 		my ($token,$refreshToken) = $self->{_oneDrive}->refreshToken($code);
+	  		$self->{_login_dbm}->writeLogin( pDrive::Config->USERNAME,$token,$refreshToken);
+
         	sleep (5);
         	$retrycount++;
 	    }

@@ -153,7 +153,7 @@ sub uploadLargeFile(*$$$){
 	    }
 
 	}
-    masterLog("retry failed $file\n") if ($retrycount >= 5);
+    pDrive::masterLog("retry failed $file\n") if ($retrycount >= 5);
 
   	$fileID=$status;
     $pointerInFile += $chunkSize;

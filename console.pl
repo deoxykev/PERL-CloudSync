@@ -640,7 +640,7 @@ while (my $input = <$userInput>){
 	      			}
 
     			}
-	    		masterLog("retry failed $fileList[$i]\n") if ($retrycount >= 5);
+	    		pDrive::masterLog("retry failed $fileList[$i]\n") if ($retrycount >= 5);
 
     			$fileID=$status;
 		    	$pointerInFile += $chunkSize;

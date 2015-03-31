@@ -482,7 +482,7 @@ sub createFile(*$$){
 	my $path = shift;
 	my $filename = shift;
 
-	my $req = new HTTP::Request POST  => API_URL . '/drive/'.$path.':/'.$filename.':/upload.createSession';
+	my $req = new HTTP::Request POST  => API_URL . '/drive/root:/'.$path.'/'.$filename.':/upload.createSession';
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'bearer '.$self->{_token});
 	$req->content_length(0);

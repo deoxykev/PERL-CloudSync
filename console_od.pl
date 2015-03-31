@@ -224,51 +224,6 @@ $service = pDrive::oneDrive->new();
 
 					$service->uploadFile($fileList[$i], 'new', $fileName);
 
-
-  					my $fileSize =  -s $fileList[$i];
-  					print STDOUT "file size for $fileList[$i] is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
-
-  					my $uploadURL = $service->createFile($createFileURL,$fileSize,$fileName,$filetype);
-
-
-  					my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
-					my $pointerInFile=0;
-  					print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  					open(INPUT, "<".$fileList[$i]) or die ('cannot read file '.$fileList[$i]);
-
-  					binmode(INPUT);
-
-  					print STDERR 'uploading chunks [' . $chunkNumbers.  "]...\n";
-  					my $fileID=0;
-  					for (my $i=0; $i < $chunkNumbers; $i++){
-			    		my $chunkSize = CHUNKSIZE;
-		    			my $chunk;
-    					if ($i == $chunkNumbers-1){
-	      					$chunkSize = $fileSize - $pointerInFile;
-    					}
-
-    					sysread INPUT, $chunk, CHUNKSIZE;
-    					print STDERR "\r".$i . '/'.$chunkNumbers;
-    					my $status=0;
-    					my $retrycount=0;
-    					while ($status eq '0' and $retrycount < 5){
-				    		$status = $service->$service($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      						print STDOUT "\r"  . $status;
-	      					if ($status eq '0'){
-	        					print STDERR "...retry\n";
-        						sleep (5);
-        						$retrycount++;
-	      					}
-
-    					}
-	    				masterLog("retry failed $fileList[$i]\n") if ($retrycount >= 5);
-
-    					$fileID=$status;
-		    			$pointerInFile += $chunkSize;
-  					}
-  					close(INPUT);
-
-	  				print STDOUT "\n";
 	    		}
     		}
   		}

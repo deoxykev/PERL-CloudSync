@@ -15,7 +15,7 @@ use constant FOLDER_SUBFOLDER => 3;
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 #my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 
-sub new(*$$$) {
+sub new(*) {
 
 	my $self = {_oneDrive => undef,
               _listURL => undef,
@@ -24,12 +24,10 @@ sub new(*$$$) {
 
   	my $class = shift;
   	bless $self, $class;
-  	my $username  = shift;
-  	my $clientID = shift;
-  	my $clientSecret = shift;
+	my $username = pDrive::Config->USERNAME;
 
   	# initialize web connections
-  	$self->{_oneDrive} = pDrive::OneDriveAPI1->new($clientID,$clientSecret);
+  	$self->{_oneDrive} = pDrive::OneDriveAPI1->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
 
   	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
   	$self->{_login_dbm} = $loginsDBM;
@@ -38,7 +36,7 @@ sub new(*$$$) {
 	# no token defined
 	if ($token eq '' or  $refreshToken  eq ''){
 		my $code;
-		my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.$clientID . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
+		my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.pDrive::Config->CLIENT_ID . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
 		print STDOUT "visit $URL\n";
 		print STDOUT 'Input Code:';
 		$code = <>;
@@ -60,7 +58,7 @@ sub new(*$$$) {
   	#$self->{_oneDrive}->getList('https://api.onedrive.com/v1.0/drive/root/children');#?access_token='.$token);
 
 	#simple file
-  	$self->uploadFile('/u01/pdrive/Test/ALF - 01x12 - Oh, Tannerbaum.avi', 'root','ALF.avi');
+  	#$self->uploadFile('/u01/pdrive/dtl_shattered_1_130705.flv', 'root','dtl_shattered_1_130705.flvi');
 	#complex file
   	#$self->uploadFile('/tmp/TEST.txt');
 
@@ -89,7 +87,8 @@ sub uploadFile(*$$$){
 	# get filesize
 	my $fileSize = -s $file;
 
-	if ($fileSize < 100000000){
+#	if ($fileSize < 100000000){
+	if ($fileSize < 1000){
 		$self->uploadSimpleFile($file, $path, $filename);
 	}else{
 		$self->uploadLargeFile($file, $path, $filename);
@@ -119,11 +118,11 @@ sub uploadLargeFile(*$$$){
 
     my $URL = $self->{_oneDrive}->createFile($path, $filename);
 
-
 	# calculate the number of chunks
 	my $chunkNumbers = int($fileSize/(pDrive::Config->CHUNKSIZE))+1;
 	my $pointerInFile=0;
 	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
+  	my $fileID=0;
 	for (my $i=0; $i < $chunkNumbers; $i++){
 		my $chunkSize = pDrive::Config->CHUNKSIZE;
     	my $chunk;
@@ -131,19 +130,36 @@ sub uploadLargeFile(*$$$){
       		$chunkSize = $fileSize - $pointerInFile;
     	}
 	# read chunk from file
-    read INPUT, $chunk, $chunkSize;
+    #read INPUT, $chunk, $chunkSize;
+    sysread INPUT, $chunk, $chunkSize;
 
    	# - don't slurp the entire file
 	#$chunk = substr($fileContents, $pointerInFile, $chunkSize);
 
-    print STDOUT 'uploading chunk ' . $i.  "\n";
-    $self->{_oneDrive}->uploadFile($URL, \$chunk, $chunkSize, 'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$path, $filename);
+    print STDERR "\r".$i . '/'.$chunkNumbers;
+    my $status=0;
+	my $retrycount=0;
+	while ($status eq '0' and $retrycount < 5){
+		$status = $self->{_oneDrive}->uploadFile($URL, \$chunk, $chunkSize, 'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$path, $filename);
+      	print STDOUT "\r"  . $status;
+	    if ($status eq '0'){
+	    	print STDERR "...retry\n";
+        	sleep (5);
+        	$retrycount++;
+	    }
+
+	}
+    masterLog("retry failed $file\n") if ($retrycount >= 5);
+
+  	$fileID=$status;
     $pointerInFile += $chunkSize;
 
   }
   close(INPUT);
 
 }
+
+
 sub uploadSimpleFile(*$$$){
 
 	my $self = shift;

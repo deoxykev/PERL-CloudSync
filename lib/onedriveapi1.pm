@@ -438,7 +438,7 @@ sub uploadEntireFile(*$$$$){
 
 
 
-my $req = new HTTP::Request PUT => API_URL .'/drive/'.$path.':/'.$filename.':/content';
+my $req = new HTTP::Request PUT => API_URL .'/drive/root:/'.$path.'/'.$filename.':/content';
 $req->protocol('HTTP/1.1');
 $req->header('Authorization' => 'bearer '.$self->{_token});
 $req->content_type('application/octet-stream');
@@ -482,9 +482,11 @@ sub createFile(*$$){
 	my $path = shift;
 	my $filename = shift;
 
-	my $req = new HTTP::Request GET => API_URL . '/drive/'.$path.':/'.$filename.':/upload.createSession';
+	my $req = new HTTP::Request POST  => API_URL . '/drive/'.$path.':/'.$filename.':/upload.createSession';
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'bearer '.$self->{_token});
+	$req->content_length(0);
+	$req->content('');
 	my $res = $self->{_ua}->request($req);
 
 	my $uploadURL;
@@ -492,7 +494,7 @@ sub createFile(*$$){
 
   		my $block = $res->as_string;
 
-  		($uploadURL) = $block = m%\"uploadUrl\"\: \"([^\"]+)\"%;
+  		($uploadURL) = $block =~ m%\"uploadUrl\"\:\"([^\"]+)\"%;
 		return $uploadURL;
 	}else{
   		print STDERR "error";

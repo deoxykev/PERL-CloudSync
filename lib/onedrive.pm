@@ -42,6 +42,7 @@ sub new(*) {
 		$code = <>;
 		print STDOUT "code = $code\n";
  	  	($token,$refreshToken) = $self->{_oneDrive}->getToken($code);
+	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
 	}else{
 		$self->{_oneDrive}->setToken($token,$refreshToken);
 	}

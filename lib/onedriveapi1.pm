@@ -15,7 +15,7 @@ use constant FOLDER_ROOT => 1;
 use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
-use constant API_URL => 'https://api.onedrive.com/v1.0/';
+use constant API_URL => 'https://api.onedrive.com/v1.0';
 use constant API_VER => 1;
 
 sub new() {
@@ -177,6 +177,8 @@ sub refreshToken(*){
 
 
 }
+
+
 sub getList(*$){
 
   my $self = shift;
@@ -210,6 +212,35 @@ if($res->is_success){
 die($res->as_string."error in loading page");}
 
   return \$res->as_string;
+
+}
+
+
+sub testAccess(*){
+
+  	my $self = shift;
+
+	my $URL = API_URL . '/drives/me';
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+  		return 1;
+
+	}else{
+		#	print STDOUT $res->as_string;
+		return 0;}
+
 
 }
 
@@ -346,21 +377,72 @@ if($res->is_success){
 }
 
 
+###
+# uplad a file in chunks
+##
 sub uploadFile(*$$$$){
+
+	my $self = shift;
+	my $URL = shift;
+ 	my $chunk = shift;
+ 	my $chunkSize = shift;
+ 	my $chunkRange = shift;
+ 	my $path = shift;
+  	my $filename = shift;
+
+
+	my $req = new HTTP::Request PUT => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'bearer '.$self->{_token});
+	$req->content_type('application/octet-stream');
+	$req->content_length($chunkSize);
+	$req->header('Content-Range' => $chunkRange);
+	$req->content($$chunk);
+	my $res = $self->{_ua}->request($req);
+
+
+	if($res->is_success or $res->code == 308){
+  		my $block = $res->as_string;
+		my ($resourceType,$resourceID);
+		while (my ($line) = $block =~ m%([^\n]*)\n%){
+			$block =~ s%[^\n]*\n%%;
+
+		    if ($line =~ m%\"id\"\: \"%){
+	    		($resourceID) = $line =~ m%\"id\"\: \"([\"]+)\"%;
+	   	 	}
+
+		}
+
+ 	 	return $resourceID;
+	}else{
+  		print STDERR "error";
+  		print STDOUT $req->headers_as_string;
+  		print STDOUT $res->as_string;
+  		return 0;
+	}
+
+
+}
+
+
+###
+# uplad an entire file (< 100MB)
+##
+sub uploadEntireFile(*$$$$){
 
   my $self = shift;
   my $chunk = shift;
-  my $chunkSize = shift;
-  my $chunkRange = shift;
-  my $filetype = shift;
+  my $fileSize = shift;
+  my $path = shift;
+  my $filename = shift;
 
 
-my $req = new HTTP::Request PUT => 'https://api.onedrive.com/v1.0/drive/root:/TEST.txt:/content';
+
+my $req = new HTTP::Request PUT => API_URL .'/drive/'.$path.':/'.$filename.':/content';
 $req->protocol('HTTP/1.1');
 $req->header('Authorization' => 'bearer '.$self->{_token});
 $req->content_type('application/octet-stream');
-$req->content_length($chunkSize);
-#$req->header('Content-Range' => $chunkRange);
+$req->content_length($fileSize);
 $req->content($$chunk);
 my $res = $self->{_ua}->request($req);
 
@@ -373,14 +455,10 @@ if($res->is_success or $res->code == 308){
 
 		$block =~ s%[^\n]*\n%%;
 
-	    if ($line =~ m%\<gd\:resourceId\>%){
-	    	($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-	    }
-
 	}
 
 
-  return $resourceID;
+  return 1;
 }else{
   print STDERR "error";
   print STDOUT $req->headers_as_string;
@@ -393,66 +471,32 @@ if($res->is_success or $res->code == 308){
 
 
 
-sub createFile(*$$$$){
+###
+# create a file upload session
+# return: URL to upload file segments
+# error: return 0
+##
+sub createFile(*$$){
 
 	my $self = shift;
-  	my $URL = shift;
-  	my $fileSize = shift;
-  	my $file = shift;
-  	my $fileType = shift;
+	my $path = shift;
+	my $filename = shift;
 
-
-  	my $content = '<?xml version="1.0" encoding="UTF-8"?>
-	<entry xmlns="http://www.w3.org/2005/Atom" xmlns:docs="http://schemas.google.com/docs/2007">
-  	<title>'.$file.'</title>
-	</entry>'."\n\n";
-
-#  convert=false prevents plain/text from becoming docs
-	my $req = new HTTP::Request POST => $URL.'?convert=false';
+	my $req = new HTTP::Request GET => API_URL . '/drive/'.$path.':/'.$filename.':/upload.createSession';
 	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
-#	$req->header('X-Upload-Content-Type' => 'application/pdf');
-	$req->header('X-Upload-Content-Type' => $fileType);
-	$req->header('X-Upload-Content-Length' => $fileSize);
-	$req->content_length(length $content);
-	$req->content_type('application/atom+xml');
-	$req->content($content);
-
+	$req->header('Authorization' => 'bearer '.$self->{_token});
 	my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+	my $uploadURL;
+	if($res->is_success or $res->code == 308){
 
   		my $block = $res->as_string;
 
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-#		    if ($line =~ m%\<gd\:resourceId\>%){
-#		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-#
-#	      		return $resourceID;
- #   		}
-
-		    if ($line =~ m%^Location:%){
-      			($URL) = $line =~ m%^Location:\s+(\S+)%;
-	      		return $URL;
-    		}
-
-  		}
-
+  		($uploadURL) = $block = m%\"uploadUrl\"\: \"([^\"]+)\"%;
+		return $uploadURL;
 	}else{
-		print STDOUT $req->as_string;
+  		print STDERR "error";
+  		print STDOUT $req->headers_as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -677,12 +721,6 @@ if($res->is_success){
 
 }
 
-
-sub fixServerMD5(**){
-  my $self = shift;
-  my $memoryHash = shift;
-
-}
 
 sub readDriveListings(***){
 

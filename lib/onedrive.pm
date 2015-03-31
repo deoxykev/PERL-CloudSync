@@ -48,15 +48,23 @@ sub new(*$$$) {
 		$self->{_oneDrive}->setToken($token,$refreshToken);
 	}
 
- 	 #($token,$refreshToken) = $self->{_oneDrive}->refreshToken($code);
+	# token expired?
+	if (!($self->{_oneDrive}->testAccess())){
+		# refresh token
+ 	 	($token,$refreshToken) = $self->{_oneDrive}->refreshToken($code);
+	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
+	}
 
-  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
 
   	# get contents
-  	$self->{_oneDrive}->getList('https://api.onedrive.com/v1.0/drive/root/children');#?access_token='.$token);
+  	#$self->{_oneDrive}->getList('https://api.onedrive.com/v1.0/drive/root/children');#?access_token='.$token);
 
-  	$self->uploadFile('/tmp/TEST.txt');
-	return;
+	#simple file
+  	$self->uploadFile('/u01/pdrive/Test/ALF - 01x12 - Oh, Tannerbaum.avi', 'root','ALF.avi');
+	#complex file
+  	#$self->uploadFile('/tmp/TEST.txt');
+
+	return $self;
 
 
 
@@ -66,196 +74,35 @@ sub new(*$$$) {
 
 	my $resourceIDHash = $dbm->constructResourceIDHash($dbase);
 
-
-my $driveListings;
-my $createFileURL;
-
-my $maxTimestamp = $dbm->getLastUpdated($dbase);
-print STDOUT 'maximum timestamp = '.(defined $$maxTimestamp[pDrive::Time->A_DATE]?$$maxTimestamp[pDrive::Time->A_DATE]:'').' '.(defined $$maxTimestamp[pDrive::Time->A_TIMESTAMP]?$$maxTimestamp[pDrive::Time->A_TIMESTAMP]:'')."\n" if (pDrive::Config->DEBUG);
-
-
-if ($$maxTimestamp[pDrive::Time->A_TIMESTAMP] > 0){
-  $self->{_listURL} = $self->{_oneDrive}->getListURL($$maxTimestamp[pDrive::Time->A_DATE]);
-#  $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:2012-08-10';
-}else{
-  $self->{_listURL} = $self->{_oneDrive}->getListURL();
-}
-
-
-
-my %newDocuments;
-my @updatedList;
-#*****
-###
-# read through to
-# 1) build folders
-# 2) gather files to download
-while ($self->{_listURL} ne ''){
-
-  ($driveListings) = $self->{_oneDrive}->getList($self->{_listURL});
-
-  my $nextlistURL = $self->{_oneDrive}->getNextURL($driveListings);
-  if (defined $nextlistURL){
-    $nextlistURL =~ s%\&amp\;%\&%g;
-    $nextlistURL =~ s%\%3A%\:%g;
-  }
-  if (defined $nextlistURL and $nextlistURL eq $self->{_listURL}){
-    print STDERR "reset fetch\n";
-    $self->{_listURL} = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
-    last;
-  }else{
-    $self->{_listURL} = $nextlistURL;
-  }
-
-
-($createFileURL) = $self->{_oneDrive}->getCreateURL($driveListings) if (defined $createFileURL and $createFileURL eq '');
-print STDOUT 'create URL = '.(defined $$createFileURL?$createFileURL:'')."\n" if (pDrive::Config->DEBUG);
-$self->{_listURL} .= '&showfolders=true' if (defined $self->{_listURL} and $self->{_listURL} ne '' and !($self->{_listURL} =~ m%showfolders%));
-
-if (defined $self->{_listURL}){
-  $self->{_listURL} =~ s%\&amp\;%\&%g;
-  $self->{_listURL} =~ s%\%3A%\:%g;
-}
-
-
-%newDocuments = $self->{_oneDrive}->readDriveListings($driveListings,$folders);
-
-
-
-# DEBUG -- print folders
-if ( pDrive::Config->DEBUG){
-
-  foreach my $resourceID (keys %{$folders}){
-
-    if (defined $resourceID and defined $$folders{$resourceID}[FOLDER_ROOT] and $$folders{$resourceID}[FOLDER_ROOT] == IS_ROOT){
-
-      print STDOUT $$folders{$resourceID}[FOLDER_TITLE]. "\n";
-      for (my $i=FOLDER_SUBFOLDER; $i <= $#{${$folders}{$resourceID}}; $i++){
-
-      print STDOUT "\t $$folders{${$folders}{$resourceID}[$i]}[FOLDER_TITLE]\n";
-      pDrive::oneDrive::traverseFolder($$folders{$resourceID}[$i]);
-
-      }
-
-    }
-  }
-}
-
-if (pDrive::Config->DEBUG){
-  foreach my $resourceID (keys %newDocuments){
-
-    print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
-
-  }
-}
-
-
-
-my $count=0;
-foreach my $resourceID (keys %newDocuments){
-
-
-  my @parentArray = (0);
-  my $path =  pDrive::oneDrive::getPath($folders,$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]).$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}];
-
-  print STDOUT "path = $path\n";
-
-    # never existed with this path
-    if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] eq ''){
-      print STDOUT "new $path $resourceID".pDrive::DBM->D->{'server_updated'}." ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]."\n";
-      # never existed before - new file
-      if (pDrive::oneDrive::isNewResourceID($resourceID, \%resourceIDHash)){
-
-        # save file information
-        #$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}];
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_link'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_edit'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_edit'}];
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'type'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'type'}];
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'published'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'published'}];
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'title'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'title'}];
-
-        # file exists locally
-        if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] eq '' and -e pDrive::Config->LOCAL_PATH.'/'.$path){
-
-          my $md5 = pDrive::FileIO::getMD5(pDrive::Config->LOCAL_PATH.'/'.$path);
-          #is it the same as the server? -- skip file
-          if ($newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq $md5 and $md5 ne '0'){
-            print STDOUT 'skipping (found file on local)'. "\n" if (pDrive::Config->DEBUG);
-            $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}];
-            $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}];
-            $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] = $md5;
-        if ($#{$updatedList} >= 0){
-          $updatedList[$#{$updatedList}++] = $path;
-        }else{
-          $updatedList[0] = $path;
-        }
-            $count++;
-          #download the file -- potential conflict
-          }else{
-            print STDOUT 'potential conflict'  . "\n" if (pDrive::Config->DEBUG);
-            pDrive::masterLog("$path $resourceID - potential conflict -- $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] - $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}]");
-            eval {
-            $self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
-            1;
-            } or do {
-              pDrive::masterLog("$path $resourceID - download failedlict -- $@");
-            };
-
-          }
-        # download file
-        }elsif ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] eq '' or $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] eq ''or pDrive::Time::isNewerTimestamp($newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}])){
-          eval {
-          $self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
-            1;
-            } or do {
-              pDrive::masterLog("$path $resourceID - download failedlict -- $@");
-            };
-          $count++;
-        }
-      }else{
-        print STDOUT "existed\n";
-      }
-
-    # file missing local db information only
-#   }elsif($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] ne ''){
-
-    # file is newer on the server; download
-    }elsif (pDrive::Time::isNewerTimestamp($newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],${$dbase}{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}])){
-      print STDOUT "newer on server ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]."\n";
-      $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
-      $self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
-      $count++;
-    # file is newer on the local; upload
-    }elsif (pDrive::Time::isNewerTimestamp(${$dbase}{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}])){
-      print STDOUT "newer on local ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]."\n";
-      $self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
-      $count++;
-
-    }
-
-  $self->{_dbm}->writeHash($dbase,$folders) if ($count % 20==0);
-
-}
-$self->{_dbm}->writeHash($dbase,$folders);
-
-# new values to post to db
-if ($#updatedList >= 0){
-  print STDOUT "updating values DB\n" if (pDrive::Config->DEBUG);
-  $self->{_dbm}->writeHash($dbase,$folders);
-}
-} ####
-
   return $self;
 
 }
 
-use constant CHUNKSIZE => (8*256*1024);
 
-sub uploadFile(*$){
+sub uploadFile(*$$$){
 
 	my $self = shift;
 	my $file = shift;
+	my $path = shift;
+	my $filename = shift;
+
+	# get filesize
+	my $fileSize = -s $file;
+
+	if ($fileSize < 100000000){
+		$self->uploadSimpleFile($file, $path, $filename);
+	}else{
+		$self->uploadLargeFile($file, $path, $filename);
+	}
+
+}
+
+sub uploadLargeFile(*$$$){
+
+	my $self = shift;
+	my $file = shift;
+	my $path = shift;
+	my $filename = shift;
 
 	# get filesize
 	my $fileSize = -s $file;
@@ -270,12 +117,15 @@ sub uploadFile(*$){
 	print STDOUT "file size for $file is $fileSize\n" if (pDrive::Config->DEBUG);
 
 
+    my $URL = $self->{_oneDrive}->createFile($path, $filename);
+
+
 	# calculate the number of chunks
-	my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
+	my $chunkNumbers = int($fileSize/(pDrive::Config->CHUNKSIZE))+1;
 	my $pointerInFile=0;
 	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
 	for (my $i=0; $i < $chunkNumbers; $i++){
-		my $chunkSize = CHUNKSIZE;
+		my $chunkSize = pDrive::Config->CHUNKSIZE;
     	my $chunk;
     	if ($i == $chunkNumbers-1){
       		$chunkSize = $fileSize - $pointerInFile;
@@ -287,11 +137,32 @@ sub uploadFile(*$){
 	#$chunk = substr($fileContents, $pointerInFile, $chunkSize);
 
     print STDOUT 'uploading chunk ' . $i.  "\n";
-    $self->{_oneDrive}->uploadFile(\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
+    $self->{_oneDrive}->uploadFile($URL, \$chunk, $chunkSize, 'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$path, $filename);
     $pointerInFile += $chunkSize;
 
   }
   close(INPUT);
+
+}
+sub uploadSimpleFile(*$$$){
+
+	my $self = shift;
+	my $file = shift;
+	my $path = shift;
+	my $filename = shift;
+
+	# get filesize
+	my $fileSize = -s $file;
+
+	open(INPUT, "<".$file) or die ('cannot read file '.$file);
+	binmode(INPUT);
+	my $fileContents = do { local $/; <INPUT> };
+  	close(INPUT);
+
+    print STDOUT 'uploading entire file '. "\n";
+    $self->{_oneDrive}->uploadEntireFile(\$fileContents,$fileSize, $path, $filename);
+
+
 
 }
 

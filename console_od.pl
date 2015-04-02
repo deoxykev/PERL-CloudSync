@@ -170,14 +170,16 @@ $service = pDrive::oneDrive->new();
 
   		if($input =~ m%^exit%i or$input =~ m%^quit%i){
   			last;
-  		}elsif($input =~ m%^help%i or $input =~ m%\?%i){
+
+  		}elsif($input =~ m%^help%){
     		print STDERR HELP;
 		   # 	run system os commands
   		}elsif($input =~ m%^run\s[^\n]+\n%i){
 
-    	my ($os_command) = $input =~ m%^run\s([^\n]+)\n%;
+	    	my ($os_command) = $input =~ m%^run\s([^\n]+)\n%;
     		print STDOUT "running $os_command\n";
     		print STDOUT `$os_command`;
+
 		}elsif($input =~ m%^dump dbm%i){
 
     		my ($parameter) = $input =~ m%^dump dbm\s+(\S+)%i;
@@ -201,7 +203,12 @@ $service = pDrive::oneDrive->new();
 
 			$service->uploadFile('/tmp/TEST.txt', 'uploaded', 'TEST.txt');
 			print STDOUT "complete\n";
-	  }elsif($input =~ m%^upload dir list%i){
+		}elsif($input =~ m%^upload url%i){
+    		my ($filename,$URL) = $input =~ m%^upload url \"([^\"]+)\" ([^\n]+)\n%;
+			my $statusURL = $service->uploadRemoteFile($URL,'',$filename);
+			print STDOUT $statusURL . "\n";
+
+	  	}elsif($input =~ m%^upload dir list%i){
     		my ($list) = $input =~ m%^upload dir list\s([^\n]+)\n%;
 
 			open (LIST, '<./'.$list) or  die ('cannot read file ./'.$list);
@@ -226,7 +233,9 @@ $service = pDrive::oneDrive->new();
 
 	    		}
     		}
-  		}
+	  	}
+	  	print STDERR '>';
+
 	}
 
 

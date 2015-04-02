@@ -97,6 +97,19 @@ sub uploadFile(*$$$){
 
 }
 
+
+sub uploadRemoteFile(*$$$){
+
+	my $self = shift;
+	my $URL = shift;
+	my $path = shift;
+	my $filename = shift;
+
+	return $self->{_oneDrive}->uploadRemoteFile($URL, $path, $filename);
+
+}
+
+
 sub uploadLargeFile(*$$$){
 
 	my $self = shift;

@@ -505,6 +505,54 @@ sub createFile(*$$){
 
 }
 
+
+###
+#
+#
+#
+##
+sub uploadRemoteFile(*$$$){
+
+	my $self = shift;
+	my $URL = shift;
+	my $path = shift;
+	my $filename = shift;
+
+	my $req = new HTTP::Request POST  => API_URL . '/drive/root/children';
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'bearer '.$self->{_token});
+#	$req->content_length(0);
+	$req->header('Prefer' => 'respond-async');
+	$req->header('Content-Type' => 'application/json');
+	$req->content('{
+  "@content.sourceUrl": "'.$URL.'",
+  "name": "'.$filename.'",
+  "file":  {}
+}');
+	my $res = $self->{_ua}->request($req);
+
+	my $uploadURL;
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+	if($res->is_success or $res->code == 308){
+
+  		my $block = $res->as_string;
+
+  		my ($statusURL) = $block =~ m%Location\:\s?([^\n]+)%;
+		return $statusURL;
+	}else{
+  		print STDERR "error";
+  		print STDOUT $req->headers_as_string;
+  		print STDOUT $res->as_string;
+  		return 0;
+	}
+
+}
 sub createFolder(*$$){
 
 	my $self = shift;

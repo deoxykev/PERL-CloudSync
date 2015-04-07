@@ -57,8 +57,8 @@ use lib "$FindBin::Bin/../lib";
 require 'lib/dbm.pm';
 require 'lib/time.pm';
 require 'lib/fileio.pm';
-require 'lib/gdrive.pm';
-require './lib/googledocsapi3.pm';
+require 'lib/gdrive_drive.pm';
+require './lib/googledriveapi2.pm';
 
 
 
@@ -142,12 +142,14 @@ use constant HELP => q{
 
 my $dbm = pDrive::DBM->new();
 my ($dbase,$folders) = $dbm->readHash();
-my $gdrive;
+my $service;
 my $currentURL;
 my $nextURL;
 my $driveListings;
 my $createFileURL;
 my $loggedInUser = '';
+
+$service = pDrive::gDrive->new();
 
 
 # authenticate as provided as argument
@@ -159,19 +161,19 @@ if ($opt{u} ne '' and $opt{p} ne ''){
   	$password = <INPUT>;
     close(INPUT);
 
-    $gdrive = pDrive::GoogleDocsAPI3->new();
-    $gdrive->authenticate($username,$password);
+    $service = pDrive::GoogleDocsAPI3->new();
+    $service->authenticate($username,$password);
 
-    ($driveListings) = $gdrive->getList($gdrive->getListURL());
+    ($driveListings) = $service->getList($service->getListURL());
 
     #
     # for creating new files
     ##
-  	my ($nextlistURL) = $gdrive->getNextURL($driveListings);
+  	my ($nextlistURL) = $service->getNextURL($driveListings);
   	$nextlistURL =~ s%\&amp\;%\&%g;
   	$nextlistURL =~ s%\%3A%\:%g;
 
-  	($createFileURL) = $gdrive->getCreateURL($driveListings);
+  	($createFileURL) = $service->getCreateURL($driveListings);
   	print "Create File URL = ".$createFileURL . "\n";
 
     ##
@@ -231,9 +233,9 @@ while (my $input = <$userInput>){
 
   }elsif($input =~ m%^get drive list%i){
     my $listURL;
-    ($driveListings) = $gdrive->getList($gdrive->getListURL());
+    ($driveListings) = $service->getList($service->getListURL());
 
-  	my ($nextlistURL) = $gdrive->getNextURL($driveListings);
+  	my ($nextlistURL) = $service->getNextURL($driveListings);
   	$nextlistURL =~ s%\&amp\;%\&%g;
   	$nextlistURL =~ s%\%3A%\:%g;
 
@@ -244,21 +246,21 @@ while (my $input = <$userInput>){
 	    $listURL = $nextlistURL;
   	}
 
-  	($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
+  	($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
   	print "Create File URL = ".$createFileURL . "\n";
-  	my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
+  	my %newDocuments = $service->readDriveListings($driveListings,$folders);
 
   	foreach my $resourceID (keys %newDocuments){
     	print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
 	}
 
   }elsif($input =~ m%^get drive all%i){
-    my $listURL = $gdrive->getListURL();
+    my $listURL = $service->getListURL();
 
     while ($listURL ne ''){
-    ($driveListings) = $gdrive->getList($listURL);
+    ($driveListings) = $service->getList($listURL);
 
-  	my ($nextlistURL) = $gdrive->getNextURL($driveListings);
+  	my ($nextlistURL) = $service->getNextURL($driveListings);
   	$nextlistURL =~ s%\&amp\;%\&%g;
   	$nextlistURL =~ s%\%3A%\:%g;
 
@@ -269,7 +271,7 @@ while (my $input = <$userInput>){
 	    $listURL = $nextlistURL;
   	}
 
-  	my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
+  	my %newDocuments = $service->readDriveListings($driveListings,$folders);
 
   	foreach my $resourceID (keys %newDocuments){
     	print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
@@ -283,9 +285,9 @@ while (my $input = <$userInput>){
 
    	while(1){
 
-   		($driveListings) = $gdrive->getList($listURL);
+   		($driveListings) = $service->getList($listURL);
 
-  		my $nextlistURL = $gdrive->getNextURL($driveListings);
+  		my $nextlistURL = $service->getNextURL($driveListings);
   		$nextlistURL =~ s%\&amp\;%\&%g;
   		$nextlistURL =~ s%\%3A%\:%g;
 
@@ -293,8 +295,8 @@ while (my $input = <$userInput>){
 
 
 
-  		($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
-  		my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
+  		($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
+  		my %newDocuments = $service->readDriveListings($driveListings,$folders);
 
   		foreach my $resourceID (keys %newDocuments){
 		    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
@@ -320,9 +322,9 @@ while (my $input = <$userInput>){
 
    	while(1){
 
-   		($driveListings) = $gdrive->getList($listURL);
+   		($driveListings) = $service->getList($listURL);
 
-  		my $nextlistURL = $gdrive->getNextURL($driveListings);
+  		my $nextlistURL = $service->getNextURL($driveListings);
   		$nextlistURL =~ s%\&amp\;%\&%g;
   		$nextlistURL =~ s%\%3A%\:%g;
 
@@ -330,8 +332,8 @@ while (my $input = <$userInput>){
 
 
 
-  		($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
-  		my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
+  		($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
+  		my %newDocuments = $service->readDriveListings($driveListings,$folders);
 
   		foreach my $resourceID (keys %newDocuments){
 		    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
@@ -342,7 +344,7 @@ while (my $input = <$userInput>){
 
   	foreach my $resourceID (sort keys %sortedDocuments){
 	    print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
-	    $gdrive->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
+	    $service->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
   	}
 
  }elsif($input =~ m%^download all%i){
@@ -352,9 +354,9 @@ while (my $input = <$userInput>){
 
    	while(1){
 
-   		($driveListings) = $gdrive->getList($listURL);
+   		($driveListings) = $service->getList($listURL);
 
-  		my $nextlistURL = $gdrive->getNextURL($driveListings);
+  		my $nextlistURL = $service->getNextURL($driveListings);
   		$nextlistURL =~ s%\&amp\;%\&%g;
   		$nextlistURL =~ s%\%3A%\:%g;
 
@@ -362,8 +364,8 @@ while (my $input = <$userInput>){
 
 
 
-  		($createFileURL) = $gdrive->getCreateURL($driveListings) if ($createFileURL eq '');
-  		my %newDocuments = $gdrive->readDriveListings($driveListings,$folders);
+  		($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
+  		my %newDocuments = $service->readDriveListings($driveListings,$folders);
 
   		foreach my $resourceID (keys %newDocuments){
 		    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
@@ -374,7 +376,7 @@ while (my $input = <$userInput>){
 
   	foreach my $resourceID (sort keys %sortedDocuments){
 	    print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
-	    $gdrive->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
+	    $service->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
   	}
 
 
@@ -383,7 +385,7 @@ while (my $input = <$userInput>){
   ###
   }elsif($input =~ m%^bind\s[^\s]+%i){
     my ($IP) = $input =~ m%^bind\s([^\s]+)%i;
-    $gdrive->bindIP($IP);
+    $service->bindIP($IP);
     $loggedInUser .= '-' .$IP;
 
   ##
@@ -391,19 +393,19 @@ while (my $input = <$userInput>){
   ###
   }elsif($input =~ m%^authenticate\s[^\s]+\s[^\s]+%i){
     my ($username, $password) = $input =~ m%^authenticate\s([^\s]+)\s([^\s]+)%i;
-    $gdrive = pDrive::GoogleDocsAPI3->new();
-    $gdrive->authenticate($username,$password);
+    $service = pDrive::GoogleDocsAPI3->new();
+    $service->authenticate($username,$password);
 
-    ($driveListings) = $gdrive->getList($gdrive->getListURL());
+    ($driveListings) = $service->getList($service->getListURL());
 
     #
     # for creating new files
     ##
-  	my ($nextlistURL) = $gdrive->getNextURL($driveListings);
+  	my ($nextlistURL) = $service->getNextURL($driveListings);
   	$nextlistURL =~ s%\&amp\;%\&%g;
   	$nextlistURL =~ s%\%3A%\:%g;
 
-  	($createFileURL) = $gdrive->getCreateURL($driveListings);
+  	($createFileURL) = $service->getCreateURL($driveListings);
   	print "Create File URL = ".$createFileURL . "\n";
 
     ##
@@ -412,7 +414,7 @@ while (my $input = <$userInput>){
   }elsif($input =~ m%^create dir\s[^\n]+\n%i){
     my ($dir) = $input =~ m%^create dir\s([^\n]+)\n%;
 
-  	my $folderID = $gdrive->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$dir);
+  	my $folderID = $service->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$dir);
     print "resource ID = " . $folderID . "\n";
 
 
@@ -423,7 +425,7 @@ while (my $input = <$userInput>){
   my $filetype = 'application/pdf';
   print STDOUT "file size for $file is $fileSize\n" if (pDrive::Config->DEBUG);
 
-  my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$file,$filetype);
+  my $uploadURL = $service->createFile($createFileURL,$fileSize,$file,$filetype);
 
   my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
   my $pointerInFile=0;
@@ -441,7 +443,7 @@ while (my $input = <$userInput>){
     }
     sysread INPUT, $chunk, CHUNKSIZE;
     print STDOUT 'uploading chunk ' . $i.  "\n";
-    $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+    $service->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
     print STDOUT 'next location = '.$uploadURL."\n";
     $pointerInFile += $chunkSize;
   }
@@ -451,7 +453,7 @@ while (my $input = <$userInput>){
   }elsif($input =~ m%^upload list%i){
 
 
-#    my $uploadURL = $gdrive->createFile($createFileURL);
+#    my $uploadURL = $service->createFile($createFileURL);
 #    my $file = '/tmp/test_receipt.pdf';
 
     open (LIST, "<./list.txt") or  die ('cannot read file list.txt');
@@ -471,7 +473,7 @@ while (my $input = <$userInput>){
 #  my $fileSize = length $fileContents;
 #  print STDOUT "file size for $file is $fileSize\n" if (pDrive::Config->DEBUG);
 #
-#  my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$file,$filetype);
+#  my $uploadURL = $service->createFile($createFileURL,$fileSize,$file,$filetype);
 #
 #  my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
 #  my $pointerInFile=0;
@@ -485,7 +487,7 @@ while (my $input = <$userInput>){
 #    }
 #    $chunk = substr($fileContents, $pointerInFile, $chunkSize);
 #    print STDOUT 'uploading chunk ' . $i.  "\n";
-#    $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+#    $service->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
 #    print STDOUT 'next location = '.$uploadURL."\n";
 #    $pointerInFile += $chunkSize;
 #  }
@@ -493,7 +495,7 @@ while (my $input = <$userInput>){
 	  	my $fileSize =  -s "$path/$file";
 	  	print STDOUT "file size for $file is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
 
-  		my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$file,$filetype);
+  		my $uploadURL = $service->createFile($createFileURL,$fileSize,$file,$filetype);
 
   		my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
   		my $pointerInFile=0;
@@ -513,7 +515,7 @@ while (my $input = <$userInput>){
     		print STDERR $i;
     		my $status=0;
     		while ($status == 0){
-	      		$status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+	      		$status = $service->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
     	  		if ($status == 0){
         			print STDERR "retry\n";
         			sleep (5);
@@ -547,7 +549,7 @@ while (my $input = <$userInput>){
   	my $filetype = 'text/plain';
   	print STDOUT "file size for $fullPath is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
 
-  	my $uploadURL = $gdrive->editFile($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_edit'}],$fileSize,$fullPath,$filetype);
+  	my $uploadURL = $service->editFile($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_edit'}],$fileSize,$fullPath,$filetype);
 
   	my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
   	my $pointerInFile=0;
@@ -567,7 +569,7 @@ while (my $input = <$userInput>){
     	print STDERR $i;
     	my $status=0;
     	while ($status == 0){
-      		$status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+      		$status = $service->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
       		if ($status == 0){
         		print STDERR "retry\n";
         		sleep (5);
@@ -595,7 +597,7 @@ while (my $input = <$userInput>){
     	my @fileList = pDrive::FileIO::getFilesDir($dir);
 
 	    print STDOUT "folder = $folder\n";
-	  	my $folderID = $gdrive->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
+	  	my $folderID = $service->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
 	    print "resource ID = " . $folderID . "\n";
 
     	for (my $i=0; $i <= $#fileList; $i++){
@@ -607,7 +609,7 @@ while (my $input = <$userInput>){
   			my $filetype = 'application/octet-stream';
   			print STDOUT "file size for $fileList[$i] is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
 
-  			my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$fileName,$filetype);
+  			my $uploadURL = $service->createFile($createFileURL,$fileSize,$fileName,$filetype);
 
 
   			my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
@@ -631,7 +633,7 @@ while (my $input = <$userInput>){
     			my $status=0;
     			my $retrycount=0;
     			while ($status eq '0' and $retrycount < 5){
-				    $status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+				    $status = $service->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
       				print STDOUT "\r"  . $status;
 	      			if ($status eq '0'){
 	        			print STDERR "...retry\n";
@@ -646,8 +648,8 @@ while (my $input = <$userInput>){
 		    	$pointerInFile += $chunkSize;
   			}
   			close(INPUT);
-  	    	$gdrive->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
-  	    	$gdrive->deleteFile('root',$fileID);
+  	    	$service->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
+  	    	$service->deleteFile('root',$fileID);
 
 	  		print STDOUT "\n";
 	    }
@@ -662,7 +664,7 @@ while (my $input = <$userInput>){
     my @fileList = pDrive::FileIO::getFilesDir($dir);
 
     print STDOUT "folder = $folder\n";
-  	my $folderID = $gdrive->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
+  	my $folderID = $service->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
     print "resource ID = " . $folderID . "\n";
 
     for (my $i=0; $i <= $#fileList; $i++){
@@ -674,7 +676,7 @@ while (my $input = <$userInput>){
   		my $filetype = 'application/octet-stream';
   		print STDOUT "file size for $fileList[$i] is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
 
-  		my $uploadURL = $gdrive->createFile($createFileURL,$fileSize,$fileName,$filetype);
+  		my $uploadURL = $service->createFile($createFileURL,$fileSize,$fileName,$filetype);
 
 
   		my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
@@ -698,7 +700,7 @@ while (my $input = <$userInput>){
     		my $status=0;
     		my $retrycount=0;
     		while ($status eq '0' and $retrycount < 5){
-			    $status = $gdrive->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+			    $status = $service->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
       			print STDOUT $status . "\n";
 	      		if ($status eq '0'){
         			print STDERR "retry\n";
@@ -713,8 +715,8 @@ while (my $input = <$userInput>){
 		    $pointerInFile += $chunkSize;
   		}
   		close(INPUT);
-  	    $gdrive->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
-  	    $gdrive->deleteFile('root',$fileID);
+  	    $service->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
+  	    $service->deleteFile('root',$fileID);
 
   		print STDOUT "\n";
     }
@@ -734,9 +736,9 @@ while (my $input = <$userInput>){
 
   }elsif($input =~ m%^get current%i){
 
-    my ($driveListings) = $gdrive->getList($currentURL);
+    my ($driveListings) = $service->getList($currentURL);
 
-    ($nextURL) = $gdrive->getNextURL($driveListings);
+    ($nextURL) = $service->getNextURL($driveListings);
     $nextURL =~ s%\&amp\;%\&%g;
     $nextURL =~ s%\%3A%\:%g;
     $nextURL .= '&showfolders=true' if ($nextURL ne '' and !($nextURL =~ m%showfolders%));

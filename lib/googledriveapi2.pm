@@ -1,4 +1,4 @@
-package pDrive::GoogleDocsAPI3;
+package pDrive::GoogleDriveAPI2;
 
 use HTTP::Cookies;
 #use HTML::Form;
@@ -15,44 +15,54 @@ use constant FOLDER_ROOT => 1;
 use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
+use constant API_URL => 'https://www.googleapis.com/drive/v2/';
+use constant API_VER => 2;
+
 
 
 sub new() {
 
-  my $self = {_ident => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; Q312461)",
+	my $self = {_ident => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; Q312461)",
               _ua => undef,
               _cookiejar => undef,
-              _authwise => undef,
-              _authwritely => undef};
+              _clientID => undef,
+              _clientSecret => undef,
+              _refreshToken  => undef,
+              _token => undef};
 
-  bless $self, $_[0];
+  	my $class = shift;
+  	bless $self, $class;
+  	my $clientID = shift;
+	my $clientSecret = shift;
+	$self->{_clientID} = $clientID;
+	$self->{_clientSecret} = $clientSecret;
 
-  ######
-  #  Useragent
-  ###
+  	######
+  	#  Useragent
+  	###
 
-  # this gets logged, so it should be representative
+  	# this gets logged, so it should be representative
 
-  # Create a user agent object
-  $self->{_ua} = new LWP::UserAgent;	# call the constructor method for this object
+  	# Create a user agent object
+  	$self->{_ua} = new LWP::UserAgent;	# call the constructor method for this object
 
-  $self->{_ua}->agent($self->{_ident});		# set the identity
-  $self->{_ua}->timeout(30);		# set the timeout
+  	$self->{_ua}->agent($self->{_ident});		# set the identity
+  	$self->{_ua}->timeout(30);		# set the timeout
 
 
-  $self->{_cookiejar} = HTTP::Cookies->new();
-  $self->{_ua}->cookie_jar($self->{_cookiejar});
-#  $self->{_ua}->max_redirect(0);
-#  $self->{_ua}->requests_redirectable([]);
+  	$self->{_cookiejar} = HTTP::Cookies->new();
+  	$self->{_ua}->cookie_jar($self->{_cookiejar});
+	#  $self->{_ua}->max_redirect(0);
+	#  $self->{_ua}->requests_redirectable([]);
 
-  $self->{_ua}->default_headers->push_header('Accept' => "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword, application/xaml+xml, application/vnd.ms-xpsdocument, application/x-ms-xbap, application/x-ms-application, */*");
-  $self->{_ua}->default_headers->push_header('Accept-Language' => "en-us");
-  #$ua->default_headers->push_header('Connection' => "close");
-  $self->{_ua}->default_headers->push_header('Connection' => "keep-alive");
-  $self->{_ua}->default_headers->push_header('Keep-Alive' => "300");
-  #$cookie_jar->load();
+  	$self->{_ua}->default_headers->push_header('Accept' => "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword, application/xaml+xml, application/vnd.ms-xpsdocument, application/x-ms-xbap, application/x-ms-application, */*");
+  	$self->{_ua}->default_headers->push_header('Accept-Language' => "en-us");
+  	#$ua->default_headers->push_header('Connection' => "close");
+  	$self->{_ua}->default_headers->push_header('Connection' => "keep-alive");
+  	$self->{_ua}->default_headers->push_header('Keep-Alive' => "300");
+  	#$cookie_jar->load();
 
-  return $self;
+  	return $self;
 
 }
 
@@ -62,107 +72,139 @@ sub new() {
 ##
 sub bindIP(*$){
 
-  my $self = shift;
-  my $IP = shift;
+	my $self = shift;
+  	my $IP = shift;
 
-  $self->{_ua}->local_address($IP);
+  	$self->{_ua}->local_address($IP);
 
 }
 
 #
-# authenticate (writely and wise)
+# setTokens: access & refresh
 ##
-sub authenticate(*$$){
-  my $self = shift;
-  my $username = shift;
-  my $password = shift;
+sub setToken(*$$){
+	my $self = shift;
+	my $token = shift;
+	my $refreshToken = shift;
 
-my  $URL = 'https://www.google.com/accounts/ClientLogin';
-my $req = new HTTP::Request POST => $URL;
-$req->content_type("application/x-www-form-urlencoded");
-$req->protocol('HTTP/1.1');
-$req->content('Email='.$username.'&Passwd='.$password.'&accountType=HOSTED_OR_GOOGLE&source='.pDrive::Config->APP_NAME.'&service=writely');
-my $res = $self->{_ua}->request($req);
+	$self->{_refreshToken} = $refreshToken;
+	$self->{_token} = $token;
 
-
-my $SID;
-my $LSID;
-
-
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
-
-  my $block = $res->as_string;
-
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    $block =~ s%[^\n]*\n%%;
-
-    if ($line =~ m%^SID%){
-      ($SID) = $line =~ m%SID\=(.*)%;
-    }elsif ($line =~ m%^LSID%){
-      ($LSID) = $line =~ m%LSID\=(.*)%;
-    }elsif ($line =~ m%^Auth%){
-      ($self->{_authwritely}) = $line =~ m%Auth\=(.*)%;
-    }
-
-  }
-  print STDOUT "SID = $SID\n" if pDrive::Config->DEBUG;
-  print STDOUT "LSID = $LSID\n" if pDrive::Config->DEBUG;
-  print STDOUT "AUTH = $self->{_authwritely}\n" if pDrive::Config->DEBUG;
-
-}else{
-#print STDOUT $res->as_string;
-die ($res->as_string."error in loading page");}
-
-
-die("Login failed") unless $self->{_authwritely} ne '';
-
-$req = new HTTP::Request POST => $URL;
-$req->content_type("application/x-www-form-urlencoded");
-$req->protocol('HTTP/1.1');
-$req->content('Email='.$username.'&Passwd='.$password.'&accountType=HOSTED_OR_GOOGLE&source='.pDrive::Config->APP_NAME.'&service=wise');
-$res = $self->{_ua}->request($req);
-
-if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  open (LOG, '>'.pDrive::Config->DEBUG_LOG);
-  print LOG $req->as_string;
-  print LOG $res->as_string;
-  close(LOG);
 }
 
-my $SID_wise;
-my $LSID_wise;
+#
+# getTokens (writely and wise)
+##
+sub getToken(*$){
+	my $self = shift;
+	my $code = shift;
+
+  #https://accounts.google.com/o/oauth2/auth?scope=email%20profile&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=
+	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
+	my $req = new HTTP::Request POST => $URL;
+	$req->content_type("application/x-www-form-urlencoded");
+	$req->protocol('HTTP/1.1');
+	$req->content('code='.$code.'&client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&redirect_uri=urn:ietf:wg:oauth:2.0:oob&grant_type=authorization_code');
+	my $res = $self->{_ua}->request($req);
 
 
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
-  my $block = $res->as_string;
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+ 	 open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+ 	 print LOG $req->as_string;
+ 	 print LOG $res->as_string;
+ 	 close(LOG);
+	}
 
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
+	my $token;
+	my $refreshToken;
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
 
-    $block =~ s%[^\n]*\n%%;
+	  	my $block = $res->as_string;
 
-    if ($line =~ m%^SID%){
-      ($SID_wise) = $line =~ m%SID\=(.*)%;
-    }elsif ($line =~ m%^LSID%){
-      ($LSID_wise) = $line =~ m%LSID\=(.*)%;
-    }elsif ($line =~ m%^Auth%){
+		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
+		($refreshToken) = $block =~ m%\"refresh_token\"\:\s?\"([^\"]+)\"%;
 
-      ($self->{_authwise}) = $line =~ m%Auth\=(.*)%;
-    }
+	}else{
+		#print STDOUT $res->as_string;
+		die ($res->as_string."error in loading page");}
 
-  }
-  print STDOUT "SID = $SID_wise\n" if pDrive::Config->DEBUG;
-  print STDOUT "LSID = $LSID_wise\n" if pDrive::Config->DEBUG;
-  print STDOUT "AUTH = $self->{_authwise}\n" if pDrive::Config->DEBUG;
+	$self->{_token} = $token;
+	$self->{_refreshToken} = $refreshToken;
+	return ($self->{_token},$self->{_refreshToken});
 
-}else{
-#print STDOUT $res->as_string;
-die($res->as_string."error in loading page");}
+}
 
 
-die("Login failed") unless $self->{_authwise} ne '';
+#
+# refreshToken (writely and wise)
+##
+sub refreshToken(*){
+	my $self = shift;
+
+	my  $URL = 'https://login.live.com/oauth20_token.srf';
+	my $req = new HTTP::Request POST => $URL;
+	$req->content_type("application/x-www-form-urlencoded");
+	$req->protocol('HTTP/1.1');
+	$req->content('client_id='.$self->{_clientID}.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
+	my $res = $self->{_ua}->request($req);
+
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+ 	 open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+ 	 print LOG $req->as_string;
+ 	 print LOG $res->as_string;
+ 	 close(LOG);
+	}
+
+	my $token;
+	my $refreshToken;
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+
+	  	my $block = $res->as_string;
+
+		($token) = $block =~ m%\"access_token\"\:\"([^\"]+)\"%;
+		($refreshToken) = $block =~ m%\"refresh_token\"\:\"([^\"]+)\"%;
+
+	}else{
+		#print STDOUT $res->as_string;
+		die ($res->as_string."error in loading page");}
+
+	if ($token ne '' and $refreshToken ne ''){
+		$self->{_token} = $token;
+		$self->{_refreshToken} = $refreshToken;
+	}
+		return ($self->{_token},$self->{_refreshToken});
+
+
+}
+
+
+sub testAccess(*){
+
+  	my $self = shift;
+
+	my $URL = API_URL . 'about';
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+  		return 1;
+
+	}else{
+		#	print STDOUT $res->as_string;
+		return 0;}
 
 
 }

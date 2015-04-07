@@ -17,17 +17,18 @@ my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 
 
 sub new(*$$) {
 
-  my $self = {_gdrive => undef,
+  	my $self = {_gdrive => undef,
               _listURL => undef,
+               _login_dbm => undef,
               _dbm => undef};
 
-  my $class = shift;
-  bless $self, $class;
-  my $username = shift;
-  my $password = shift;
+  	my $class = shift;
+  	bless $self, $class;
+	my $username = pDrive::Config->USERNAME;
 
-  # initialize web connections
-  $self->{_gdrive} = pDrive::GoogleDocsAPI3->new();
+
+  	# initialize web connections
+  	$self->{_gdrive} = pDrive::GoogleDriveAPI2->new();
 
   # login into google
   $self->{_gdrive}->authenticate($username,$password);

@@ -56,8 +56,6 @@ sub new(*$$) {
 	}
 	return $self;
 
-  	# login into google
-  	$self->{_gdrive}->authenticate($username,$password);
 
   	my $dbm = pDrive::DBM->new();
   	$self->{_dbm} = $dbm;

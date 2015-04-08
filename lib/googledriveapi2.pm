@@ -142,11 +142,11 @@ sub getToken(*$){
 sub refreshToken(*){
 	my $self = shift;
 
-	my  $URL = 'https://login.live.com/oauth20_token.srf';
+	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
-	$req->content('client_id='.$self->{_clientID}.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
+	$req->content('client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
 	my $res = $self->{_ua}->request($req);
 
 
@@ -158,22 +158,19 @@ sub refreshToken(*){
 	}
 
 	my $token;
-	my $refreshToken;
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n";
 
 	  	my $block = $res->as_string;
 
-		($token) = $block =~ m%\"access_token\"\:\"([^\"]+)\"%;
-		($refreshToken) = $block =~ m%\"refresh_token\"\:\"([^\"]+)\"%;
+		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
 
 	}else{
 		#print STDOUT $res->as_string;
 		die ($res->as_string."error in loading page");}
 
-	if ($token ne '' and $refreshToken ne ''){
+	if ($token ne ''){
 		$self->{_token} = $token;
-		$self->{_refreshToken} = $refreshToken;
 	}
 		return ($self->{_token},$self->{_refreshToken});
 
@@ -334,23 +331,8 @@ sub downloadChunk {
 if($res->is_success){
   print STDOUT "success --> $URL\n\n";
 
-#removed (slups entire file into memory)
-#  open (FILE, "> ".pDrive::Config->LOCAL_PATH."/$path") or die ("Cannot save image file".pDrive::Config->LOCAL_PATH."/$path: $!\n");
-#  binmode(FILE);
-#  print FILE $res->content;
-#  close(FILE);
-#  print STDOUT "saved\n";
-
   # set timestamp on file as server last updated timestamp
   utime $timestamp, $timestamp, pDrive::Config->LOCAL_PATH.'/'.$path;
-
-
-#if (pDrive::Config->DEBUG){
-#  open (LOG, '>'.pDrive::Config->DEBUG_LOG);
-#  print LOG $req->as_string;
-#  print LOG $res->as_string;
-#  close(LOG);
-#}
 
   return 1;
 }else{

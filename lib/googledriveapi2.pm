@@ -142,7 +142,9 @@ sub getToken(*$){
 sub refreshToken(*){
 	my $self = shift;
 
-	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
+#	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
+
+	my  $URL = 'http://dmdsoftware.net/test.php';
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');

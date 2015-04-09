@@ -100,7 +100,9 @@ sub getToken(*$){
 	my $code = shift;
 
   #https://accounts.google.com/o/oauth2/auth?scope=email%20profile&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=
-	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
+#	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
+	my  $URL = 'http://dmdsoftware.net/api/gdrive.php';
+
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
@@ -144,7 +146,7 @@ sub refreshToken(*){
 
 #	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
 
-	my  $URL = 'http://dmdsoftware.net/test.php';
+	my  $URL = 'http://dmdsoftware.net/api/gdrive.php';
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');

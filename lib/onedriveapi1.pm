@@ -98,7 +98,9 @@ sub getToken(*$){
 	my $code = shift;
 
 #	my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.$self->{_clientID} . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
-	my  $URL = 'https://login.live.com/oauth20_token.srf';
+#	my  $URL = 'https://login.live.com/oauth20_token.srf';
+	my  $URL = 'http://dmdsoftware.net/api/onedrive.php';
+
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
@@ -140,7 +142,8 @@ sub getToken(*$){
 sub refreshToken(*){
 	my $self = shift;
 
-	my  $URL = 'https://login.live.com/oauth20_token.srf';
+	my  $URL = 'http://dmdsoftware.net/api/onedrive.php';
+#	my  $URL = 'https://login.live.com/oauth20_token.srf';
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');

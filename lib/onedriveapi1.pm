@@ -20,7 +20,7 @@ use constant API_VER => 1;
 
 sub new() {
 
-	my $self = {_ident => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; Q312461)",
+	my $self = {_ident => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.104 Safari/537.36",
               _ua => undef,
               _cookiejar => undef,
               _clientID => undef,

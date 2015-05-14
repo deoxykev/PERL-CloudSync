@@ -22,7 +22,7 @@ use constant API_VER => 2;
 
 sub new() {
 
-	my $self = {_ident => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; Q312461)",
+	my $self = {_ident => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.104 Safari/537.36",
               _ua => undef,
               _cookiejar => undef,
               _clientID => undef,
@@ -212,39 +212,37 @@ sub testAccess(*){
 
 sub getList(*$){
 
-  my $self = shift;
-  my $URL = shift;
+	my $self = shift;
+	my $URL = shift;
 
 
-my $req = new HTTP::Request GET => $URL;
-$req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
 
-$req->header('GData-Version' => '3.0');
-my $res = $self->{_ua}->request($req);
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
 
-if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  print LOG $req->as_string;
-  print LOG $res->as_string;
-  close(LOG);
-}
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+  		my $block = $res->as_string;
 
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
-  my $block = $res->as_string;
+  		while (my ($line) = $block =~ m%([^\n]*)\n%){
 
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
+    		$block =~ s%[^\n]*\n%%;
 
-    $block =~ s%[^\n]*\n%%;
+  		}
 
-  }
+	}else{
+		#		print STDOUT $res->as_string;
+		die($res->as_string."error in loading page");}
 
-}else{
-#print STDOUT $res->as_string;
-die($res->as_string."error in loading page");}
-
-  return \$res->as_string;
+  	return \$res->as_string;
 
 }
 
@@ -261,27 +259,26 @@ sub getCreateURL(*$){
 
 sub getNextURL(*$){
 
-  my $self = shift;
-  my $listing = shift;
+ 	my $self = shift;
+  	my $listing = shift;
 
-  my ($URL) = $$listing =~ m%\<link\s+rel\=\'next\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
-  print STDOUT 'NEXT URL = '.(defined $URL?$URL:'')."\n";
-#exit(0);
-  return $URL;
+  	my ($URL) = $$listing =~ m%\<link\s+rel\=\'next\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
+  	print STDOUT 'NEXT URL = '.(defined $URL?$URL:'')."\n";
+	return $URL;
 
 }
 
 sub getListURL(*$){
 
-  my $self = shift;
-  my $timestamp = shift;
+	my $self = shift;
+	my $timestamp = shift;
 
-  if (defined $timestamp and $timestamp ne ''){
-    return 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:'.$timestamp;
-  #  $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:2012-08-10';
-  }else{
-    return 'https://docs.google.com/feeds/default/private/full?showfolders=true';
-  }
+	if (defined $timestamp and $timestamp ne ''){
+    	return 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:'.$timestamp;
+	  #  $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:2012-08-10';
+  	}else{
+    	return 'https://docs.google.com/feeds/default/private/full?showfolders=true';
+  	}
 
 }
 
@@ -319,6 +316,8 @@ my $res;
   }
   close(FILE);
   print STDOUT "saved\n";
+
+
 
 # reduce memory consumption from slurping the entire download file in memory
 #downloadChunk adapted from: http://www.perlmonks.org/?node_id=953833
@@ -709,83 +708,83 @@ sub fixServerMD5(**){
 
 sub readDriveListings(***){
 
-my $self = shift;
-my $driveListings = shift;
-my $folders = shift;
-my %newDocuments;
+	my $self = shift;
+	my $driveListings = shift;
+	my $folders = shift;
+	my %newDocuments;
 
-my $count=0;
+	my $count=0;
 
-  $$driveListings =~ s%\</entry\>%\n\</entry\>%g;
+  	$$driveListings =~ s%\</entry\>%\n\</entry\>%g;
 
-  while ($$driveListings =~ m%\<entry[^\>]+[^\n]+\n\</entry\>%){
+  	while ($$driveListings =~ m%\<entry[^\>]+[^\n]+\n\</entry\>%){
 
-    my ($entry) = $$driveListings =~ m%\<entry[^\>]+([^\n]+)\n\</entry\>%;
-    $$driveListings =~ s%\<entry[^\>]+[^\n]+\n\</entry\>%\.%;
-
-
-    my ($title) = $entry =~ m%\<title\>([^\<]+)\</title\>%;
-    my ($updated) = $entry =~ m%\<updated\>([^\<]+)\</updated\>%;
-    my ($published) = $entry =~ m%\<published\>([^\<]+)\</published\>%;
-    my ($resourceType,$resourceID) = $entry =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-    my ($downloadURL) = $entry =~ m%\<content type\=\'[^\']+\' src\=\'([^\']+)\'/\>%;
-    my ($parentID,$folder) = $entry =~ m@\#parent\' type\=\'application/atom\+xml\' href\=\'[^\%]+\%3A([^\']+)\' title\=\'([^\']+)\'/\>@;
-    my ($editURL) = $entry =~ m%\<link\s+rel\=\'http\:\/\/schemas.google.com\/g\/2005\#resumable-edit-media\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
-    my ($md5) = $entry =~ m%\<docs\:md5Checksum\>([^\<]+)\<\/docs\:md5Checksum\>%;
-
-    # is a folder
-    if ($resourceType eq 'folder'){
-
-      # save the title
-      $$folders{$resourceID}[FOLDER_TITLE] = $title;
-
-      # is not a root folder
-      if (defined $folder and $folder ne ''){
-
-        $$folders{$resourceID}[FOLDER_ROOT] = NOT_ROOT;
-        $$folders{$resourceID}[FOLDER_PARENT] = $parentID;
-
-        # add the resourceID to the parent directory
-        if ($#{${$folders}{$parentID}} >= FOLDER_SUBFOLDER){
-
-          $$folders{$parentID}[$#{${$folders}{$parentID}}+1] = $resourceID;
-
-        }else{
-
-          $$folders{$parentID}[FOLDER_SUBFOLDER] = $resourceID;
-
-        }
-
-      # is a root folder
-      }else{
-
-        $$folders{$resourceID}[FOLDER_ROOT] = IS_ROOT;
-
-      }
-      print STDOUT 'folder = '.(defined $title? $title:'').' '. (defined $resourceID? $resourceID:'').' *'.(defined $parentID? $parentID: '')."  \n";
-
-    }else{
-
-      $updated =~ s%\D+%%g;
-      ($updated) = $updated =~ m%^(\d{14})%;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
-#      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
-
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_edit'}] = $editURL;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'type'}] = $resourceType;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] = $parentID;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'published'}] = $published;
-    }
-    $count++;
-
-  }
+    	my ($entry) = $$driveListings =~ m%\<entry[^\>]+([^\n]+)\n\</entry\>%;
+    	$$driveListings =~ s%\<entry[^\>]+[^\n]+\n\</entry\>%\.%;
 
 
-print STDOUT "entries = $count\n";
-return %newDocuments;
+    	my ($title) = $entry =~ m%\<title\>([^\<]+)\</title\>%;
+    	my ($updated) = $entry =~ m%\<updated\>([^\<]+)\</updated\>%;
+    	my ($published) = $entry =~ m%\<published\>([^\<]+)\</published\>%;
+    	my ($resourceType,$resourceID) = $entry =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
+    	my ($downloadURL) = $entry =~ m%\<content type\=\'[^\']+\' src\=\'([^\']+)\'/\>%;
+    	my ($parentID,$folder) = $entry =~ m@\#parent\' type\=\'application/atom\+xml\' href\=\'[^\%]+\%3A([^\']+)\' title\=\'([^\']+)\'/\>@;
+    	my ($editURL) = $entry =~ m%\<link\s+rel\=\'http\:\/\/schemas.google.com\/g\/2005\#resumable-edit-media\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
+    	my ($md5) = $entry =~ m%\<docs\:md5Checksum\>([^\<]+)\<\/docs\:md5Checksum\>%;
+
+	    # 	is a folder
+	    if ($resourceType eq 'folder'){
+
+    		# save the title
+      		$$folders{$resourceID}[FOLDER_TITLE] = $title;
+
+		    # 	is not a root folder
+      		if (defined $folder and $folder ne ''){
+
+        		$$folders{$resourceID}[FOLDER_ROOT] = NOT_ROOT;
+        		$$folders{$resourceID}[FOLDER_PARENT] = $parentID;
+
+		        # add the resourceID to the parent directory
+		        if ($#{${$folders}{$parentID}} >= FOLDER_SUBFOLDER){
+
+          			$$folders{$parentID}[$#{${$folders}{$parentID}}+1] = $resourceID;
+
+        		}else{
+
+          			$$folders{$parentID}[FOLDER_SUBFOLDER] = $resourceID;
+
+        		}
+
+		      # is a root folder
+			}else{
+
+        		$$folders{$resourceID}[FOLDER_ROOT] = IS_ROOT;
+
+      		}
+			print STDOUT 'folder = '.(defined $title? $title:'').' '. (defined $resourceID? $resourceID:'').' *'.(defined $parentID? $parentID: '')."  \n";
+
+    	}else{
+
+      		$updated =~ s%\D+%%g;
+      		($updated) = $updated =~ m%^(\d{14})%;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
+			#      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
+
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_edit'}] = $editURL;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}] = $resourceType;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] = $parentID;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}] = $published;
+    	}
+    	$count++;
+
+ 	}
+
+
+	print STDOUT "entries = $count\n";
+	return %newDocuments;
 }
 
 1;

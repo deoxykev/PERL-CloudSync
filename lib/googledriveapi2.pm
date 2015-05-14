@@ -210,10 +210,10 @@ sub testAccess(*){
 
 }
 
-sub getList(*$){
+sub getList(*){
 
 	my $self = shift;
-	my $URL = shift;
+	my $URL = 'https://www.googleapis.com/drive/v2/files?fields=items(alternateLink%2Ckind)';
 
 
 	my $req = new HTTP::Request GET => $URL;
@@ -715,14 +715,17 @@ sub readDriveListings(***){
 
 	my $count=0;
 
-  	$$driveListings =~ s%\</entry\>%\n\</entry\>%g;
+  	$$driveListings =~ s%\n%%g;
+	print $$driveListings;
+  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
 
-  	while ($$driveListings =~ m%\<entry[^\>]+[^\n]+\n\</entry\>%){
+    	my ($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\,\s+\{%;
+    	$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\,\s+%%;
+		print STDERR "IN" . $entry;
+  	}
 
-    	my ($entry) = $$driveListings =~ m%\<entry[^\>]+([^\n]+)\n\</entry\>%;
-    	$$driveListings =~ s%\<entry[^\>]+[^\n]+\n\</entry\>%\.%;
-
-
+  	if (0){
+  		my $entry = "xx";
     	my ($title) = $entry =~ m%\<title\>([^\<]+)\</title\>%;
     	my ($updated) = $entry =~ m%\<updated\>([^\<]+)\</updated\>%;
     	my ($published) = $entry =~ m%\<published\>([^\<]+)\</published\>%;

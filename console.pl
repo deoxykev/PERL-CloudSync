@@ -216,11 +216,6 @@ while (my $input = <$userInput>){
     print STDOUT "running $os_command\n";
     print STDOUT `$os_command`;
 
-  }elsif($input =~ m%^fix timestamps%i){
-
-    $dbm->fixTimestamps($dbase);
-    $dbm->writeHash($dbase,$folders);
-
   }elsif($input =~ m%^dump dbm%i){
 
     my ($parameter) = $input =~ m%^dump dbm\s+(\S+)%i;
@@ -233,26 +228,21 @@ while (my $input = <$userInput>){
 
   }elsif($input =~ m%^get drive list%i){
     my $listURL;
-    ($driveListings) = $service->getList($service->getListURL());
+    ($driveListings) = $service->getList($folders);
 
-  	my ($nextlistURL) = $service->getNextURL($driveListings);
-  	$nextlistURL =~ s%\&amp\;%\&%g;
-  	$nextlistURL =~ s%\%3A%\:%g;
+  	#my ($nextlistURL) = $service->getNextURL($driveListings);
+  	#$nextlistURL =~ s%\&amp\;%\&%g;
+  	#$nextlistURL =~ s%\%3A%\:%g;
 
-  	if ($nextlistURL eq $listURL){
-	    print STDERR "reset fetch\n";
-	    $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
-  	}else{
-	    $listURL = $nextlistURL;
-  	}
+  	#if ($nextlistURL eq $listURL){
+	 #   print STDERR "reset fetch\n";
+	#    $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
+  	#}else{
+	#    $listURL = $nextlistURL;
+  	#}
 
-  	($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
-  	print "Create File URL = ".$createFileURL . "\n";
-  	my %newDocuments = $service->readDriveListings($driveListings,$folders);
-
-  	foreach my $resourceID (keys %newDocuments){
-    	print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
-	}
+  	#($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
+  	#print "Create File URL = ".$createFileURL . "\n";
 
   }elsif($input =~ m%^get drive all%i){
     my $listURL = $service->getListURL();

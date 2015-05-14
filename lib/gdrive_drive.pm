@@ -51,188 +51,9 @@ sub new(*$$) {
 	# token expired?
 	if (!($self->{_gdrive}->testAccess())){
 		# refresh token
- 	 	($token,$refreshToken) = $self->{_gdrive}->refreshToken($code);
+ 	 	($token,$refreshToken) = $self->{_gdrive}->refreshToken();
 	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
 	}
-	return $self;
-
-
-  	my $dbm = pDrive::DBM->new();
-  	$self->{_dbm} = $dbm;
-  	my ($dbase,$folders) = $dbm->readHash();
-
-	my $resourceIDHash = $dbm->constructResourceIDHash($dbase);
-
-
-	my $driveListings;
-	my $createFileURL;
-
-	my $maxTimestamp = $dbm->getLastUpdated($dbase);
-	print STDOUT 'maximum timestamp = '.(defined $$maxTimestamp[pDrive::Time->A_DATE]?$$maxTimestamp[pDrive::Time->A_DATE]:'').' '.(defined $$maxTimestamp[pDrive::Time->A_TIMESTAMP]?$$maxTimestamp[pDrive::Time->A_TIMESTAMP]:'')."\n" if (pDrive::Config->DEBUG);
-
-
-	if ($$maxTimestamp[pDrive::Time->A_TIMESTAMP] > 0){
-  		$self->{_listURL} = $self->{_gdrive}->getListURL($$maxTimestamp[pDrive::Time->A_DATE]);
-		#  $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:2012-08-10';
-	}else{
-  		$self->{_listURL} = $self->{_gdrive}->getListURL();
-	}
-
-	my %newDocuments;
-	my @updatedList;
-
-	#*****
-	###
-	# read through to
-	# 1) build folders
-	# 2) gather files to download
-	while ($self->{_listURL} ne ''){
-
-  		($driveListings) = $self->{_gdrive}->getList($self->{_listURL});
-
-  		my $nextlistURL = $self->{_gdrive}->getNextURL($driveListings);
-  		if (defined $nextlistURL){
-    		$nextlistURL =~ s%\&amp\;%\&%g;
-    		$nextlistURL =~ s%\%3A%\:%g;
-  		}
-  		if (defined $nextlistURL and $nextlistURL eq $self->{_listURL}){
-    		print STDERR "reset fetch\n";
-    		$self->{_listURL} = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
-    		last;
-		}else{
-    		$self->{_listURL} = $nextlistURL;
-  		}
-
-		($createFileURL) = $self->{_gdrive}->getCreateURL($driveListings) if (defined $createFileURL and $createFileURL eq '');
-		print STDOUT 'create URL = '.(defined $$createFileURL?$createFileURL:'')."\n" if (pDrive::Config->DEBUG);
-		$self->{_listURL} .= '&showfolders=true' if (defined $self->{_listURL} and $self->{_listURL} ne '' and !($self->{_listURL} =~ m%showfolders%));
-
-		if (defined $self->{_listURL}){
-  			$self->{_listURL} =~ s%\&amp\;%\&%g;
-  			$self->{_listURL} =~ s%\%3A%\:%g;
-		}
-
-		%newDocuments = $self->{_gdrive}->readDriveListings($driveListings,$folders);
-
-
-		# DEBUG -- print folders
-		if ( pDrive::Config->DEBUG){
-
-  			foreach my $resourceID (keys %{$folders}){
-
-			    if (defined $resourceID and defined $$folders{$resourceID}[FOLDER_ROOT] and $$folders{$resourceID}[FOLDER_ROOT] == IS_ROOT){
-
-      				print STDOUT $$folders{$resourceID}[FOLDER_TITLE]. "\n";
-      				for (my $i=FOLDER_SUBFOLDER; $i <= $#{${$folders}{$resourceID}}; $i++){
-
-      					print STDOUT "\t $$folders{${$folders}{$resourceID}[$i]}[FOLDER_TITLE]\n";
-      					pDrive::gDrive::traverseFolder($$folders{$resourceID}[$i]);
-
-      				}
-
-    			}
-  			}
-		}
-
-		if (pDrive::Config->DEBUG){
-  			foreach my $resourceID (keys %newDocuments){
-		    	print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
-			}
-		}
-
-
-		my $count=0;
-		foreach my $resourceID (keys %newDocuments){
-
-		  	my @parentArray = (0);
-  			my $path =  pDrive::gDrive::getPath($folders,$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]).$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}];
-
-  			print STDOUT "path = $path\n";
-
-		    # 	never existed with this path
-    		if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] eq ''){
-    			print STDOUT "new $path $resourceID".pDrive::DBM->D->{'server_updated'}." ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]."\n";
-      			# 	never existed before - new file
-      			if (pDrive::gDrive::isNewResourceID($resourceID, \%resourceIDHash)){
-
-	    	    	# save file information
-    	    		#	$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}];
-        			$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_link'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
-	        		$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_edit'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_edit'}];
-    	    		$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
-        			$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'type'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'type'}];
-	        		$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'published'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'published'}];
-    	    		$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'title'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'title'}];
-
-		    	    # file exists locally
-	    	    	if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] eq '' and -e pDrive::Config->LOCAL_PATH.'/'.$path){
-
-    	    			my $md5 = pDrive::FileIO::getMD5(pDrive::Config->LOCAL_PATH.'/'.$path);
-		    	      	#		is it the same as the server? -- skip file
-    		    	  	if ($newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq $md5 and $md5 ne '0'){
-        	    			print STDOUT 'skipping (found file on local)'. "\n" if (pDrive::Config->DEBUG);
-	        	    		$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}];
-            				$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}];
-            				$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] = $md5;
-	        				if ($#{$updatedList} >= 0){
-		          				$updatedList[$#{$updatedList}++] = $path;
-    		    			}else{
-        		  				$updatedList[0] = $path;
-        					}
-	            			$count++;
-				          #download the file -- potential conflict
-    		    	 	}else{
-        		    		print STDOUT 'potential conflict'  . "\n" if (pDrive::Config->DEBUG);
-            				pDrive::masterLog("$path $resourceID - potential conflict -- $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] - $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}]");
-            				eval {
-            					$self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
-            					1;
-	            			} or do {
-		              			pDrive::masterLog("$path $resourceID - download failedlict -- $@");
-    		        		};
-
-        		  		}
-		        	# download file
-    		    	}elsif ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] eq '' or $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] eq ''or pDrive::Time::isNewerTimestamp($newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}])){
-        				 eval {
-          					$self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
-            				1;
-            			} or do {
-	              			pDrive::masterLog("$path $resourceID - download failedlict -- $@");
-    	       		 	};
-        	  			$count++;
-	        		}
-    	  		}else{
-        			print STDOUT "existed\n";
-      			}
-
-		    # 	file missing local db information only
-			#   }elsif($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] ne ''){
-
-	    	# file is newer on the server; download
-			}elsif (pDrive::Time::isNewerTimestamp($newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],${$dbase}{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}])){
-    		 	print STDOUT "newer on server ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]."\n";
-      			$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
-      			$self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
-      			$count++;
-			    # file is newer on the local; upload
-    		}elsif (pDrive::Time::isNewerTimestamp(${$dbase}{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}])){
-    			print STDOUT "newer on local ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]."\n";
-      			$self->downloadFile($path,$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}],$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}],$resourceID,$dbase,\@updatedList);
-      			$count++;
-    		}
-	  		$self->{_dbm}->writeHash($dbase,$folders) if ($count % 20==0);
-
-		}
-		$self->{_dbm}->writeHash($dbase,$folders);
-
-		# new values to post to db
-		if ($#updatedList >= 0){
-  			print STDOUT "updating values DB\n" if (pDrive::Config->DEBUG);
-  			$self->{_dbm}->writeHash($dbase,$folders);
-		}
-	} ####
-
 	return $self;
 
 }
@@ -468,6 +289,22 @@ sub getPathResourceID($*){
   my ($resourceID,$dbase) = @_;
 
   return $$dbase{$resourceID};
+
+}
+
+
+sub getList(**){
+
+	my $self = shift;
+	my $folders = shift;
+	my $driveListings = $self->{_gdrive}->getList();
+
+  	my %newDocuments = $self->{_gdrive}->readDriveListings($driveListings,$folders);
+
+  	foreach my $resourceID (keys %newDocuments){
+    	print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
+	}
+
 
 }
 

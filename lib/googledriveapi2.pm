@@ -213,7 +213,7 @@ sub testAccess(*){
 sub getList(*){
 
 	my $self = shift;
-	my $URL = 'https://www.googleapis.com/drive/v2/files?fields=items(alternateLink%2Ckind)';
+	my $URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 
 
 	my $req = new HTTP::Request GET => $URL;
@@ -251,21 +251,18 @@ sub getCreateURL(*$){
   my $self = shift;
   my $listing = shift;
 
-  my ($URL) = $$listing =~ m%\<link\s+rel\=\'http\:\/\/schemas.google.com\/g\/2005\#resumable-create-media\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
+  my ($URL) = $listing =~ m%\<link\s+rel\=\'http\:\/\/schemas.google.com\/g\/2005\#resumable-create-media\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
 
   return $URL;
 
 }
 
-sub getNextURL(*$){
+sub getNextURL(**){
 
  	my $self = shift;
   	my $listing = shift;
-
-  	my ($URL) = $$listing =~ m%\<link\s+rel\=\'next\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
-  	print STDOUT 'NEXT URL = '.(defined $URL?$URL:'')."\n";
+	my ($URL) = $$listing =~ m%\"kind\"\:\s?\"([^\"]+)\"%;
 	return $URL;
-
 }
 
 sub getListURL(*$){
@@ -716,24 +713,21 @@ sub readDriveListings(***){
 	my $count=0;
 
   	$$driveListings =~ s%\n%%g;
-	print $$driveListings;
+	#print $$driveListings;
   	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
 
     	my ($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\,\s+\{%;
     	$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\,\s+%%;
-		print STDERR "IN" . $entry;
-  	}
+#		print STDERR "IN" . $entry;
 
-  	if (0){
-  		my $entry = "xx";
-    	my ($title) = $entry =~ m%\<title\>([^\<]+)\</title\>%;
-    	my ($updated) = $entry =~ m%\<updated\>([^\<]+)\</updated\>%;
-    	my ($published) = $entry =~ m%\<published\>([^\<]+)\</published\>%;
-    	my ($resourceType,$resourceID) = $entry =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-    	my ($downloadURL) = $entry =~ m%\<content type\=\'[^\']+\' src\=\'([^\']+)\'/\>%;
-    	my ($parentID,$folder) = $entry =~ m@\#parent\' type\=\'application/atom\+xml\' href\=\'[^\%]+\%3A([^\']+)\' title\=\'([^\']+)\'/\>@;
-    	my ($editURL) = $entry =~ m%\<link\s+rel\=\'http\:\/\/schemas.google.com\/g\/2005\#resumable-edit-media\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
-    	my ($md5) = $entry =~ m%\<docs\:md5Checksum\>([^\<]+)\<\/docs\:md5Checksum\>%;
+    	my ($title) = $entry =~ m%\"title\"\:\s?\"([^\"]+)\"%;
+		my ($updated) = $entry =~ m%\"modifiedDate\"\:\s?\"([^\"]+)\"%;
+		my ($published) = $entry =~ m%\"createdDate\"\:\s?\"([^\"]+)\"%;
+		my ($resourceType) = $entry =~ m%\"mimeType\"\:\s?\"([^\"]+)\"%;
+		my ($resourceID) = $entry =~ m%\"id\"\:\s?\"([^\"]+)\"%;
+		my ($downloadURL) = $entry =~ m%\"downloadUrl\"\:\s?\"([^\"]+)\"%;
+		my ($parentID) = $entry =~ m%\"parentLink\"\:\s?\"([^\"]+)\"%;
+		my ($md5) = $entry =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;
 
 	    # 	is a folder
 	    if ($resourceType eq 'folder'){
@@ -742,7 +736,7 @@ sub readDriveListings(***){
       		$$folders{$resourceID}[FOLDER_TITLE] = $title;
 
 		    # 	is not a root folder
-      		if (defined $folder and $folder ne ''){
+#      		if ($entry =~ defined $folder and $folder ne ''){
 
         		$$folders{$resourceID}[FOLDER_ROOT] = NOT_ROOT;
         		$$folders{$resourceID}[FOLDER_PARENT] = $parentID;
@@ -759,11 +753,11 @@ sub readDriveListings(***){
         		}
 
 		      # is a root folder
-			}else{
+#			}else{
 
-        		$$folders{$resourceID}[FOLDER_ROOT] = IS_ROOT;
+#        		$$folders{$resourceID}[FOLDER_ROOT] = IS_ROOT;
 
-      		}
+ #     		}
 			print STDOUT 'folder = '.(defined $title? $title:'').' '. (defined $resourceID? $resourceID:'').' *'.(defined $parentID? $parentID: '')."  \n";
 
     	}else{
@@ -774,7 +768,7 @@ sub readDriveListings(***){
 			#      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
 
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;
-      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_edit'}] = $editURL;
+#      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_edit'}] = $editURL;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}] = $resourceType;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] = $parentID;
@@ -782,9 +776,7 @@ sub readDriveListings(***){
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}] = $published;
     	}
     	$count++;
-
- 	}
-
+  	}
 
 	print STDOUT "entries = $count\n";
 	return %newDocuments;

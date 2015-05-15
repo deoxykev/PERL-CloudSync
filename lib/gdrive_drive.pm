@@ -30,7 +30,8 @@ sub new(*$$) {
   	# initialize web connections
   	$self->{_gdrive} = pDrive::GoogleDriveAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
 
-  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
+  	my $loginsDBM = pDrive::DBM->new('/tmp/test.db');
+#  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
   	$self->{_login_dbm} = $loginsDBM;
   	my ($token,$refreshToken) = $loginsDBM->readLogin($username);
 
@@ -299,14 +300,20 @@ sub getList(**){
 	my $folders = shift;
 	my $driveListings = $self->{_gdrive}->getList();
 
+
   	my %newDocuments = $self->{_gdrive}->readDriveListings($driveListings,$folders);
 
   	foreach my $resourceID (keys %newDocuments){
     	print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
 	}
 
+	print STDOUT $$driveListings . "\n";
+	print STDOUT "next url " . $self->{_gdrive}->getNextURL($driveListings) . "\n";
 
 }
+
+
+
 
 1;
 

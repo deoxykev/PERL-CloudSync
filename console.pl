@@ -209,21 +209,38 @@ while (my $input = <$userInput>){
     $dbm->clearLocalMD5($dbase);
     $dbm->writeHash($dbase,$folders);
 
-  # run system os commands
-  }elsif($input =~ m%^run\s[^\n]+\n%i){
+	###
+	# os-tools
+	###
+  	# run system os commands
+  	}elsif($input =~ m%^run\s[^\n]+\n%i){
 
-    my ($os_command) = $input =~ m%^run\s([^\n]+)\n%;
-    print STDOUT "running $os_command\n";
-    print STDOUT `$os_command`;
+    	my ($os_command) = $input =~ m%^run\s([^\n]+)\n%;
+    	print STDOUT "running $os_command\n";
+    	print STDOUT `$os_command`;
 
-  }elsif($input =~ m%^dump dbm%i){
+    # scan local dir
+  	}elsif($input =~ m%^scan dir\s[^\n]+\n%i){
+    	my ($dir) = $input =~ m%^scan dir\s([^\n]+)\n%;
+    	print STDOUT "directory = $dir\n";
+    	pDrive::FileIO::scanDir($dir);
 
-    my ($parameter) = $input =~ m%^dump dbm\s+(\S+)%i;
-    $dbm->printHash($parameter);
 
-  }elsif($input =~ m%^get lastupdated%i){
-    my $maxTimestamp = $dbm->getLastUpdated($dbase);
-    print STDOUT "maximum timestamp = ".$$maxTimestamp[pDrive::Time->A_DATE]." ".$$maxTimestamp[pDrive::Time->A_TIMESTAMP]."\n";
+
+	###
+	# local-hash helpers
+	###
+	# dump the local-hash
+  	}elsif($input =~ m%^dump dbm%i){
+
+    	my ($parameter) = $input =~ m%^dump dbm\s+(\S+)%i;
+    	$dbm->printHash($parameter);
+
+	# retrieve the datestamp for the last updated filr from the local-hash
+  	}elsif($input =~ m%^get last updated%i){
+    	my $maxTimestamp = $dbm->getLastUpdated($dbase);
+    	print STDOUT "maximum timestamp = ".$$maxTimestamp[pDrive::Time->A_DATE]." ".$$maxTimestamp[pDrive::Time->A_TIMESTAMP]."\n";
+
 
 
   }elsif($input =~ m%^get drive list%i){
@@ -440,10 +457,6 @@ while (my $input = <$userInput>){
   close(INPUT);
 
 
-  }elsif($input =~ m%^scan dir\s[^\n]+\n%i){
-    my ($dir) = $input =~ m%^scan dir\s([^\n]+)\n%;
-    print STDOUT "directory = $dir\n";
-    pDrive::FileIO::scanDir($dir);
 
   }elsif($input =~ m%^get edit\s[^\s]+\s[^\n]+\n%i){
     my ($resourceID,$path) = $input =~ m%^get edit\s([^\s]+)\s([^\n]+)\n%;

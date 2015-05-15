@@ -494,10 +494,18 @@ use Fcntl;
   	print STDOUT "\n";
 
 
-  }elsif($input =~ m%^upload dir list%i){
+	}elsif($input =~ m%^create folder%i){
+    	my ($folder) = $input =~ m%^create folder\s([^\n]+)\n%;
 
-    open (LIST, "<./list.dir") or  die ('cannot read file list.dir');
-    while (my $line = <LIST>){
+	  	my $folderID = $service->createFolder($folder);
+	    print "resource ID = " . $folderID . "\n";
+
+
+	}elsif($input =~ m%^upload dir list%i){
+    	my ($list) = $input =~ m%^upload dir list\s([^\n]+)\n%;
+
+		open (LIST, '<./'.$list) or  die ('cannot read file ./'.$list);
+    	while (my $line = <LIST>){
 		my ($dir,$folder,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;
       	print STDOUT "folder = $folder, type = $filetype\n";
 

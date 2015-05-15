@@ -294,6 +294,15 @@ sub getPathResourceID($*){
 }
 
 
+sub createFolder(*$){
+
+	my $self = shift;
+	my $folder = shift;
+
+	return $self->{_gdrive}->createFolder('https://www.googleapis.com/drive/v2/files?fields=id',$folder);
+
+}
+
 sub getList(**){
 
 	my $self = shift;
@@ -364,6 +373,8 @@ print STDOUT "new document = $newDocuments\n";
 	untie(%dbase);
 
 }
+
+
 
 
 

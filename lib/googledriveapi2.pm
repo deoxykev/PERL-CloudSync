@@ -488,21 +488,17 @@ sub createFolder(*$$){
   	my $URL = shift;
   	my $folder = shift;
 
-
-  	my $content = '<?xml version="1.0" encoding="UTF-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-  <category scheme="http://schemas.google.com/g/2005#kind"
-      term="http://schemas.google.com/docs/2007#folder"/>
-        		<title>'.$folder.'</title>
-	</entry>'."\n\n";
+#  "parents": [{"id":"0ADK06pfg"}]
+  	my $content = '{
+  "title": "'.$folder. '",
+  "mimeType": "application/vnd.google-apps.folder"
+}'."\n\n";
 
 	my $req = new HTTP::Request POST => $URL;
 	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	$req->content_length(length $content);
-	$req->content_type('application/atom+xml');
+	$req->content_type('application/json');
 	$req->content($content);
 
 	my $res = $self->{_ua}->request($req);
@@ -523,9 +519,8 @@ sub createFolder(*$$){
 
     		$block =~ s%[^\n]*\n%%;
 
-		    if ($line =~ m%\<gd\:resourceId\>%){
-		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-
+		    if ($line =~ m%\"id\"%){
+		    	my ($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
 	      		return $resourceID;
     		}
 

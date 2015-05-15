@@ -44,8 +44,9 @@ sub new(*) {
 
 
 
+
 #
-# Create the memory logins from the DBM
+# Read login information from the login DBM
 #
 sub readLogin(*$){
 

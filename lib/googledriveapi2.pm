@@ -210,10 +210,14 @@ sub testAccess(*){
 
 }
 
-sub getList(*){
+sub getList(*$){
 
 	my $self = shift;
-	my $URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	my $URL = shift;
+
+	if ($URL eq ''){
+		$URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	}
 
 
 	my $req = new HTTP::Request GET => $URL;
@@ -261,7 +265,7 @@ sub getNextURL(**){
 
  	my $self = shift;
   	my $listing = shift;
-	my ($URL) = $$listing =~ m%\"kind\"\:\s?\"([^\"]+)\"%;
+	my ($URL) = $$listing =~ m%\"nextLink\"\:\s?\"([^\"]+)\"%;
 	return $URL;
 }
 
@@ -714,10 +718,18 @@ sub readDriveListings(***){
 
   	$$driveListings =~ s%\n%%g;
 	#print $$driveListings;
-  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
+#  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
+  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{% or $$driveListings =~ m%\{\s+\"kind\"\:.*?\}\s*\]\s*\}%){ # [^\}]+
 
     	my ($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\,\s+\{%;
-    	$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\,\s+%%;
+
+		if ($entry eq ''){
+    		($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\s*\]\s*\}%;
+	    	$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\s*\]\s*\}%%;
+		}else{
+    		$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\,\s+%%;
+		}
+
 #		print STDERR "IN" . $entry;
 
     	my ($title) = $entry =~ m%\"title\"\:\s?\"([^\"]+)\"%;
@@ -779,7 +791,7 @@ sub readDriveListings(***){
   	}
 
 	print STDOUT "entries = $count\n";
-	return %newDocuments;
+	return \%newDocuments;
 }
 
 1;

@@ -243,6 +243,10 @@ while (my $input = <$userInput>){
 
 
 
+  }elsif($input =~ m%^get drive list all%i){
+    my $listURL;
+    ($driveListings) = $service->getListAll($folders);
+
   }elsif($input =~ m%^get drive list%i){
     my $listURL;
     ($driveListings) = $service->getList($folders);
@@ -260,30 +264,16 @@ while (my $input = <$userInput>){
 
   	#($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
   	#print "Create File URL = ".$createFileURL . "\n";
-
-  }elsif($input =~ m%^get drive all%i){
-    my $listURL = $service->getListURL();
-
-    while ($listURL ne ''){
-    ($driveListings) = $service->getList($listURL);
-
-  	my ($nextlistURL) = $service->getNextURL($driveListings);
-  	$nextlistURL =~ s%\&amp\;%\&%g;
-  	$nextlistURL =~ s%\%3A%\:%g;
-
-  	if ($nextlistURL eq $listURL){
-	    print STDERR "reset fetch\n";
-	    $listURL = '';
-  	}else{
-	    $listURL = $nextlistURL;
-  	}
-
-  	my %newDocuments = $service->readDriveListings($driveListings,$folders);
-
-  	foreach my $resourceID (keys %newDocuments){
-    	print STDOUT "new document -> ".$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
+  }elsif($input =~ m%^dump md5%i){
+  	pDrive::Config->DBM_TYPE;
+use Fcntl;
+	tie(my %dbase, pDrive::Config->DBM_TYPE, '/tmp/md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	foreach my $md5 (keys %dbase){
+			print STDOUT $dbase{$md5} . "\n";
 	}
-    }
+	untie(%dbase);
+
+
 
  }elsif($input =~ m%^get download list%i){
   	my %sortedDocuments;

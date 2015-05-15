@@ -374,13 +374,11 @@ sub uploadFile(*$$$$){
   my $chunkSize = shift;
   my $chunkRange = shift;
   my $filetype = shift;
-
+ my $resourceID = 0;
 
 my $req = new HTTP::Request PUT => $URL;
 $req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-$req->header('GData-Version' => '3.0');
+$req->header('Authorization' => 'Bearer '.$self->{_token});
 $req->content_type($filetype);
 $req->content_length($chunkSize);
 $req->header('Content-Range' => $chunkRange);
@@ -396,9 +394,10 @@ if($res->is_success or $res->code == 308){
 
 		$block =~ s%[^\n]*\n%%;
 
-	    if ($line =~ m%\<gd\:resourceId\>%){
-	    	($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-	    }
+		    if ($line =~ m%\"id\"%){
+		    	my ($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
+	      		return $resourceID;
+	    	}
 
 	}
 
@@ -425,22 +424,20 @@ sub createFile(*$$$$){
   	my $fileType = shift;
 
 
-  	my $content = '<?xml version="1.0" encoding="UTF-8"?>
-	<entry xmlns="http://www.w3.org/2005/Atom" xmlns:docs="http://schemas.google.com/docs/2007">
-  	<title>'.$file.'</title>
-	</entry>'."\n\n";
+
+  	my $content = '{
+  "title": "'.$file. '"
+}'."\n\n";
+
 
 #  convert=false prevents plain/text from becoming docs
-	my $req = new HTTP::Request POST => $URL.'?convert=false';
+	my $req = new HTTP::Request POST => $URL;
 	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
-#	$req->header('X-Upload-Content-Type' => 'application/pdf');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	$req->header('X-Upload-Content-Type' => $fileType);
 	$req->header('X-Upload-Content-Length' => $fileSize);
 	$req->content_length(length $content);
-	$req->content_type('application/atom+xml');
+	$req->content_type('application/json');
 	$req->content($content);
 
 	my $res = $self->{_ua}->request($req);
@@ -460,12 +457,6 @@ sub createFile(*$$$$){
   		while (my ($line) = $block =~ m%([^\n]*)\n%){
 
     		$block =~ s%[^\n]*\n%%;
-
-#		    if ($line =~ m%\<gd\:resourceId\>%){
-#		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-#
-#	      		return $resourceID;
- #   		}
 
 		    if ($line =~ m%^Location:%){
       			($URL) = $line =~ m%^Location:\s+(\S+)%;

@@ -10,6 +10,7 @@ use constant FOLDER_ROOT => 1;
 use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
+use constant CHUNKSIZE => (8*256*1024);
 
 #my $types = {'document' => ['doc','html'],'drawing' => 'png', 'pdf' => 'pdf','presentation' => 'ppt', 'spreadsheet' => 'xls'};
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
@@ -60,7 +61,7 @@ sub new(*$$) {
 }
 
 
-sub uploadFile(*$$){
+sub uploadFile2(*$$){
 
 	my $self = shift;
 	my $file = shift;
@@ -301,6 +302,61 @@ sub createFolder(*$){
 
 	return $self->{_gdrive}->createFolder('https://www.googleapis.com/drive/v2/files?fields=id',$folder);
 
+}
+
+sub uploadFile(*$){
+
+	my $self = shift;
+	my $file = shift;
+
+			print STDOUT $file . "\n";
+
+    		my ($fileName) = $file =~ m%\/([^\/]+)$%;
+
+  			my $fileSize =  -s $file;
+  			return 0 if $fileSize == 0;
+  			my $filetype = 'application/octet-stream';
+  			print STDOUT "file size for $file  is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
+
+  			my $uploadURL = $self->{_gdrive}->createFile('https://www.googleapis.com/upload/drive/v2/files?fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype);
+
+
+  			my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
+			my $pointerInFile=0;
+  			print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
+  			open(INPUT, "<".$file) or die ('cannot read file '.$file);
+
+  			binmode(INPUT);
+
+  			print STDERR 'uploading chunks [' . $chunkNumbers.  "]...\n";
+  			my $fileID=0;
+  			for (my $i=0; $i < $chunkNumbers; $i++){
+			    my $chunkSize = CHUNKSIZE;
+		    	my $chunk;
+    			if ($i == $chunkNumbers-1){
+	      			$chunkSize = $fileSize - $pointerInFile;
+    			}
+
+    			sysread INPUT, $chunk, CHUNKSIZE;
+    			print STDERR "\r".$i . '/'.$chunkNumbers;
+    			my $status=0;
+    			my $retrycount=0;
+    			while ($status eq '0' and $retrycount < 5){
+				    $status = $self->{_gdrive}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+      				print STDOUT "\r"  . $status;
+	      			if ($status eq '0'){
+	        			print STDERR "...retry\n";
+        				sleep (5);
+        				$retrycount++;
+	      			}
+
+    			}
+	    		pDrive::masterLog("retry failed $file\n") if ($retrycount >= 5);
+
+    			$fileID=$status;
+		    	$pointerInFile += $chunkSize;
+  			}
+  			close(INPUT);
 }
 
 sub getList(**){

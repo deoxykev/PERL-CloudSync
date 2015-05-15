@@ -415,38 +415,6 @@ use Fcntl;
     print "resource ID = " . $folderID . "\n";
 
 
-  }elsif($input =~ m%^upload test%i){
-
-  my $file = './201309.pdf';
-  my $fileSize =  -s "$file";
-  my $filetype = 'application/pdf';
-  print STDOUT "file size for $file is $fileSize\n" if (pDrive::Config->DEBUG);
-
-  my $uploadURL = $service->createFile($createFileURL,$fileSize,$file,$filetype);
-
-  my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
-  my $pointerInFile=0;
-  print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  open(INPUT, "<".$file) or die ('cannot read file '.$file);
-  binmode(INPUT);
-
-
-  for (my $i=0; $i < $chunkNumbers; $i++){
-    my $chunkSize = CHUNKSIZE;
-
-    my $chunk;
-    if ($i == $chunkNumbers-1){
-      $chunkSize = $fileSize - $pointerInFile;
-    }
-    sysread INPUT, $chunk, CHUNKSIZE;
-    print STDOUT 'uploading chunk ' . $i.  "\n";
-    $service->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-    print STDOUT 'next location = '.$uploadURL."\n";
-    $pointerInFile += $chunkSize;
-  }
-  close(INPUT);
-
-
 
   }elsif($input =~ m%^get edit\s[^\s]+\s[^\n]+\n%i){
     my ($resourceID,$path) = $input =~ m%^get edit\s([^\s]+)\s([^\n]+)\n%;
@@ -518,66 +486,18 @@ use Fcntl;
     	my @fileList = pDrive::FileIO::getFilesDir($dir);
 
 	    print STDOUT "folder = $folder\n";
-	  	my $folderID = $service->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
+	  	my $folderID = '';#$service->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
 	    print "resource ID = " . $folderID . "\n";
 
     	for (my $i=0; $i <= $#fileList; $i++){
-			print STDOUT $fileList[$i] . "\n";
-
-    		my ($fileName) = $fileList[$i] =~ m%\/([^\/]+)$%;
-
-  			my $fileSize =  -s $fileList[$i];
-  			my $filetype = 'application/octet-stream';
-  			print STDOUT "file size for $fileList[$i] is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
-
-  			my $uploadURL = $service->createFile($createFileURL,$fileSize,$fileName,$filetype);
-
-
-  			my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
-			my $pointerInFile=0;
-  			print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  			open(INPUT, "<".$fileList[$i]) or die ('cannot read file '.$fileList[$i]);
-
-  			binmode(INPUT);
-
-  			print STDERR 'uploading chunks [' . $chunkNumbers.  "]...\n";
-  			my $fileID=0;
-  			for (my $i=0; $i < $chunkNumbers; $i++){
-			    my $chunkSize = CHUNKSIZE;
-		    	my $chunk;
-    			if ($i == $chunkNumbers-1){
-	      			$chunkSize = $fileSize - $pointerInFile;
-    			}
-
-    			sysread INPUT, $chunk, CHUNKSIZE;
-    			print STDERR "\r".$i . '/'.$chunkNumbers;
-    			my $status=0;
-    			my $retrycount=0;
-    			while ($status eq '0' and $retrycount < 5){
-				    $status = $service->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      				print STDOUT "\r"  . $status;
-	      			if ($status eq '0'){
-	        			print STDERR "...retry\n";
-        				sleep (5);
-        				$retrycount++;
-	      			}
-
-    			}
-	    		pDrive::masterLog("retry failed $fileList[$i]\n") if ($retrycount >= 5);
-
-    			$fileID=$status;
-		    	$pointerInFile += $chunkSize;
-  			}
-  			close(INPUT);
-  	    	$service->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
-  	    	$service->deleteFile('root',$fileID);
-
+print STDOUT "file = $fileList[$i] ($fileList[$i]);\n";
+	  		my $fileID = $service->uploadFile($fileList[$i]);
+#  	    	$service->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
+ # 	    	$service->deleteFile('root',$fileID);
 	  		print STDOUT "\n";
 	    }
     }
   }elsif($input =~ m%^upload dir\s[^\n]+\n%i){
-
-
 
     my ($dir) = $input =~ m%^upload dir\s([^\n]+)\n%;
     my ($folder) = $dir =~ m%\/([^\/]+)$%;

@@ -415,18 +415,22 @@ if($res->is_success or $res->code == 308){
 
 
 
-sub createFile(*$$$$){
+sub createFile(*$$$$$){
 
 	my $self = shift;
   	my $URL = shift;
   	my $fileSize = shift;
   	my $file = shift;
   	my $fileType = shift;
-
+	my $folder = shift;
 
 
   	my $content = '{
-  "title": "'.$file. '"
+  "title": "'.$file. '",
+  "parents": [{
+    "kind": "drive#fileLink",
+    "id": "'.$folder.'"
+  }]
 }'."\n\n";
 
 
@@ -478,12 +482,15 @@ sub createFolder(*$$){
 	my $self = shift;
   	my $URL = shift;
   	my $folder = shift;
+  	my $parentFolder = shift;
+
 
 #  "parents": [{"id":"0ADK06pfg"}]
   	my $content = '{
   "title": "'.$folder. '",
-  "mimeType": "application/vnd.google-apps.folder"
-}'."\n\n";
+  "mimeType": "application/vnd.google-apps.folder"';
+  	$content .= ' ,"parents": [{"id":"'.$parentFolder.'"}]' if $parentFolder ne '';
+	$content .= '}'."\n\n";
 
 	my $req = new HTTP::Request POST => $URL;
 	$req->protocol('HTTP/1.1');

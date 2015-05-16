@@ -1,4 +1,5 @@
 package pDrive::gDrive;
+	use Fcntl;
 
 
 # magic numbers
@@ -295,68 +296,122 @@ sub getPathResourceID($*){
 }
 
 
-sub createFolder(*$){
+sub createFolder(*$$){
 
 	my $self = shift;
 	my $folder = shift;
+	my $parentFolder = shift;
 
-	return $self->{_gdrive}->createFolder('https://www.googleapis.com/drive/v2/files?fields=id',$folder);
+	return $self->{_gdrive}->createFolder('https://www.googleapis.com/drive/v2/files?fields=id',$folder, $parentFolder);
 
 }
 
-sub uploadFile(*$){
+
+sub uploadFolder(*$$){
+	my $self = shift;
+	my $path = shift;
+	my $parentFolder = shift;
+
+    my ($folder) = $path =~ m%\/([^\/]+)$%;
+
+  	print STDOUT "path = $path\n";
+   	my @fileList = pDrive::FileIO::getFilesDir($path);
+
+	print STDOUT "folder = $folder\n";
+	my $folderID = $self->createFolder($folder, $parentFolder);
+	print "resource ID = " . $folderID . "\n";
+
+    for (my $i=0; $i <= $#fileList; $i++){
+
+    	#folder
+    	if (-d $fileList[$i]){
+			print STDOUT "folder = $fileList[$i] ($fileList[$i]);\n";
+	  		my $fileID = $self->uploadFolder($fileList[$i], $folderID);
+    	# file
+    	}else{
+    		my $process = 1;
+    		#look for md5 file
+    		for (my $j=0; $j <= $#fileList; $j++){
+    			my $value = $fileList[$i];
+    			my ($file,$md5) = $fileList[$j] =~ m%[^\/]+\/\.(.*?)\.([^\.]+)$%;
+    			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
+
+    			if ($file eq $currentFile and $md5 ne ''){
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+    				if (defined $dbase{$md5.'_1'} and $dbase{$md5.'_1'}){
+    					print "found md5 $file $md5\n";
+    					$process = 0;
+    					last;
+	    			}
+    				untie(%dbase);
+    			}
+    		}
+			if ($process){
+				print STDOUT "file = $fileList[$i] ($fileList[$i]);\n";
+		  		my $fileID = $self->uploadFile($fileList[$i], $folderID);
+    		}else{
+				print STDOUT "SKIP = $fileList[$i] ($fileList[$i]);\n";
+
+	    	}
+    	}
+	  	print STDOUT "\n";
+	}
+}
+
+sub uploadFile(*$$){
 
 	my $self = shift;
 	my $file = shift;
+	my $folder = shift;
 
-			print STDOUT $file . "\n";
+	print STDOUT $file . "\n";
 
-    		my ($fileName) = $file =~ m%\/([^\/]+)$%;
+    my ($fileName) = $file =~ m%\/([^\/]+)$%;
 
-  			my $fileSize =  -s $file;
-  			return 0 if $fileSize == 0;
-  			my $filetype = 'application/octet-stream';
-  			print STDOUT "file size for $file  is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
+  	my $fileSize =  -s $file;
+  	return 0 if $fileSize == 0;
+  	my $filetype = 'application/octet-stream';
+  	print STDOUT "file size for $file  is $fileSize of type $filetype to folder $folder\n" if (pDrive::Config->DEBUG);
 
-  			my $uploadURL = $self->{_gdrive}->createFile('https://www.googleapis.com/upload/drive/v2/files?fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype);
+  	my $uploadURL = $self->{_gdrive}->createFile('https://www.googleapis.com/upload/drive/v2/files?fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
 
 
-  			my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
-			my $pointerInFile=0;
-  			print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  			open(INPUT, "<".$file) or die ('cannot read file '.$file);
+  	my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
+	my $pointerInFile=0;
+  	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
+  	open(INPUT, "<".$file) or die ('cannot read file '.$file);
 
-  			binmode(INPUT);
+  	binmode(INPUT);
 
-  			print STDERR 'uploading chunks [' . $chunkNumbers.  "]...\n";
-  			my $fileID=0;
-  			for (my $i=0; $i < $chunkNumbers; $i++){
-			    my $chunkSize = CHUNKSIZE;
-		    	my $chunk;
-    			if ($i == $chunkNumbers-1){
-	      			$chunkSize = $fileSize - $pointerInFile;
-    			}
+  	print STDERR 'uploading chunks [' . $chunkNumbers.  "]...\n";
+  	my $fileID=0;
+  	for (my $i=0; $i < $chunkNumbers; $i++){
+		my $chunkSize = CHUNKSIZE;
+		my $chunk;
+    	if ($i == $chunkNumbers-1){
+	    	$chunkSize = $fileSize - $pointerInFile;
+    	}
 
-    			sysread INPUT, $chunk, CHUNKSIZE;
-    			print STDERR "\r".$i . '/'.$chunkNumbers;
-    			my $status=0;
-    			my $retrycount=0;
-    			while ($status eq '0' and $retrycount < 5){
-				    $status = $self->{_gdrive}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      				print STDOUT "\r"  . $status;
-	      			if ($status eq '0'){
-	        			print STDERR "...retry\n";
-        				sleep (5);
-        				$retrycount++;
-	      			}
+    	sysread INPUT, $chunk, CHUNKSIZE;
+    	print STDERR "\r".$i . '/'.$chunkNumbers;
+    	my $status=0;
+    	my $retrycount=0;
+    	while ($status eq '0' and $retrycount < 5){
+			$status = $self->{_gdrive}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+      		print STDOUT "\r"  . $status;
+	      	if ($status eq '0'){
+	       		print STDERR "...retry\n";
+        		sleep (5);
+        		$retrycount++;
+	      	}
 
-    			}
-	    		pDrive::masterLog("retry failed $file\n") if ($retrycount >= 5);
+    	}
+	    pDrive::masterLog("retry failed $file\n") if ($retrycount >= 5);
 
-    			$fileID=$status;
-		    	$pointerInFile += $chunkSize;
-  			}
-  			close(INPUT);
+    	$fileID=$status;
+		$pointerInFile += $chunkSize;
+  	}
+  	close(INPUT);
 }
 
 sub getList(**){
@@ -401,11 +456,10 @@ sub updateMD5Hash(**){
 	my $self = shift;
 	my $newDocuments = shift;
 
-pDrive::Config->DBM_TYPE;
-use Fcntl;
-print STDOUT "new document = $newDocuments\n";
+#pDrive::Config->DBM_TYPE;
+	print STDOUT "new document = $newDocuments\n";
 	my $count=0;
-	tie(my %dbase, pDrive::Config->DBM_TYPE, '/tmp/md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	foreach my $resourceID (keys $newDocuments){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '';
 		for (my $i; 1; $i++){

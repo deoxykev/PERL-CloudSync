@@ -481,22 +481,11 @@ use Fcntl;
 	        print STDOUT "no files\n";
         	next;
       	}
-  		$dir = $dir . '/' . $folder;
-    	print STDOUT "directory = $dir\n";
-    	my @fileList = pDrive::FileIO::getFilesDir($dir);
+  		$service->uploadFolder($dir . '/'. $folder, '');
 
-	    print STDOUT "folder = $folder\n";
-	  	my $folderID = '';#$service->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
-	    print "resource ID = " . $folderID . "\n";
-
-    	for (my $i=0; $i <= $#fileList; $i++){
-print STDOUT "file = $fileList[$i] ($fileList[$i]);\n";
-	  		my $fileID = $service->uploadFile($fileList[$i]);
-#  	    	$service->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
- # 	    	$service->deleteFile('root',$fileID);
-	  		print STDOUT "\n";
-	    }
     }
+
+
   }elsif($input =~ m%^upload dir\s[^\n]+\n%i){
 
     my ($dir) = $input =~ m%^upload dir\s([^\n]+)\n%;

@@ -86,10 +86,11 @@ closedir(IMD);
 sub getFilesDir($){
 
 my $directory = shift;
-opendir(IMD, $directory) || die("Cannot open directory");
+opendir(IMD, $directory) || die("Cannot open directory" . $directory);
 my @dirContents = readdir(IMD);
 my @fileList;
 my $count=0;
+
 #scan dirs
 foreach my $item (@dirContents)
 {
@@ -101,7 +102,7 @@ foreach my $item (@dirContents)
 
   #item is a directory
   }elsif (-d $fullPath and ($item ne '.' and $item ne '..') ){
-
+    $fileList[$count++] = $fullPath;
   }else{
     $fileList[$count++] = $fullPath;
   }

@@ -273,13 +273,25 @@ while (my $input = <$userInput>){
   	#($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
   	#print "Create File URL = ".$createFileURL . "\n";
   }elsif($input =~ m%^dump md5%i){
-  	pDrive::Config->DBM_TYPE;
-use Fcntl;
-	tie(my %dbase, pDrive::Config->DBM_TYPE, '/tmp/md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	use Fcntl;
+	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	foreach my $md5 (keys %dbase){
 			print STDOUT $dbase{$md5} . "\n";
 	}
 	untie(%dbase);
+
+  }elsif($input =~ m%^search md5%i){
+    my ($filtermd5) = $input =~ m%^search md5\s([^\s]+)%i;
+	use Fcntl;
+	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	foreach my $md5 (keys %dbase){
+			if ($md5 eq $filtermd5.'_1'){
+				print STDOUT 'found MD5 = '.$md5 . "\n";
+				print STDOUT $dbase{$md5} . "\n";
+			}
+	}
+	untie(%dbase);
+	print STDOUT "complete\n";
 
 
 

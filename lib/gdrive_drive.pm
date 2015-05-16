@@ -342,6 +342,7 @@ sub uploadFolder(*$$){
     				tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDONLY, 0666) or die "can't open md5: $!";
     				if (defined $dbase{$md5.'_1'} and $dbase{$md5.'_1'}){
     					$process = 0;
+				    	pDrive::masterLog("skipped file (md5 $md5 exists ".$dbase{$md5.'_1'}.") - $fileList[$i]\n");
     					last;
 	    			}
     				untie(%dbase);
@@ -352,7 +353,6 @@ sub uploadFolder(*$$){
 		  		my $fileID = $self->uploadFile($fileList[$i], $folderID);
     		}else{
 				print STDOUT "SKIP $fileList[$i]\n";
-
 	    	}
     	}
 	  	print STDOUT "\n";
@@ -407,7 +407,10 @@ sub uploadFile(*$$){
 	      	}
 
     	}
-	    pDrive::masterLog("retry failed $file\n") if ($retrycount >= 5);
+    	if ($retrycount >= 5){
+	    	pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
+	    	last;
+    	}
 
     	$fileID=$status;
 		$pointerInFile += $chunkSize;

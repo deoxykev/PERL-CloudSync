@@ -323,9 +323,11 @@ sub uploadFolder(*$$){
 
     for (my $i=0; $i <= $#fileList; $i++){
 
+    	#empty file; skip
+    	if (-z $fileList[$i]){
+			next;
     	#folder
-    	if (-d $fileList[$i]){
-			print STDOUT "folder = $fileList[$i] ($fileList[$i]);\n";
+    	}elsif (-d $fileList[$i]){
 	  		my $fileID = $self->uploadFolder($fileList[$i], $folderID);
     	# file
     	}else{
@@ -339,7 +341,6 @@ sub uploadFolder(*$$){
     			if ($file eq $currentFile and $md5 ne ''){
     				tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDONLY, 0666) or die "can't open md5: $!";
     				if (defined $dbase{$md5.'_1'} and $dbase{$md5.'_1'}){
-    					print "found md5 $file $md5\n";
     					$process = 0;
     					last;
 	    			}
@@ -347,10 +348,10 @@ sub uploadFolder(*$$){
     			}
     		}
 			if ($process){
-				print STDOUT "file = $fileList[$i] ($fileList[$i]);\n";
+				print STDOUT "Upload $fileList[$i]\n";
 		  		my $fileID = $self->uploadFile($fileList[$i], $folderID);
     		}else{
-				print STDOUT "SKIP = $fileList[$i] ($fileList[$i]);\n";
+				print STDOUT "SKIP $fileList[$i]\n";
 
 	    	}
     	}

@@ -285,7 +285,7 @@ while (my $input = <$userInput>){
 	use Fcntl;
 	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	foreach my $md5 (keys %dbase){
-			if ($md5 eq $filtermd5.'_1'){
+			if ($md5 eq $filtermd5.'_0' or $md5 eq $filtermd5.'_1'){
 				print STDOUT 'found MD5 = '.$md5 . "\n";
 				print STDOUT $dbase{$md5} . "\n";
 			}

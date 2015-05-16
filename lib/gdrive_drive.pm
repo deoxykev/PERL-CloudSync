@@ -491,7 +491,7 @@ sub updateMD5Hash(**){
 	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	foreach my $resourceID (keys $newDocuments){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '';
-		for (my $i; 1; $i++){
+		for (my $i=0; 1; $i++){
 			# if MD5 exists,
 			if (defined $dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'. $i}){
 				# validate it is the same file, if so, skip, otherwise move onto another md5 slot

@@ -857,6 +857,7 @@ sub readChangeListings(**){
 #		$$driveListings =~ s%drive\#file%%;
 
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
+  		print STDERR "md5 = $md5\n";
     	$count++;
   	}
 

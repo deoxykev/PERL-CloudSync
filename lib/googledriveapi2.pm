@@ -250,6 +250,47 @@ sub getList(*$){
 
 }
 
+sub getChanges(*$){
+
+	my $self = shift;
+	my $URL = shift;
+	my $changeID = shift;
+
+	if ($URL eq ''){
+		$URL = 'https://www.googleapis.com/drive/v2/changes?startChangeId='.$changeID;
+	}
+
+
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+  		my $block = $res->as_string;
+
+  		while (my ($line) = $block =~ m%([^\n]*)\n%){
+
+    		$block =~ s%[^\n]*\n%%;
+
+  		}
+
+	}else{
+		#		print STDOUT $res->as_string;
+		die($res->as_string."error in loading page");}
+
+  	return \$res->as_string;
+
+}
+
 sub getCreateURL(*$){
 
   my $self = shift;
@@ -268,6 +309,16 @@ sub getNextURL(**){
 	my ($URL) = $$listing =~ m%\"nextLink\"\:\s?\"([^\"]+)\"%;
 	return $URL;
 }
+
+
+sub getChangeID(**){
+
+ 	my $self = shift;
+  	my $listing = shift;
+	my ($largestChangeId) = $$listing =~ m%\"largestChangeId\"\:\s?\"([^\"]+)\"%;
+	return $largestChangeId;
+}
+
 
 sub getListURL(*$){
 
@@ -787,5 +838,41 @@ sub readDriveListings(***){
 	return \%newDocuments;
 }
 
+
+
+sub readChangeListings(**){
+
+	my $self = shift;
+	my $driveListings = shift;
+	my %newDocuments;
+
+	my $count=0;
+
+  	$$driveListings =~ s%\n%%g;
+	#print $$driveListings;
+#  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
+  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{% or $$driveListings =~ m%\{\s+\"kind\"\:.*?\}\s*\]\s*\}%){ # [^\}]+
+
+    	my ($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\,\s+\{%;
+
+		if ($entry eq ''){
+    		($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\s*\]\s*\}%;
+	    	$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\s*\]\s*\}%%;
+		}else{
+    		$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\,\s+%%;
+		}
+
+#		print STDERR "IN" . $entry;
+
+		my ($resourceID) = $entry =~ m%\"id\"\:\s?\"([^\"]+)\"%;
+		my ($md5) = $entry =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;
+
+  		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
+    	$count++;
+  	}
+
+	print STDOUT "entries = $count\n";
+	return \%newDocuments;
+}
 1;
 

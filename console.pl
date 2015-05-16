@@ -247,6 +247,14 @@ while (my $input = <$userInput>){
     my $listURL;
     ($driveListings) = $service->getListAll($folders);
 
+  }elsif($input =~ m%^set changeid%i){
+    my ($changeID) = $input =~ m%^set changeid\s([^\s]+)%i;
+    $service->updateChange($changeID);
+	print STDOUT "changeID set to " . $changeID . "\n";
+
+  }elsif($input =~ m%^get changes%i){
+    my ($driveListings) = $service->getChangesAll($folders);
+
   }elsif($input =~ m%^get drive list%i){
     my $listURL;
     ($driveListings) = $service->getList($folders);

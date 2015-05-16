@@ -337,7 +337,7 @@ sub uploadFolder(*$$){
     			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
 
     			if ($file eq $currentFile and $md5 ne ''){
-    				tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDONLY, 0666) or die "can't open md5: $!";
     				if (defined $dbase{$md5.'_1'} and $dbase{$md5.'_1'}){
     					print "found md5 $file $md5\n";
     					$process = 0;
@@ -451,13 +451,36 @@ sub getListAll(**){
 
 }
 
+sub getChangesAll(**){
+
+	my $self = shift;
+	my $folders = shift;
+
+	my $nextURL = '';
+    tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDONLY, 0666) or die "can't open md5: $!";
+    my $changeID = $dbase{'LAST_CHANGE'};
+    print STDOUT "changeID = " . $changeID . "\n";
+    untie(%dbase);
+
+	while (1){
+		my $driveListings = $self->{_gdrive}->getChanges($nextURL, $changeID);
+  		$nextURL = $self->{_gdrive}->getNextURL($driveListings);
+  		my $newDocuments = $self->{_gdrive}->readChangeListings($driveListings);
+		$self->updateMD5Hash($newDocuments);
+		$changeID = $self->{_gdrive}->getChangeID($driveListings);
+		print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+	}
+	#print STDOUT $$driveListings . "\n";
+	$self->updateChange($changeID);
+
+}
+
 sub updateMD5Hash(**){
 
 	my $self = shift;
 	my $newDocuments = shift;
 
-#pDrive::Config->DBM_TYPE;
-	print STDOUT "new document = $newDocuments\n";
 	my $count=0;
 	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	foreach my $resourceID (keys $newDocuments){
@@ -484,6 +507,16 @@ sub updateMD5Hash(**){
 
 }
 
+sub updateChange(**){
+
+	my $self = shift;
+	my $changeID = shift;
+
+	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	$dbase{'LAST_CHANGE'} = $changeID;
+	untie(%dbase);
+
+}
 
 
 

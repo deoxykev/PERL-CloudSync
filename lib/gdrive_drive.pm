@@ -340,7 +340,7 @@ sub uploadFolder(*$$){
 
     			if ($file eq $currentFile and $md5 ne ''){
     				tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDONLY, 0666) or die "can't open md5: $!";
-    				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'}) or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'})){
+    				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
     					$process = 0;
 				    	pDrive::masterLog("skipped file (md5 $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
     					last;

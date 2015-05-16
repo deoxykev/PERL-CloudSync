@@ -300,8 +300,7 @@ while (my $input = <$userInput>){
 	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	foreach my $md5 (keys %dbase){
 			if ($dbase{$md5} eq $filtermd5){
-				print STDOUT 'found MD5 = '.$dbase{$md5} . "\n";
-				print STDOUT $dbase{$md5} . "\n";
+				print STDOUT 'found MD5 = '.$dbase{$md5} . ", md5 = $md5\n";
 			}
 	}
 	untie(%dbase);

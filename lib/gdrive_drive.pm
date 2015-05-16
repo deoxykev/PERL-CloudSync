@@ -384,7 +384,7 @@ sub uploadFile(*$$){
 
   	binmode(INPUT);
 
-  	print STDERR 'uploading chunks [' . $chunkNumbers.  "]...\n";
+  	#print STDERR 'uploading chunks [' . $chunkNumbers.  "]...\n";
   	my $fileID=0;
   	for (my $i=0; $i < $chunkNumbers; $i++){
 		my $chunkSize = CHUNKSIZE;
@@ -629,7 +629,18 @@ if ($#updatedList >= 0){
 }
 } ####
 
+##
+# multiple NIC cards:
+# bind to a specific IP
+##
+sub bindIP(*$){
 
+	my $self = shift;
+  	my $IP = shift;
+
+  	$self->{_gdrive}->bindIP($IP);
+
+}
 
 1;
 

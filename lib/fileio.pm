@@ -26,6 +26,19 @@ sub getMD5($){
 }
 
 ####
+#retrieve MD5 of the string
+#
+####
+sub getMD5String($){
+  my $md5String = shift;
+
+  my $md5 = Digest::MD5->new;
+  my $md5sum = $md5->addfile($md5String)->hexdigest;
+  return $md5sum;
+
+}
+
+####
 # mkdir
 # /dir1/dir2/dir3
 ####

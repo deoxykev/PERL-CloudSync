@@ -273,37 +273,25 @@ while (my $input = <$userInput>){
   	#($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
   	#print "Create File URL = ".$createFileURL . "\n";
   }elsif($input =~ m%^dump md5%i){
-	use Fcntl;
-	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
-	foreach my $md5 (keys %dbase){
-			print STDOUT $dbase{$md5} . "\n";
-	}
-	untie(%dbase);
+	my $dbase = $dbm->openDBM('./md5.db');
+	$dbm->dumpHash($dbase);
+	$dbm->closeDBM($dbase);
 
   }elsif($input =~ m%^search md5%i){
     my ($filtermd5) = $input =~ m%^search md5\s([^\s]+)%i;
-	use Fcntl;
-	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
-	foreach my $md5 (keys %dbase){
-			if ($md5 eq $filtermd5.'_0' or $md5 eq $filtermd5.'_1'){
-				print STDOUT 'found MD5 = '.$md5 . "\n";
-				print STDOUT $dbase{$md5} . "\n";
-			}
-	}
-	untie(%dbase);
+
+	my $dbase = $dbm->openDBM('./md5.db');
+	my $value = $dbm->findKey($dbase,$filtermd5);
+	$dbm->closeDBM($dbase);
 	print STDOUT "complete\n";
 
 
   }elsif($input =~ m%^search file%i){
     my ($filtermd5) = $input =~ m%^search file\s([^\s]+)%i;
-	use Fcntl;
-	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
-	foreach my $md5 (keys %dbase){
-			if ($dbase{$md5} eq $filtermd5){
-				print STDOUT 'found MD5 = '.$dbase{$md5} . ", md5 = $md5\n";
-			}
-	}
-	untie(%dbase);
+
+	my $dbase = $dbm->openDBM('./md5.db');
+	my $value = $dbm->findValue($dbase,$filtermd5);
+	$dbm->closeDBM($dbase);
 	print STDOUT "complete\n";
 
 

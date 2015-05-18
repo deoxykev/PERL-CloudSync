@@ -31,6 +31,7 @@ sub new(*) {
 
   	my $self = {_dbase => undef, _container => pDrive::Config->DBM_CONTAINER_FILE};
 
+
  	my $class = shift;
   	bless $self, $class;
 	my $containerFile = shift;
@@ -44,6 +45,67 @@ sub new(*) {
 
 
 
+
+#
+# Open the DBM provided
+#
+sub openDBM(**$){
+
+	my $self = shift;
+	my $file = shift;
+	tie( my %dbase, pDrive::Config->DBM_TYPE, $file ,O_RDONLY, 0666) or die "can't open ". $file.": $!";
+	return \%dbase;
+}
+
+#
+# Close the DBM provided
+#
+sub closeDBM(**$){
+
+	my $self = shift;
+	my $dbase = shift;
+	untie($dbase);
+	return;
+
+}
+
+#
+# Find key, given value
+#
+sub findValue(**$){
+
+	my $self = shift;
+	my $dbase = shift;
+	my $findValue = shift;
+
+	foreach my $key (keys $dbase){
+			if ($$dbase{$key} eq $findValue){
+				print STDOUT 'value = '. $findValue. ', key = '.$key ."\n";
+				return $key;
+			}
+	}
+	return;
+
+}
+
+#
+# Find value, given key
+#
+sub findKey(**$){
+
+	my $self = shift;
+	my $dbase = shift;
+	my $findKey = shift;
+
+	foreach my $key (keys $dbase){
+			if ($key eq $findKey.'_0' or $key eq $findKey.'_1'){
+				print STDOUT 'found key = '.$key . "\n";
+				print STDOUT $$dbase{$key} . "\n";
+				return $$dbase{$key};
+			}
+	}
+	return;
+}
 
 #
 # Read login information from the login DBM
@@ -252,9 +314,36 @@ sub writeValueContainerHash(****){
 }
 
 
+
+
 #
 # Dump the DBM Hash to the screen
 #
+sub dumpHash(*$){
+
+  my $self = shift;
+  my $dbase = shift;
+
+  print "(filter = $filter) Database consists of the following key value pairs...\n";
+
+  if ($filter ne ''){
+
+    foreach my $key (keys $dbase) {
+      next unless ($key =~ m%$filter%);
+      print "$key: $$dbase{$key}\n";
+    }
+  }else{
+    foreach my $key (keys $dbase) {
+      print "$key: $$dbase{$key}\n";
+    }
+  }
+
+}
+
+
+#
+# Dump the DBM Hash to the screen
+# * obsolete
 sub printHash(*$){
 
   my $self = shift;

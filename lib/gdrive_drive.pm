@@ -359,6 +359,7 @@ sub uploadFolder(*$$){
 	}
 }
 
+
 sub uploadFile(*$$){
 
 	my $self = shift;
@@ -402,8 +403,14 @@ sub uploadFile(*$$){
       		print STDOUT "\r"  . $status;
 	      	if ($status eq '0'){
 	       		print STDERR "...retry\n";
- 	 			my ($token,$refreshToken) = $self->{_gdrive}->refreshToken();
-	  			$self->{_login_dbm}->writeLogin( pDrive::Config->USERNAME,$token,$refreshToken);
+	       		if ($retrycount == 0){
+	       			my ($token,$refreshToken) = $self->{_gdrive}>readLogin(pDrive::Config->USERNAME);
+	       			$self->{_gdrive}->setToken($token,$refreshToken);
+	       		}else{
+ 	 				my ($token,$refreshToken) = $self->{_gdrive}->refreshToken();
+	  				$self->{_login_dbm}->writeLogin( pDrive::Config->USERNAME,$token,$refreshToken);
+	       			$self->{_gdrive}->setToken($token,$refreshToken);
+	       		}
         		sleep (5);
         		$retrycount++;
 	      	}

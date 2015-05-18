@@ -253,7 +253,7 @@ while (my $input = <$userInput>){
 	print STDOUT "changeID set to " . $changeID . "\n";
 
   }elsif($input =~ m%^get changes%i){
-    my ($driveListings) = $service->getChangesAll($folders);
+    	my ($driveListings) = $service->getChangesAll($folders);
 
   }elsif($input =~ m%^get drive list%i){
     my $listURL;
@@ -276,6 +276,13 @@ while (my $input = <$userInput>){
 	my $dbase = $dbm->openDBM('./md5.db');
 	$dbm->dumpHash($dbase);
 	$dbm->closeDBM($dbase);
+
+  #
+  }elsif($input =~ m%^get changeid%i){
+	my $dbase = $dbm->openDBM('./md5.db');
+	$dbm->findKey($dbase,'LAST_CHANGE');
+	$dbm->closeDBM($dbase);
+
 
   }elsif($input =~ m%^search md5%i){
     my ($filtermd5) = $input =~ m%^search md5\s([^\s]+)%i;

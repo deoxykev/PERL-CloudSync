@@ -403,9 +403,11 @@ sub uploadFile(*$$){
       		print STDOUT "\r"  . $status;
 	      	if ($status eq '0'){
 	       		print STDERR "...retry\n";
+	       		#some other instance may have updated the tokens already, refresh with the latest
 	       		if ($retrycount == 0){
-	       			my ($token,$refreshToken) = $self->{_gdrive}>readLogin(pDrive::Config->USERNAME);
+	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin(pDrive::Config->USERNAME);
 	       			$self->{_gdrive}->setToken($token,$refreshToken);
+	       		#multiple failures, force-fech a new token
 	       		}else{
  	 				my ($token,$refreshToken) = $self->{_gdrive}->refreshToken();
 	  				$self->{_login_dbm}->writeLogin( pDrive::Config->USERNAME,$token,$refreshToken);

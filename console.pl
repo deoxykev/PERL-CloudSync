@@ -140,46 +140,15 @@ use constant HELP => q{
 };
 
 
-my $dbm = pDrive::DBM->new();
-my ($dbase,$folders) = $dbm->readHash();
-my $service;
 my $currentURL;
 my $nextURL;
 my $driveListings;
 my $createFileURL;
 my $loggedInUser = '';
-
-$service = pDrive::gDrive->new();
-
-
-# authenticate as provided as argument
-if ($opt{u} ne '' and $opt{p} ne ''){
-
-	my $username = $opt{u};
-	my $password;
-    open (INPUT, "<". $opt{p}) or  die ('cannot read file '.$opt{p});
-  	$password = <INPUT>;
-    close(INPUT);
-
-    $service = pDrive::GoogleDocsAPI3->new();
-    $service->authenticate($username,$password);
-
-    ($driveListings) = $service->getList($service->getListURL());
-
-    #
-    # for creating new files
-    ##
-  	my ($nextlistURL) = $service->getNextURL($driveListings);
-  	$nextlistURL =~ s%\&amp\;%\&%g;
-  	$nextlistURL =~ s%\%3A%\:%g;
-
-  	($createFileURL) = $service->getCreateURL($driveListings);
-  	print "Create File URL = ".$createFileURL . "\n";
-
-    ##
-	$loggedInUser = $username;
-}
-
+my $bindIP;
+my @services;
+my $currentService;
+my $dbm = pDrive::DBM->new();
 
 # scripted input
 my $userInput;
@@ -196,18 +165,10 @@ print STDERR '>';
 
 while (my $input = <$userInput>){
 
-  if($input =~ m%^exit%i or$input =~ m%^quit%i){
-  	last;
-  }elsif($input =~ m%^help%i or $input =~ m%\?%i){
-    print STDERR HELP;
-  }elsif($input =~ m%^fix server md5%i){
-
-    $dbm->fixServerMD5($dbase);
-    $dbm->writeHash($dbase,$folders);
-  }elsif($input =~ m%^clear local md5%i){
-
-    $dbm->clearLocalMD5($dbase);
-    $dbm->writeHash($dbase,$folders);
+	if($input =~ m%^exit%i or$input =~ m%^quit%i){
+  		last;
+  	}elsif($input =~ m%^help%i or $input =~ m%\?%i){
+    	print STDERR HELP;
 
 	###
 	# os-tools
@@ -218,6 +179,20 @@ while (my $input = <$userInput>){
     	my ($os_command) = $input =~ m%^run\s([^\n]+)\n%;
     	print STDOUT "running $os_command\n";
     	print STDOUT `$os_command`;
+  	##
+	# bind to IP address
+	###
+  	}elsif($input =~ m%^bind\s[^\s]+%i){
+    	my ($IP) = $input =~ m%^bind\s([^\s]+)%i;
+    	$bindIP = $IP . ' - ';
+
+		for (my $i=0;$i <= $#services;$i++){
+			if (defined $services[$i]){
+				$services[$i]->bindIP($IP);
+				$loggedInUser .= ', ' if $i > 1;
+				$loggedInUser .= $i. '. ' . $services[$i]->{_username};
+			}
+		}
 
     # scan local dir
   	}elsif($input =~ m%^scan dir\s[^\n]+\n%i){
@@ -225,274 +200,210 @@ while (my $input = <$userInput>){
     	print STDOUT "directory = $dir\n";
     	pDrive::FileIO::scanDir($dir);
 
+  	}elsif($input =~ m%^load gd\s\d+\s([^\s]+)%i){
+    	my ($account,$login) = $input =~ m%^load gd\s(\d+)\s([^\s]+)%i;
+		#my ($dbase,$folders) = $dbm->readHash();
+		$services[$account] = pDrive::gDrive->new($login);
+		$currentService = $account;
+
+		$loggedInUser = $bindIP;
+		for (my $i=0;$i <= $#services;$i++){
+			if (defined $services[$i]){
+				$loggedInUser .= ', ' if $i > 1;
+				if ($currentService == $i){
+					$loggedInUser .= '*'.$i. '*. ' . $services[$i]->{_username};
+				}else{
+					$loggedInUser .= $i. '. ' . $services[$i]->{_username};
+				}
+
+			}
+		}
 
 
 	###
 	# local-hash helpers
 	###
 	# dump the local-hash
-  	}elsif($input =~ m%^dump dbm%i){
+  	}elsif($input =~ m%^dump dbm\s\S+%i){
+    	my ($db) = $input =~ m%^dump dbm\s(\S+)\n%;
+    	$dbm->printHash($db);
 
-    	my ($parameter) = $input =~ m%^dump dbm\s+(\S+)%i;
-    	$dbm->printHash($parameter);
+	# update the  the key
+  	}elsif($input =~ m%^update dbm key\s\S+\s\S+\s\S+%i){
+    	my ($db, $filter, $filterChange) = $input =~ m%^update dbm key\s(\S+)\s(\S+)\s(\S+)\n%;
+    	$dbm->updateHashKey($db, $filter, $filterChange);
+
+
 
 	# retrieve the datestamp for the last updated filr from the local-hash
-  	}elsif($input =~ m%^get last updated%i){
-    	my $maxTimestamp = $dbm->getLastUpdated($dbase);
-    	print STDOUT "maximum timestamp = ".$$maxTimestamp[pDrive::Time->A_DATE]." ".$$maxTimestamp[pDrive::Time->A_TIMESTAMP]."\n";
+  	#}elsif($input =~ m%^get last updated%i){
+    	#my $maxTimestamp = $dbm->getLastUpdated($dbase);
+    	#print STDOUT "maximum timestamp = ".$$maxTimestamp[pDrive::Time->A_DATE]." ".$$maxTimestamp[pDrive::Time->A_TIMESTAMP]."\n";
 
 
+	# load MD5 with account data
+  	}elsif($input =~ m%^get drive list all%i){
+    	my $listURL;
+    	($driveListings) = $services[$currentService]->getListAll();
 
-  }elsif($input =~ m%^get drive list all%i){
-    my $listURL;
-    ($driveListings) = $service->getListAll($folders);
+  	}elsif($input =~ m%^set changeid%i){
+    	my ($changeID) = $input =~ m%^set changeid\s([^\s]+)%i;
+    	$services[$currentService]->updateChange($changeID);
+		print STDOUT "changeID set to " . $changeID . "\n";
 
-  }elsif($input =~ m%^set changeid%i){
-    my ($changeID) = $input =~ m%^set changeid\s([^\s]+)%i;
-    $service->updateChange($changeID);
-	print STDOUT "changeID set to " . $changeID . "\n";
+	# load MD5 with all changes
+  	}elsif($input =~ m%^get changes%i){
+    	my ($driveListings) = $services[$currentService]->getChangesAll();
 
-  }elsif($input =~ m%^get changes%i){
-    	my ($driveListings) = $service->getChangesAll($folders);
+	# load MD5 with account data of first page of results
+  	}elsif($input =~ m%^get drive list%i){
+    	my $listURL;
+    	($driveListings) = $services[$currentService]->getList();
 
-  }elsif($input =~ m%^get drive list%i){
-    my $listURL;
-    ($driveListings) = $service->getList($folders);
+	# return the id to the root folder
+  	}elsif($input =~ m%^get root id%i){
+    	($driveListings) = $services[$currentService]->getListRoot();
 
-  	#my ($nextlistURL) = $service->getNextURL($driveListings);
-  	#$nextlistURL =~ s%\&amp\;%\&%g;
-  	#$nextlistURL =~ s%\%3A%\:%g;
+	}elsif($input =~ m%^dump md5%i){
+		my $dbase = $dbm->openDBM($services[$currentService]->{_db_md5});
+		$dbm->dumpHash($dbase);
+		$dbm->closeDBM($dbase);
 
-  	#if ($nextlistURL eq $listURL){
-	 #   print STDERR "reset fetch\n";
-	#    $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
-  	#}else{
-	#    $listURL = $nextlistURL;
-  	#}
+	#
+  	}elsif($input =~ m%^get changeid%i){
+		my $dbase = $dbm->openDBM($services[$currentService]->{_db_md5});
+		$dbm->findKey($dbase,'LAST_CHANGE');
+		$dbm->closeDBM($dbase);
 
-  	#($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
-  	#print "Create File URL = ".$createFileURL . "\n";
-  }elsif($input =~ m%^dump md5%i){
-	my $dbase = $dbm->openDBM('./md5.db');
-	$dbm->dumpHash($dbase);
-	$dbm->closeDBM($dbase);
 
-  #
-  }elsif($input =~ m%^get changeid%i){
-	my $dbase = $dbm->openDBM('./md5.db');
-	$dbm->findKey($dbase,'LAST_CHANGE');
-	$dbm->closeDBM($dbase);
+  	}elsif($input =~ m%^search md5%i){
+    	my ($filtermd5) = $input =~ m%^search md5\s([^\s]+)%i;
 
+		my $dbase = $dbm->openDBM($services[$currentService]->{_db_md5});
+		my $value = $dbm->findKey($dbase,$filtermd5);
+		$dbm->closeDBM($dbase);
+		print STDOUT "complete\n";
 
-  }elsif($input =~ m%^search md5%i){
-    my ($filtermd5) = $input =~ m%^search md5\s([^\s]+)%i;
 
-	my $dbase = $dbm->openDBM('./md5.db');
-	my $value = $dbm->findKey($dbase,$filtermd5);
-	$dbm->closeDBM($dbase);
-	print STDOUT "complete\n";
+  	}elsif($input =~ m%^search file%i){
+	    my ($filtermd5) = $input =~ m%^search file\s([^\s]+)%i;
 
+		my $dbase = $dbm->openDBM($services[$currentService]->{_db_md5});
+		my $value = $dbm->findValue($dbase,$filtermd5);
+		$dbm->closeDBM($dbase);
+		print STDOUT "complete\n";
 
-  }elsif($input =~ m%^search file%i){
-    my ($filtermd5) = $input =~ m%^search file\s([^\s]+)%i;
 
-	my $dbase = $dbm->openDBM('./md5.db');
-	my $value = $dbm->findValue($dbase,$filtermd5);
-	$dbm->closeDBM($dbase);
-	print STDOUT "complete\n";
+ 	}elsif($input =~ m%^get download list%i){
+  		my %sortedDocuments;
+    	my $listURL;
+    	$listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
 
+   		while(1){
 
- }elsif($input =~ m%^get download list%i){
-  	my %sortedDocuments;
-    my $listURL;
-    $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
+   			($driveListings) = $services[$currentService]->getList($listURL);
 
-   	while(1){
+  			my $nextlistURL = $services[$currentService]->getNextURL($driveListings);
+  			$nextlistURL =~ s%\&amp\;%\&%g;
+  			$nextlistURL =~ s%\%3A%\:%g;
 
-   		($driveListings) = $service->getList($listURL);
+	    	$listURL = $nextlistURL;
 
-  		my $nextlistURL = $service->getNextURL($driveListings);
-  		$nextlistURL =~ s%\&amp\;%\&%g;
-  		$nextlistURL =~ s%\%3A%\:%g;
 
-	    $listURL = $nextlistURL;
 
+  			($createFileURL) = $services[$currentService]->getCreateURL($driveListings) if ($createFileURL eq '');
+  			my %newDocuments = $services[$currentService]->readDriveListings($driveListings);
 
+  			foreach my $resourceID (keys %newDocuments){
+		    	$sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
+	  		}
+	  		last if ($listURL eq '');
 
-  		($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
-  		my %newDocuments = $service->readDriveListings($driveListings,$folders);
+  		}
 
-  		foreach my $resourceID (keys %newDocuments){
-		    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
-	  	}
-	  	last if ($listURL eq '');
+  		open(OUTPUT, '>' . pDrive::Config->TMP_PATH . '/download.list') or die ('Cannot save to ' . pDrive::Config->TMP_PATH . '/download.list');
+  		foreach my $resourceID (sort keys %sortedDocuments){
+	    	print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
+	#    	print OUTPUT $resourceID. "\n" . $sortedDocuments{$resourceID} . "\n";
+    		print OUTPUT $resourceID. "\n" ;
+  		}
+  		close(OUTPUT);
 
-  	}
+	#	download only all mine documents
+ 	#
+ 	}elsif($input =~ m%^download mine%i){
+  		my %sortedDocuments;
+    	my $listURL;
+    	$listURL = 'https://docs.google.com/feeds/default/private/full/-/mine';
 
-  	open(OUTPUT, '>' . pDrive::Config->TMP_PATH . '/download.list') or die ('Cannot save to ' . pDrive::Config->TMP_PATH . '/download.list');
-  	foreach my $resourceID (sort keys %sortedDocuments){
-	    print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
-#    	print OUTPUT $resourceID. "\n" . $sortedDocuments{$resourceID} . "\n";
-    	print OUTPUT $resourceID. "\n" ;
-  	}
-  	close(OUTPUT);
+   		while(1){
 
- #download only all mine documents
- #
- }elsif($input =~ m%^download mine%i){
-  	my %sortedDocuments;
-    my $listURL;
-    $listURL = 'https://docs.google.com/feeds/default/private/full/-/mine';
+   			($driveListings) = $services[$currentService]->getList($listURL);
 
-   	while(1){
+  			my $nextlistURL = $services[$currentService]->getNextURL($driveListings);
+  			$nextlistURL =~ s%\&amp\;%\&%g;
+  			$nextlistURL =~ s%\%3A%\:%g;
 
-   		($driveListings) = $service->getList($listURL);
+	    	$listURL = $nextlistURL;
 
-  		my $nextlistURL = $service->getNextURL($driveListings);
-  		$nextlistURL =~ s%\&amp\;%\&%g;
-  		$nextlistURL =~ s%\%3A%\:%g;
 
-	    $listURL = $nextlistURL;
+  			($createFileURL) = $services[$currentService]->getCreateURL($driveListings) if ($createFileURL eq '');
+	  		my %newDocuments = $services[$currentService]->readDriveListings($driveListings);
 
+	  		foreach my $resourceID (keys %newDocuments){
+			    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
+		  	}
+		  	last if ($listURL eq '');
 
+  		}
 
-  		($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
-  		my %newDocuments = $service->readDriveListings($driveListings,$folders);
+  		foreach my $resourceID (sort keys %sortedDocuments){
+	    	print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
+	    	$services[$currentService]->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
+  		}
 
-  		foreach my $resourceID (keys %newDocuments){
-		    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
-	  	}
-	  	last if ($listURL eq '');
+ 	}elsif($input =~ m%^download all%i){
+  		my %sortedDocuments;
+    	my $listURL;
+    	$listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
 
-  	}
+   		while(1){
 
-  	foreach my $resourceID (sort keys %sortedDocuments){
-	    print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
-	    $service->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
-  	}
+   			($driveListings) = $services[$currentService]->getList($listURL);
 
- }elsif($input =~ m%^download all%i){
-  	my %sortedDocuments;
-    my $listURL;
-    $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
+  			my $nextlistURL = $services[$currentService]->getNextURL($driveListings);
+  			$nextlistURL =~ s%\&amp\;%\&%g;
+  			$nextlistURL =~ s%\%3A%\:%g;
 
-   	while(1){
+	    	$listURL = $nextlistURL;
 
-   		($driveListings) = $service->getList($listURL);
+	  		($createFileURL) = $services[$currentService]->getCreateURL($driveListings) if ($createFileURL eq '');
+  			my %newDocuments = $services[$currentService]->readDriveListings($driveListings);
 
-  		my $nextlistURL = $service->getNextURL($driveListings);
-  		$nextlistURL =~ s%\&amp\;%\&%g;
-  		$nextlistURL =~ s%\%3A%\:%g;
+  			foreach my $resourceID (keys %newDocuments){
+		    	$sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
+	  		}
+	  		last if ($listURL eq '');
 
-	    $listURL = $nextlistURL;
+  		}
 
+  		foreach my $resourceID (sort keys %sortedDocuments){
+	    	print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
+	    	$services[$currentService]->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
+  		}
 
 
-  		($createFileURL) = $service->getCreateURL($driveListings) if ($createFileURL eq '');
-  		my %newDocuments = $service->readDriveListings($driveListings,$folders);
+	}elsif($input =~ m%^create dir\s[^\n]+\n%i){
+    	my ($dir) = $input =~ m%^create dir\s([^\n]+)\n%;
 
-  		foreach my $resourceID (keys %newDocuments){
-		    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
-	  	}
-	  	last if ($listURL eq '');
-
-  	}
-
-  	foreach my $resourceID (sort keys %sortedDocuments){
-	    print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
-	    $service->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
-  	}
-
-
-  ##
-  # bind to IP address
-  ###
-  }elsif($input =~ m%^bind\s[^\s]+%i){
-    my ($IP) = $input =~ m%^bind\s([^\s]+)%i;
-    $service->bindIP($IP);
-    $loggedInUser .= '-' .$IP;
-
-  ##
-  # authenticate user account
-  ###
-  }elsif($input =~ m%^authenticate\s[^\s]+\s[^\s]+%i){
-    my ($username, $password) = $input =~ m%^authenticate\s([^\s]+)\s([^\s]+)%i;
-    $service = pDrive::GoogleDocsAPI3->new();
-    $service->authenticate($username,$password);
-
-    ($driveListings) = $service->getList($service->getListURL());
-
-    #
-    # for creating new files
-    ##
-  	my ($nextlistURL) = $service->getNextURL($driveListings);
-  	$nextlistURL =~ s%\&amp\;%\&%g;
-  	$nextlistURL =~ s%\%3A%\:%g;
-
-  	($createFileURL) = $service->getCreateURL($driveListings);
-  	print "Create File URL = ".$createFileURL . "\n";
-
-    ##
-	$loggedInUser = $username;
-
-  }elsif($input =~ m%^create dir\s[^\n]+\n%i){
-    my ($dir) = $input =~ m%^create dir\s([^\n]+)\n%;
-
-  	my $folderID = $service->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$dir);
-    print "resource ID = " . $folderID . "\n";
-
-
-
-  }elsif($input =~ m%^get edit\s[^\s]+\s[^\n]+\n%i){
-    my ($resourceID,$path) = $input =~ m%^get edit\s([^\s]+)\s([^\n]+)\n%;
-    print STDOUT "resource $resourceID, path = $path\n";
-    print STDOUT "value = $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_edit'}]\n";
-
-  }elsif($input =~ m%^upload edit\s[^\s]+\s[^\n]+\n%i){
-    my ($resourceID,$path) = $input =~ m%^upload edit\s([^\s]+)\s([^\n]+)\n%;
-    my $fullPath = pDrive::Config->LOCAL_PATH . $path;
-    print STDOUT "resource $resourceID, path = $fullPath\n";
-    print STDOUT "value = $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_edit'}]\n";
-  	my $fileSize =  -s $fullPath;
-  	my $filetype = 'text/plain';
-  	print STDOUT "file size for $fullPath is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
-
-  	my $uploadURL = $service->editFile($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_edit'}],$fileSize,$fullPath,$filetype);
-
-  	my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
-  	my $pointerInFile=0;
-  	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  	open(INPUT, "<".$fullPath) or die ('cannot read file '.$fullPath);
-  	binmode(INPUT);
-
-  	print STDERR 'uploading chunks [' . $chunkNumbers.  "]...";
-  	for (my $i=0; $i < $chunkNumbers; $i++){
-	    my $chunkSize = CHUNKSIZE;
-
-	    my $chunk;
-	    if ($i == $chunkNumbers-1){
-      		$chunkSize = $fileSize - $pointerInFile;
-    	}
-    	sysread INPUT, $chunk, CHUNKSIZE;
-    	print STDERR $i;
-    	my $status=0;
-    	while ($status == 0){
-      		$status = $service->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      		if ($status == 0){
-        		print STDERR "retry\n";
-        		sleep (5);
-      		}
-    	}
-	    $pointerInFile += $chunkSize;
-  	}
-  	close(INPUT);
-  	print STDOUT "\n";
+  		my $folderID = $services[$currentService]->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$dir);
+    	print "resource ID = " . $folderID . "\n";
 
 
 	}elsif($input =~ m%^create folder%i){
     	my ($folder) = $input =~ m%^create folder\s([^\n]+)\n%;
 
-	  	my $folderID = $service->createFolder($folder);
+	  	my $folderID = $services[$currentService]->createFolder($folder);
 	    print "resource ID = " . $folderID . "\n";
 
 
@@ -508,7 +419,7 @@ while (my $input = <$userInput>){
 	        print STDOUT "no files\n";
         	next;
       	}
-  		$service->uploadFolder($dir . '/'. $folder, '');
+  		$services[$currentService]->uploadFolder($dir . '/'. $folder, '');
 
     }
 
@@ -521,7 +432,7 @@ while (my $input = <$userInput>){
     my @fileList = pDrive::FileIO::getFilesDir($dir);
 
     print STDOUT "folder = $folder\n";
-  	my $folderID = $service->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
+  	my $folderID = $services[$currentService]->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
     print "resource ID = " . $folderID . "\n";
 
     for (my $i=0; $i <= $#fileList; $i++){
@@ -533,7 +444,7 @@ while (my $input = <$userInput>){
   		my $filetype = 'application/octet-stream';
   		print STDOUT "file size for $fileList[$i] is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
 
-  		my $uploadURL = $service->createFile($createFileURL,$fileSize,$fileName,$filetype);
+  		my $uploadURL = $services[$currentService]->createFile($createFileURL,$fileSize,$fileName,$filetype);
 
 
   		my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
@@ -557,7 +468,7 @@ while (my $input = <$userInput>){
     		my $status=0;
     		my $retrycount=0;
     		while ($status eq '0' and $retrycount < 5){
-			    $status = $service->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+			    $status = $services[$currentService]->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
       			print STDOUT $status . "\n";
 	      		if ($status eq '0'){
         			print STDERR "retry\n";
@@ -572,8 +483,8 @@ while (my $input = <$userInput>){
 		    $pointerInFile += $chunkSize;
   		}
   		close(INPUT);
-  	    $service->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
-  	    $service->deleteFile('root',$fileID);
+  	    $services[$currentService]->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
+  	    $services[$currentService]->deleteFile('root',$fileID);
 
   		print STDOUT "\n";
     }
@@ -593,9 +504,9 @@ while (my $input = <$userInput>){
 
   }elsif($input =~ m%^get current%i){
 
-    my ($driveListings) = $service->getList($currentURL);
+    my ($driveListings) = $services[$currentService]->getList($currentURL);
 
-    ($nextURL) = $service->getNextURL($driveListings);
+    ($nextURL) = $services[$currentService]->getNextURL($driveListings);
     $nextURL =~ s%\&amp\;%\&%g;
     $nextURL =~ s%\%3A%\:%g;
     $nextURL .= '&showfolders=true' if ($nextURL ne '' and !($nextURL =~ m%showfolders%));

@@ -343,16 +343,16 @@ sub dumpHash(*$){
 
 #
 # Dump the DBM Hash to the screen
-# * obsolete
-sub printHash(*$){
+sub printHash(*$$){
 
   my $self = shift;
+  my $dbfile = shift;
   my $filter = shift;
 
-  print "(filter = $filter) Database ".$self->{_container}." consists of the following key value pairs...\n";
+  print "(filter = $filter) Database ".$dbfile." consists of the following key value pairs...\n";
 
 
-  tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_container},O_RDWR|O_CREAT, 0666) or die "can't open ".$self->{_container}.": $!";
+  tie(my %dbase, pDrive::Config->DBM_TYPE, $dbfile,O_RDONLY, 0666) or die "can't open ".$dbfile.": $!";
 
   if ($filter ne ''){
 
@@ -370,6 +370,31 @@ sub printHash(*$){
 
 }
 
+#
+# update  the key in the hash
+sub updateHashKey(*$$$){
+
+	my $self = shift;
+ 	my $dbfile = shift;
+ 	my $filter = shift;
+  	my $filterChange = shift;
+
+  	tie(my %dbase, pDrive::Config->DBM_TYPE, $dbfile,O_RDWR|O_CREAT, 0666) or die "can't open ".$dbfile.": $!";
+
+  	if ($filter ne ''){
+
+    	foreach my $key (keys %dbase) {
+      		next unless ($key =~ m%$filter%);
+      		my $newKey = $key;
+      		$newKey =~ s%$filter%$filterChange%;
+      		$dbase{$newKey} = $dbase{$key};
+      		print "Saved new key $dbase{$key} $newKey with value ".$dbase{$newKey}."\n";
+    	}
+  	}
+
+  	untie(%dbase);
+
+}
 #
 # Retrieve the timestamp of the most recent record
 #

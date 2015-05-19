@@ -17,25 +17,30 @@ use constant CHUNKSIZE => (8*256*1024);
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 #my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 
-sub new(*$$) {
+sub new(*$) {
 
   	my $self = {_gdrive => undef,
               _listURL => undef,
                _login_dbm => undef,
-              _dbm => undef};
+              _dbm => undef,
+  			  _username => undef,
+  			  _db_md5 => undef,
+  			  _db_fisi => undef};
 
   	my $class = shift;
   	bless $self, $class;
-	my $username = pDrive::Config->USERNAME;
+	$self->{_username} = shift;
+	$self->{_db_md5} = $self->{_username} . '.md5.db';
+	$self->{_db_fisi} = $self->{_username} . '.fisi.db';
 
 
   	# initialize web connections
   	$self->{_gdrive} = pDrive::GoogleDriveAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
 
-  	my $loginsDBM = pDrive::DBM->new('./test.db');
+  	my $loginsDBM = pDrive::DBM->new('./'.$self->{_username}.'.db');
 #  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
   	$self->{_login_dbm} = $loginsDBM;
-  	my ($token,$refreshToken) = $loginsDBM->readLogin($username);
+  	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
 
 	# no token defined
 	if ($token eq '' or  $refreshToken  eq ''){
@@ -46,7 +51,7 @@ sub new(*$$) {
 		$code = <>;
 		print STDOUT "code = $code\n";
  	  	($token,$refreshToken) = $self->{_gdrive}->getToken($code);
-	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
+	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
 	}else{
 		$self->{_gdrive}->setToken($token,$refreshToken);
 	}
@@ -55,7 +60,7 @@ sub new(*$$) {
 	if (!($self->{_gdrive}->testAccess())){
 		# refresh token
  	 	($token,$refreshToken) = $self->{_gdrive}->refreshToken();
-	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
+	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
 	}
 	return $self;
 
@@ -405,12 +410,12 @@ sub uploadFile(*$$){
 	       		print STDERR "...retry\n";
 	       		#some other instance may have updated the tokens already, refresh with the latest
 	       		if ($retrycount == 0){
-	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin(pDrive::Config->USERNAME);
+	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($self->{_username});
 	       			$self->{_gdrive}->setToken($token,$refreshToken);
 	       		#multiple failures, force-fech a new token
 	       		}else{
  	 				my ($token,$refreshToken) = $self->{_gdrive}->refreshToken();
-	  				$self->{_login_dbm}->writeLogin( pDrive::Config->USERNAME,$token,$refreshToken);
+	  				$self->{_login_dbm}->writeLogin( $self->{_username},$token,$refreshToken);
 	       			$self->{_gdrive}->setToken($token,$refreshToken);
 	       		}
         		sleep (5);
@@ -429,14 +434,13 @@ sub uploadFile(*$$){
   	close(INPUT);
 }
 
-sub getList(**){
+sub getList(*){
 
 	my $self = shift;
-	my $folders = shift;
 	my $driveListings = $self->{_gdrive}->getList('');
 
 
-  	my $newDocuments = $self->{_gdrive}->readDriveListings($driveListings,$folders);
+  	my $newDocuments = $self->{_gdrive}->readDriveListings($driveListings);
 
   	foreach my $resourceID (keys $newDocuments){
     	print STDOUT 'new document -> '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ', '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\n";
@@ -448,15 +452,21 @@ sub getList(**){
 }
 
 
-sub getListAll(**){
+sub getListRoot(*){
 
 	my $self = shift;
-	my $folders = shift;
+	print STDOUT "root = " . $self->{_gdrive}->getListRoot('') . "\n";
+
+}
+
+sub getListAll(*){
+
+	my $self = shift;
 
 	my $nextURL = '';
 	while (1){
 		my $driveListings = $self->{_gdrive}->getList($nextURL);
-  		my $newDocuments = $self->{_gdrive}->readDriveListings($driveListings,$folders);
+  		my $newDocuments = $self->{_gdrive}->readDriveListings($driveListings);
   		$nextURL = $self->{_gdrive}->getNextURL($driveListings);
 		$self->updateMD5Hash($newDocuments);
 		print STDOUT "next url " . $nextURL . "\n";
@@ -466,10 +476,9 @@ sub getListAll(**){
 
 }
 
-sub getChangesAll(**){
+sub getChangesAll(*){
 
 	my $self = shift;
-	my $folders = shift;
 
 	my $nextURL = '';
     tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDONLY, 0666) or die "can't open md5: $!";

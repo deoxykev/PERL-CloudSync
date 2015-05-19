@@ -93,7 +93,7 @@ sub setToken(*$$){
 }
 
 #
-# getTokens (writely and wise)
+# getTokens
 ##
 sub getToken(*$){
 	my $self = shift;
@@ -139,7 +139,7 @@ sub getToken(*$){
 
 
 #
-# refreshToken (writely and wise)
+# refreshToken
 ##
 sub refreshToken(*){
 	my $self = shift;
@@ -182,6 +182,9 @@ sub refreshToken(*){
 }
 
 
+#
+# Test access (validating credentials)
+##
 sub testAccess(*){
 
   	my $self = shift;
@@ -210,6 +213,9 @@ sub testAccess(*){
 
 }
 
+#
+# get list of the content in the Google Drive
+##
 sub getList(*$){
 
 	my $self = shift;
@@ -234,22 +240,61 @@ sub getList(*$){
 
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n";
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-  		}
+	  	return \$res->as_string;
 
 	}else{
 		#		print STDOUT $res->as_string;
 		die($res->as_string."error in loading page");}
 
-  	return \$res->as_string;
 
 }
 
+
+#
+# get the root ID for the Google Drive
+##
+sub getListRoot(*$){
+
+	my $self = shift;
+	my $URL = shift;
+
+	if ($URL eq ''){
+		$URL = 'https://www.googleapis.com/drive/v2/files/root';
+	}
+
+
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+  		my $block = $res->as_string;
+
+
+		my ($resourceID) = $block =~ m%\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s?\"([^\"]+)\"%;
+		return $resourceID;
+
+	}else{
+		#		print STDOUT $res->as_string;
+		die($res->as_string."error in loading page");}
+
+  	return '';
+
+}
+
+
+#
+# get the list of changes
+##
 sub getChanges(*$){
 
 	my $self = shift;
@@ -291,17 +336,10 @@ sub getChanges(*$){
 
 }
 
-sub getCreateURL(*$){
 
-  my $self = shift;
-  my $listing = shift;
-
-  my ($URL) = $listing =~ m%\<link\s+rel\=\'http\:\/\/schemas.google.com\/g\/2005\#resumable-create-media\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
-
-  return $URL;
-
-}
-
+#
+# get the next page URL
+##
 sub getNextURL(**){
 
  	my $self = shift;
@@ -311,6 +349,9 @@ sub getNextURL(**){
 }
 
 
+#
+# get the next change ID
+##
 sub getChangeID(**){
 
  	my $self = shift;
@@ -320,19 +361,6 @@ sub getChangeID(**){
 }
 
 
-sub getListURL(*$){
-
-	my $self = shift;
-	my $timestamp = shift;
-
-	if (defined $timestamp and $timestamp ne ''){
-    	return 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:'.$timestamp;
-	  #  $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:2012-08-10';
-  	}else{
-    	return 'https://docs.google.com/feeds/default/private/full?showfolders=true';
-  	}
-
-}
 
 
 sub downloadFile(*$$$$$$){
@@ -465,7 +493,9 @@ if($res->is_success or $res->code == 308){
 }
 
 
-
+#
+# Create a file
+##
 sub createFile(*$$$$$){
 
 	my $self = shift;
@@ -528,6 +558,10 @@ sub createFile(*$$$$$){
 
 }
 
+
+#
+# Create a folder
+##
 sub createFolder(*$$){
 
 	my $self = shift;
@@ -583,6 +617,10 @@ sub createFolder(*$$){
 
 }
 
+#
+# Add a file to a folder
+# * needs updating*
+##
 sub addFile(*$$){
 
 	my $self = shift;
@@ -639,6 +677,10 @@ sub addFile(*$$){
 }
 
 
+#
+# Delete  a file to a folder
+# * needs updating*
+##
 sub deleteFile(*$$){
 
 	my $self = shift;
@@ -744,18 +786,13 @@ if($res->is_success){
 
 }
 
-
-sub fixServerMD5(**){
-  my $self = shift;
-  my $memoryHash = shift;
-
-}
-
-sub readDriveListings(***){
+#
+# Parse the drive listings
+##
+sub readDriveListings(**){
 
 	my $self = shift;
 	my $driveListings = shift;
-	my $folders = shift;
 	my %newDocuments;
 
 	my $count=0;
@@ -788,25 +825,6 @@ sub readDriveListings(***){
 	    # 	is a folder
 	    if ($resourceType eq 'folder'){
 
-    		# save the title
-      		$$folders{$resourceID}[FOLDER_TITLE] = $title;
-
-		    # 	is not a root folder
-#      		if ($entry =~ defined $folder and $folder ne ''){
-
-        		$$folders{$resourceID}[FOLDER_ROOT] = NOT_ROOT;
-        		$$folders{$resourceID}[FOLDER_PARENT] = $parentID;
-
-		        # add the resourceID to the parent directory
-		        if ($#{${$folders}{$parentID}} >= FOLDER_SUBFOLDER){
-
-          			$$folders{$parentID}[$#{${$folders}{$parentID}}+1] = $resourceID;
-
-        		}else{
-
-          			$$folders{$parentID}[FOLDER_SUBFOLDER] = $resourceID;
-
-        		}
 
 		      # is a root folder
 #			}else{
@@ -839,7 +857,9 @@ sub readDriveListings(***){
 }
 
 
-
+#
+# Parse the change listings
+##
 sub readChangeListings(**){
 
 	my $self = shift;

@@ -30,14 +30,14 @@ sub new(*$) {
   	my $class = shift;
   	bless $self, $class;
 	$self->{_username} = shift;
-	$self->{_db_md5} = $self->{_username} . '.md5.db';
-	$self->{_db_fisi} = $self->{_username} . '.fisi.db';
+	$self->{_db_md5} = 'gd.'.$self->{_username} . '.md5.db';
+	$self->{_db_fisi} = 'gd.'.$self->{_username} . '.fisi.db';
 
 
   	# initialize web connections
   	$self->{_gdrive} = pDrive::GoogleDriveAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
 
-  	my $loginsDBM = pDrive::DBM->new('./'.$self->{_username}.'.db');
+  	my $loginsDBM = pDrive::DBM->new('./gd.'.$self->{_username}.'.db');
 #  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
   	$self->{_login_dbm} = $loginsDBM;
   	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
@@ -60,6 +60,7 @@ sub new(*$) {
 	if (!($self->{_gdrive}->testAccess())){
 		# refresh token
  	 	($token,$refreshToken) = $self->{_gdrive}->refreshToken();
+		$self->{_gdrive}->setToken($token,$refreshToken);
 	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
 	}
 	return $self;
@@ -179,106 +180,18 @@ sub containsFolder($$){
 
 
 
-sub downloadFile(*$$$$$$*){
+sub downloadFile(*$$$){
 
-      my ($self,$path,$link,$updated,$resourceType,$resourceID,$dbase,$updatedList) = @_;
-      print STDOUT "downloading $path...\n";
+      my ($self,$path,$link,$updated) = @_;
       my $returnStatus;
-      my $finalPath = $path;
+      my $finalPath = pDrive::Config->LOCAL_PATH."/$path";
 
-      pDrive::FileIO::traverseMKDIR(pDrive::Config->LOCAL_PATH."/$path");
+      pDrive::FileIO::traverseMKDIR($finalPath);
+      print STDOUT "downloading $finalPath...\n";
 
       # a simple non-google-doc file
-      if ($types->{$resourceType} eq ''){
-        my $appendex='';
-        print STDOUT 'download using writely - '. $resourceType . $types->{$resourceType} if (pDrive::Config->DEBUG);
-        if (scalar (keys %{${$dbase}{$path}}) > 1){
-          $appendex .= '.'.$resourceID;
-          $finalPath .= '.'.$resourceID;
-        }
-        if (pDrive::Config->REVISIONS and defined $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
-          $appendex .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-          $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-        }
+      $returnStatus = $self->{_gdrive}->downloadFile($finalPath,$link,$updated);
 
-        $returnStatus = $self->{_gdrive}->downloadFile($link,$path,'',$appendex,$updated);
-      # a google-doc file
-      }else{
-        print STDOUT 'download using '.$types->{$resourceType}.' wise - '. $resourceType  if (pDrive::Config->DEBUG);
-
-
-        # are there multiple filetypes noted for the export?
-        if (ref($types->{$resourceType}) eq 'ARRAY'){
-          for (my $i=0; $i <= $#{$types->{$resourceType}}; $i++){
-            my $appendex='';
-            if (scalar (keys %{${$dbase}{$path}}) > 1){
-              $appendex .= '.'.$resourceID;
-              $finalPath .= '.'.$resourceID;
-            }
-            if (pDrive::Config->REVISIONS and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
-              $appendex .= '.local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}];
-              $finalPath .= '.local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}];
-            }
-#wise
-            $returnStatus = $self->{_gdrive}->downloadFile($link.'&exportFormat='.$types->{$resourceType}[$i],$path,$types->{$resourceType}[$i],$appendex,$updated);
-          }
-        }else{
-          my $appendex='';
-          if (scalar (keys %{${$dbase}{$path}}) > 1){
-            $appendex .= '.'.$resourceID;
-            $finalPath .= '.'.$resourceID;
-          }
-          if (pDrive::Config->REVISIONS and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
-            $appendex .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-            $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-          }
-#wise
-          $returnStatus = $self->{_gdrive}->downloadFile($link.'&exportFormat='.$types->{$resourceType},$path,$types->{$resourceType},$appendex,$updated);
-        }
-
-        #ignore export if fails; just try to download
-        # noticed some spreadsheets in XLSX will fail with exportFormat, but download fine (and in XSLX otherwise)
-        if ($returnStatus == 0){
-          my $appendex='';
-          if (scalar (keys %{${$dbase}{$path}}) > 1){
-            $appendex .= '.'.$resourceID;
-            $finalPath .= '.'.$resourceID;
-          }
-          if (pDrive::Config->REVISIONS and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
-            $appendex .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-            $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-          }
-#wise
-          $returnStatus = $self->{_gdrive}->downloadFile($link,$path,$types->{$resourceType},$appendex,$updated);
-        }
-      }
-
-      # successful?  update the db
-      if ($returnStatus == 1){
-
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] = $updated;
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] = pDrive::FileIO::getMD5(pDrive::Config->LOCAL_PATH.'/'.$finalPath);
-
-        if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] ne $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}]){
-          print STDOUT "MD5 check failed!!!\n";
-          pDrive::masterLog("$finalPath $resourceID - MD5 check failed -- $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] - $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}]");
-        }
-
-        if (pDrive::Config->REVISIONS){
-          $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}]++;
-        }
-#        $updatedList[$#updatedList++] = $path;
-        if ($#{$updatedList} >= 0){
-          $$updatedList[$#{$updatedList}++] = $path;
-        }else{
-          $$updatedList[0] = $path;
-        }
-
-        $self->{_dbm}->writeValueContainerHash($path,$resourceID,$dbase);
-      }elsif($returnStatus == 0){
-        #TBD
-      }
 }
 
 
@@ -344,7 +257,7 @@ sub uploadFolder(*$$){
     			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
 
     			if ($file eq $currentFile and $md5 ne ''){
-    				tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDONLY, 0666) or die "can't open md5: $!";
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_md5} ,O_RDONLY, 0666) or die "can't open md5: $!";
     				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
     					$process = 0;
 				    	pDrive::masterLog("skipped file (md5 $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
@@ -438,8 +351,6 @@ sub getList(*){
 
 	my $self = shift;
 	my $driveListings = $self->{_gdrive}->getList('');
-
-
   	my $newDocuments = $self->{_gdrive}->readDriveListings($driveListings);
 
   	foreach my $resourceID (keys $newDocuments){
@@ -447,8 +358,9 @@ sub getList(*){
 	}
 
 	#print STDOUT $$driveListings . "\n";
-	print STDOUT "next url " . $self->{_gdrive}->getNextURL($driveListings) . "\n";
-	$self->updateMD5Hash($newDocuments);
+	#print STDOUT "next url " . $self->{_gdrive}->getNextURL($driveListings) . "\n";
+	#$self->updateMD5Hash($newDocuments);
+	return $newDocuments;
 }
 
 
@@ -476,12 +388,21 @@ sub getListAll(*){
 
 }
 
+
+sub readDriveListings(**){
+
+	my $self = shift;
+	my $driveListings = shift;
+	return $self->{_gdrive}->readDriveListings($driveListings);
+
+}
+
 sub getChangesAll(*){
 
 	my $self = shift;
 
 	my $nextURL = '';
-    tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDONLY, 0666) or die "can't open md5: $!";
+    tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_md5} ,O_RDONLY, 0666) or die "can't open md5: $!";
     my $changeID = $dbase{'LAST_CHANGE'};
     print STDOUT "changeID = " . $changeID . "\n";
     untie(%dbase);
@@ -506,7 +427,7 @@ sub updateMD5Hash(**){
 	my $newDocuments = shift;
 
 	my $count=0;
-	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_md5} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	foreach my $resourceID (keys $newDocuments){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '';
 		for (my $i=0; 1; $i++){
@@ -536,7 +457,7 @@ sub updateChange(**){
 	my $self = shift;
 	my $changeID = shift;
 
-	tie(my %dbase, pDrive::Config->DBM_TYPE, './md5.db' ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_md5} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	$dbase{'LAST_CHANGE'} = $changeID;
 	untie(%dbase);
 

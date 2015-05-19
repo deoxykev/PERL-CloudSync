@@ -27,7 +27,7 @@ sub new(*) {
 	my $username = pDrive::Config->USERNAME;
 
   	# initialize web connections
-  	$self->{_oneDrive} = pDrive::OneDriveAPI1->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
+  	$self->{_oneDrive} = pDrive::OneDriveAPI1->new(pDrive::Config->ODCLIENT_ID,pDrive::Config->ODCLIENT_SECRET);
 
   	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
   	$self->{_login_dbm} = $loginsDBM;
@@ -36,7 +36,7 @@ sub new(*) {
 	# no token defined
 	if ($token eq '' or  $refreshToken  eq ''){
 		my $code;
-		my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.pDrive::Config->CLIENT_ID . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
+		my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.pDrive::Config->ODCLIENT_ID . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
 		print STDOUT "visit $URL\n";
 		print STDOUT 'Input Code:';
 		$code = <>;
@@ -50,7 +50,8 @@ sub new(*) {
 	# token expired?
 	if (!($self->{_oneDrive}->testAccess())){
 		# refresh token
- 	 	($token,$refreshToken) = $self->{_oneDrive}->refreshToken($code);
+ 	 	($token,$refreshToken) = $self->{_oneDrive}->refreshToken();
+		$self->{_oneDrive}->setToken($token,$refreshToken);
 	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
 	}
 

@@ -58,7 +58,9 @@ require 'lib/dbm.pm';
 require 'lib/time.pm';
 require 'lib/fileio.pm';
 require 'lib/gdrive_drive.pm';
+require 'lib/onedrive.pm';
 require './lib/googledriveapi2.pm';
+require './lib/onedriveapi1.pm';
 
 
 
@@ -219,6 +221,24 @@ while (my $input = <$userInput>){
 			}
 		}
 
+  	}elsif($input =~ m%^load od\s\d+\s([^\s]+)%i){
+    	my ($account,$login) = $input =~ m%^load od\s(\d+)\s([^\s]+)%i;
+		#my ($dbase,$folders) = $dbm->readHash();
+		$services[$account] = pDrive::oneDrive->new($login);
+		$currentService = $account;
+
+		$loggedInUser = $bindIP;
+		for (my $i=0;$i <= $#services;$i++){
+			if (defined $services[$i]){
+				$loggedInUser .= ', ' if $i > 1;
+				if ($currentService == $i){
+					$loggedInUser .= '*'.$i. '*. ' . $services[$i]->{_username};
+				}else{
+					$loggedInUser .= $i. '. ' . $services[$i]->{_username};
+				}
+
+			}
+		}
 
 	###
 	# local-hash helpers
@@ -258,11 +278,16 @@ while (my $input = <$userInput>){
 	# load MD5 with account data of first page of results
   	}elsif($input =~ m%^get drive list%i){
     	my $listURL;
-    	($driveListings) = $services[$currentService]->getList();
+    	my ($driveListings) = $services[$currentService]->getList();
 
 	# return the id to the root folder
   	}elsif($input =~ m%^get root id%i){
-    	($driveListings) = $services[$currentService]->getListRoot();
+    	my ($rootID) = $services[$currentService]->getListRoot();
+
+	# sync the entire drive in source current source with all other sources
+  	}elsif($input =~ m%^sync drive%i){
+    	#my ($rootID) = $services[$currentService]->getListRoot();
+    	syncDrive();
 
 	}elsif($input =~ m%^dump md5%i){
 		my $dbase = $dbm->openDBM($services[$currentService]->{_db_md5});
@@ -542,6 +567,27 @@ sub masterLog($){
   open (SYSTEMLOG, '>>' . pDrive::Config->LOGFILE) or die('Cannot access application log ' . pDrive::Config->LOGFILE);
   print SYSTEMLOG HOSTNAME . ' (' . $$ . ') - ' . $timestamp . ' -  ' . $event . "\n";
   close (SYSTEMLOG);
+
+}
+
+sub syncDrive(){
+
+	my $nextURL = '';
+	while (1){
+		my $newDocuments =  $services[$currentService]->getList($nextURL);
+  		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
+  		foreach my $resourceID (keys $newDocuments){
+			print STDOUT "downloading " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] . "\n";
+	    	$services[$currentService]->downloadFile($resourceID,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+
+	  	}
+  		$nextURL =  $services[$currentService]->getNextURL($driveListings);
+		#$self->updateMD5Hash($newDocuments);
+		print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+  		last;
+	}
+	#print STDOUT $$driveListings . "\n";
 
 }
 __END__

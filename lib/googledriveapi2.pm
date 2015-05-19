@@ -363,40 +363,26 @@ sub getChangeID(**){
 
 
 
-sub downloadFile(*$$$$$$){
+sub downloadFile(*$$$){
 
-  my $self = shift;
-  my $URL = shift;
-  my $path = shift;
-  my $resourceID = shift;
-  my $appendex = shift;
-  my $timestamp = shift;
+	my $self = shift;
+  	my $path = shift;
+  	my $URL = shift;
+  	my $timestamp = shift;
 
 
-$path .= '.'.$resourceID if ($resourceID ne '');
-$path .= $appendex if ($appendex ne '');
+#	my $req = new HTTP::Request GET => $URL;
+#	$req->protocol('HTTP/1.1');
+#	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $res;
+  	open (FILE, "> ".$path) or die ("Cannot save image file".$path.": $!\n");
+  	binmode(FILE);
+    $res = $self->{_ua}->get($URL,':content_cb' => \&downloadChunk,':read_size_hint' => 8192,'Authorization' => 'Bearer '.$self->{_token});
+	close(FILE);
+  	print STDOUT "saved\n";
 
-my $req = new HTTP::Request GET => $URL;
-$req->protocol('HTTP/1.1');
-if ($URL =~ m%\&exportFormat%){
-  $req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-}else{
-  $req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-}
-$req->header('GData-Version' => '3.0');
-  $self->{_cookiejar}->add_cookie_header($req);
-#my $res = $self->{_ua}->request($req);
-my $res;
-  open (FILE, "> ".pDrive::Config->LOCAL_PATH."/$path") or die ("Cannot save image file".pDrive::Config->LOCAL_PATH."/$path: $!\n");
-  binmode(FILE);
-  if ($URL =~ m%\&exportFormat%){
-    $res = $self->{_ua}->get($URL,':content_cb' => \&downloadChunk,':read_size_hint' => 8192,'Authorization' => 'GoogleLogin auth='.$self->{_authwise},'GData-Version' => '3.0');
-  }else{
-    $res = $self->{_ua}->get($URL,':content_cb' => \&downloadChunk,':read_size_hint' => 8192,'Authorization' => 'GoogleLogin auth='.$self->{_authwritely},'GData-Version' => '3.0');
-  }
-  close(FILE);
-  print STDOUT "saved\n";
-
+ 	 # set timestamp on file as server last updated timestamp
+ 	#utime $timestamp, $timestamp, pDrive::Config->LOCAL_PATH.'/'.$path;
 
 
 # reduce memory consumption from slurping the entire download file in memory
@@ -411,35 +397,6 @@ sub downloadChunk {
 }
 ###
 
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
-
-  # set timestamp on file as server last updated timestamp
-  utime $timestamp, $timestamp, pDrive::Config->LOCAL_PATH.'/'.$path;
-
-  return 1;
-}else{
-
-  if (0){
-  my $block = $res->as_string;
-
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    $block =~ s%[^\n]*\n%%;
-
-    if ($line =~ m%^Location:%){
-      ($URL) = $line =~ m%^Location:\s+(\S+)%;
-      print STDERR "following location $URL\n";
-      return $self->downloadFile($URL,$path,'','',$timestamp);
-    }
-
-  }
-}
-
-  print STDOUT $req->as_string;
-  print STDOUT $res->as_string;
-  return 0;
-}
 
 
 }

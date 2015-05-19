@@ -79,8 +79,60 @@ sub new(*) {
 }
 
 
-sub uploadFile(*$$$){
+sub uploadFolder(*$$){
+	my $self = shift;
+	my $path = shift;
+	my $parentFolder = shift;
 
+    my ($folder) = $path =~ m%\/([^\/]+)$%;
+
+  	print STDOUT "path = $path\n";
+   	my @fileList = pDrive::FileIO::getFilesDir($path);
+
+	print STDOUT "folder = $folder\n";
+#	my $folderID = $self->createFolder($folder, $parentFolder);
+	#print "resource ID = " . $folderID . "\n";
+	my $folderID ='new';
+
+    for (my $i=0; $i <= $#fileList; $i++){
+
+    	#empty file; skip
+    	if (-z $fileList[$i]){
+			next;
+    	#folder
+    	}elsif (-d $fileList[$i]){
+	  		my $fileID = $self->uploadFolder($fileList[$i], $folderID);
+    	# file
+    	}else{
+    		my $process = 1;
+    		#look for sha1 file
+    		for (my $j=0; $j <= $#fileList; $j++){
+    			my $value = $fileList[$i];
+    			my ($file,$sha1) = $fileList[$j] =~ m%[^\/]+\/\.(.*?)\.([^\.]+)$%;
+    			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
+
+    			if ($file eq $currentFile and $sha1 ne ''){
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_sha1} ,O_RDONLY, 0666) or die "can't open sha1: $!";
+    				if (  (defined $dbase{$sha1.'_'} and $dbase{$sha1.'_'} ne '') or (defined $dbase{$sha1.'_0'} and $dbase{$sha1.'_0'} ne '')){
+    					$process = 0;
+				    	pDrive::masterLog("skipped file (sha1 $sha1 exists ".$dbase{$sha1.'_0'}.") - $fileList[$i]\n");
+    					last;
+	    			}
+    				untie(%dbase);
+    			}
+    		}
+			if ($process){
+				print STDOUT "Upload $fileList[$i]\n";
+		  		my $fileID = $self->uploadFile($fileList[$i], $folderID);
+    		}else{
+				print STDOUT "SKIP $fileList[$i]\n";
+	    	}
+    	}
+	  	print STDOUT "\n";
+	}
+
+
+sub uploadFile(*$$){
 	my $self = shift;
 	my $file = shift;
 	my $path = shift;
@@ -155,7 +207,7 @@ sub uploadLargeFile(*$$$){
     my $status=0;
 	my $retrycount=0;
 	while ($status eq '0' and $retrycount < 5){
-		$status = $self->{_oneDrive}->uploadFile($URL, \$chunk, $chunkSize, 'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$path, $filename);
+		$status = $self->{_oneDrive}->uploadFile($URL, \$chunk, $chunkSize, 'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
       	print STDOUT "\r"  . $status;
 	    if ($status eq '0'){
 	    	print STDERR "...retry\n";
@@ -194,7 +246,8 @@ sub uploadSimpleFile(*$$$){
   	close(INPUT);
 
     print STDOUT 'uploading entire file '. "\n";
-    $self->{_oneDrive}->uploadEntireFile(\$fileContents,$fileSize, $path, $filename);
+    my $URL = $self->{_oneDrive}->API_URL .'/drive/root:/'.$path.'/'.$filename.':/content';
+    $self->{_oneDrive}->uploadEntireFile($URL, \$fileContents,$fileSize);
 
 
 
@@ -344,11 +397,11 @@ sub downloadFile(*$$$$$$*){
 
         $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] = $updated;
         $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] = pDrive::FileIO::getMD5(pDrive::Config->LOCAL_PATH.'/'.$finalPath);
+        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_sha1'}] = pDrive::FileIO::getsha1(pDrive::Config->LOCAL_PATH.'/'.$finalPath);
 
-        if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] ne $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}]){
-          print STDOUT "MD5 check failed!!!\n";
-          pDrive::masterLog("$finalPath $resourceID - MD5 check failed -- $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] - $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}]");
+        if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_sha1'}] ne $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_sha1'}]){
+          print STDOUT "sha1 check failed!!!\n";
+          pDrive::masterLog("$finalPath $resourceID - sha1 check failed -- $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_sha1'}] - $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_sha1'}]");
         }
 
         if (pDrive::Config->REVISIONS){

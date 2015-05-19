@@ -432,6 +432,12 @@ while (my $input = <$userInput>){
 	    print "resource ID = " . $folderID . "\n";
 
 
+	# remote upload using URL (OneDrive))
+	}elsif($input =~ m%^upload url%i){
+    	my ($filename,$URL) = $input =~ m%^upload url \"([^\"]+)\" ([^\n]+)\n%;
+		my $statusURL = $services[$currentService]->uploadRemoteFile($URL,'',$filename);
+		print STDOUT $statusURL . "\n";
+
 	}elsif($input =~ m%^upload dir list%i){
     	my ($list) = $input =~ m%^upload dir list\s([^\n]+)\n%;
 

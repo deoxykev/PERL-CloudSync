@@ -383,15 +383,13 @@ if($res->is_success){
 ###
 # uplad a file in chunks
 ##
-sub uploadFile(*$$$$){
+sub uploadFile(*$$$$$){
 
 	my $self = shift;
 	my $URL = shift;
  	my $chunk = shift;
  	my $chunkSize = shift;
  	my $chunkRange = shift;
- 	my $path = shift;
-  	my $filename = shift;
 
 
 	my $req = new HTTP::Request PUT => $URL;
@@ -433,15 +431,15 @@ sub uploadFile(*$$$$){
 ##
 sub uploadEntireFile(*$$$$){
 
-  my $self = shift;
-  my $chunk = shift;
-  my $fileSize = shift;
-  my $path = shift;
-  my $filename = shift;
+  	my $self = shift;
+	my $URL = shift;
+	my $chunk = shift;
+  	my $fileSize = shift;
 
 
 
-my $req = new HTTP::Request PUT => API_URL .'/drive/root:/'.$path.'/'.$filename.':/content';
+
+my $req = new HTTP::Request PUT => $URL;
 $req->protocol('HTTP/1.1');
 $req->header('Authorization' => 'bearer '.$self->{_token});
 $req->content_type('application/octet-stream');

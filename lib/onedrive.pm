@@ -18,20 +18,24 @@ my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 
 sub new(*) {
 
 	my $self = {_oneDrive => undef,
-              _listURL => undef,
-              _login_dbm => undef,
-              _dbm => undef};
+               _login_dbm => undef,
+              _dbm => undef,
+  			  _username => undef,
+  			  _db_md5 => undef,
+  			  _db_fisi => undef};
 
   	my $class = shift;
   	bless $self, $class;
-	my $username = pDrive::Config->USERNAME;
+	$self->{_username} = shift;
+	$self->{_db_md5} = 'od.'.$self->{_username} . '.md5.db';
+	$self->{_db_fisi} = 'od.'.$self->{_username} . '.fisi.db';
 
   	# initialize web connections
   	$self->{_oneDrive} = pDrive::OneDriveAPI1->new(pDrive::Config->ODCLIENT_ID,pDrive::Config->ODCLIENT_SECRET);
 
-  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
+  	my $loginsDBM = pDrive::DBM->new('./od.'.$self->{_username}.'.db');
   	$self->{_login_dbm} = $loginsDBM;
-  	my ($token,$refreshToken) = $loginsDBM->readLogin($username);
+  	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
 
 	# no token defined
 	if ($token eq '' or  $refreshToken  eq ''){
@@ -131,21 +135,22 @@ sub uploadFolder(*$$){
 	  	print STDOUT "\n";
 	}
 
+}
 
 sub uploadFile(*$$){
 	my $self = shift;
 	my $file = shift;
-	my $path = shift;
-	my $filename = shift;
+	my $folderID = shift;
+    my ($fileName) = $file =~ m%\/([^\/]+)$%;
 
 	# get filesize
 	my $fileSize = -s $file;
 
 #	if ($fileSize < 100000000){
 	if ($fileSize < 1000){
-		$self->uploadSimpleFile($file, $path, $filename);
+		$self->uploadSimpleFile($file, $folderID, $filename);
 	}else{
-		$self->uploadLargeFile($file, $path, $filename);
+		$self->uploadLargeFile($file, $folderID, $filename);
 	}
 
 }

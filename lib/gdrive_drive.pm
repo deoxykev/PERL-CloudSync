@@ -20,7 +20,6 @@ my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 
 sub new(*$) {
 
   	my $self = {_gdrive => undef,
-              _listURL => undef,
                _login_dbm => undef,
               _dbm => undef,
   			  _username => undef,

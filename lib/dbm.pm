@@ -451,53 +451,7 @@ sub fixTimestamps(**){
 
 }
 
-# TEMPORARY:
-# correct corrupt local MD5
-#
-sub fixLocalMD5(**){
-  my ($self,$memoryHash) = @_;
 
-  foreach my $path (keys %{$memoryHash}) {
-    foreach my $resourceID (keys %{${$memoryHash}{$path}}) {
-      next if ($resourceID eq '');
-      next unless ($$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] eq '');
-
-      $$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] = pDrive::FileIO::getMD5(pDrive::Config->LOCAL_PATH . '/' . $path);
-    }
-  }
-}
-
-# TEMPORARY:
-# correct corrupt server MD5
-#
-sub fixServerMD5(**){
-  my ($self,$memoryHash) = @_;
-
-  foreach my $path (keys %{$memoryHash}) {
-    foreach my $resourceID (keys %{${$memoryHash}{$path}}) {
-      next if ($resourceID eq '');
-      next unless ($$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '');
-
-      $$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] = pDrive::FileIO::getMD5(pDrive::Config->LOCAL_PATH . '/' . $path);
-    }
-  }
-}
-
-
-# TEMPORARY:
-# clear all local MD5 values
-#
-sub clearMD5(**){
-  my ($self,$memoryHash) = @_;
-
-  foreach my $path (keys %{$memoryHash}) {
-    foreach my $resourceID (keys %{${$memoryHash}{$path}}) {
-      next if ($resourceID eq '');
-
-      $$memoryHash{$path}{$resourceID}[pDrive::DBM->D->{'local_md5'}] = '';
-    }
-  }
-}
 
 1;
 

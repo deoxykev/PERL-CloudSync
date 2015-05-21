@@ -340,6 +340,18 @@ sub dumpHash(*$){
 
 }
 
+sub countHash(*$){
+
+ 	my $self = shift;
+ 	my $dbase = shift;
+
+	my $count = 0;
+  	foreach my $key (keys $dbase) {
+		$count++;
+    }
+	return $count;
+
+}
 
 #
 # Dump the DBM Hash to the screen

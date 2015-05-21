@@ -294,6 +294,11 @@ while (my $input = <$userInput>){
 		$dbm->dumpHash($dbase);
 		$dbm->closeDBM($dbase);
 
+	}elsif($input =~ m%^count  dbm%i){
+		my $dbase = $dbm->openDBM($services[$currentService]->{_db_checksum});
+		my $count = $dbm->countHash($dbase);
+		print STDOUT "hash size is records = " . $count . "\n";
+		$dbm->closeDBM($dbase);
 	#
   	}elsif($input =~ m%^get changeid%i){
 		my $dbase = $dbm->openDBM($services[$currentService]->{_db_checksum});

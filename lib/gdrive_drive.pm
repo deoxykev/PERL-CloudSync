@@ -454,6 +454,28 @@ sub updateMD5Hash(**){
 		}
 	}
 	untie(%dbase);
+	tie( %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDWR|O_CREAT, 0666) or die "can't open fisi: $!";
+	foreach my $resourceID (keys $newDocuments){
+		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq '';
+		for (my $i=0; 1; $i++){
+			# if MD5 exists,
+			if (defined $dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i}){
+				# validate it is the same file, if so, skip, otherwise move onto another md5 slot
+				if  ($dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i}  eq $resourceID){
+					print STDOUT "skipped\n";
+					last;
+				}else{
+					#move onto next slot
+				}
+			#	create
+			}else{
+				$dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i} = $resourceID;
+				print STDOUT "created\n";
+				last;
+			}
+		}
+	}
+	untie(%dbase);
 
 }
 

@@ -222,7 +222,7 @@ sub getList(*$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+		$URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 
 
@@ -778,6 +778,7 @@ sub readDriveListings(**){
 		my ($downloadURL) = $entry =~ m%\"downloadUrl\"\:\s?\"([^\"]+)\"%;
 		my ($parentID) = $entry =~ m%\"parentLink\"\:\s?\"([^\"]+)\"%;
 		my ($md5) = $entry =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;
+		my ($fileSize) = $entry =~ m%\"fileSize\"\:\s?\"([^\"]+)\"%;
 
 	    # 	is a folder
 	    if ($resourceType eq 'folder'){
@@ -805,6 +806,9 @@ sub readDriveListings(**){
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] = $parentID;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}] = $published;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
+
     	}
     	$count++;
   	}
@@ -829,7 +833,7 @@ sub readChangeListings(**){
 	#print $$driveListings;
 #  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
 #  	while ($$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"md5Checksum\"\:\s+\"[^\"]+\"\s+% ){
-while ($$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"quotaBytesUsed\"\:\s+\"[^\"]+\"% ){
+	while ($$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"quotaBytesUsed\"\:\s+\"[^\"]+\"% ){
 
     	my ($resourceID,$md5) = $$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"([^\"]+)\".*?\"md5Checksum\"\:\s+\"([^\"]+)\"%;
 		$$driveListings =~ s%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"quotaBytesUsed\"\:\s+\"[^\"]+\"%%;

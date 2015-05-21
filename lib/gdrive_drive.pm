@@ -44,7 +44,7 @@ sub new(*$) {
 	# no token defined
 	if ($token eq '' or  $refreshToken  eq ''){
 		my $code;
-		my  $URL = 'https://accounts.google.com/o/oauth2/auth?scope=drive.readonly&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id='.pDrive::Config->CLIENT_ID;
+		my  $URL = 'https://accounts.google.com/o/oauth2/auth?scope=https://www.googleapis.com/auth/drive&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id='.pDrive::Config->CLIENT_ID;
 		print STDOUT "visit $URL\n";
 		print STDOUT 'Input Code:';
 		$code = <>;

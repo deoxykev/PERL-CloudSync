@@ -22,13 +22,13 @@ sub new(*) {
                _login_dbm => undef,
               _dbm => undef,
   			  _username => undef,
-  			  _db_sha1 => undef,
+  			  _db_checksum => undef,
   			  _db_fisi => undef};
 
   	my $class = shift;
   	bless $self, $class;
 	$self->{_username} = shift;
-	$self->{_db_sha1} = 'od.'.$self->{_username} . '.sha1.db';
+	$self->{_db_checksum} = 'od.'.$self->{_username} . '.sha1.db';
 	$self->{_db_fisi} = 'od.'.$self->{_username} . '.fisi.db';
 
   	# initialize web connections
@@ -98,7 +98,7 @@ sub getChangesAll(*){
 	my $nextURL = '';
 
 	my $changeID = '';
-    if (tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_sha1} ,O_RDONLY, 0666)){
+    if (tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666)){
     	$changeID = $dbase{'LAST_CHANGE'};
     	print STDOUT "changeID = " . $changeID . "\n";
     	untie(%dbase);
@@ -124,7 +124,7 @@ sub updateChange(**){
 	my $self = shift;
 	my $changeID = shift;
 
-	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_sha1} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	$dbase{'LAST_CHANGE'} = $changeID;
 	untie(%dbase);
 
@@ -177,7 +177,7 @@ sub uploadFolder(*$$){
     			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
 
     			if ($file eq $currentFile and $sha1 ne ''){
-    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_sha1} ,O_RDONLY, 0666) or die "can't open sha1: $!";
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open sha1: $!";
     				if (  (defined $dbase{$sha1.'_'} and $dbase{$sha1.'_'} ne '') or (defined $dbase{$sha1.'_0'} and $dbase{$sha1.'_0'} ne '')){
     					$process = 0;
 				    	pDrive::masterLog("skipped file (sha1 $sha1 exists ".$dbase{$sha1.'_0'}.") - $fileList[$i]\n");
@@ -508,7 +508,7 @@ sub updateSHA1Hash(**){
 	my $newDocuments = shift;
 
 	my $count=0;
-	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_sha1} ,O_RDWR|O_CREAT, 0666) or die "can't open sha1: $!";
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open sha1: $!";
 	foreach my $resourceID (keys $newDocuments){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}] eq '';
 		for (my $i=0; 1; $i++){
@@ -516,7 +516,7 @@ sub updateSHA1Hash(**){
 			if (defined $dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}].'_'. $i}){
 				# validate it is the same file, if so, skip, otherwise move onto another md5 slot
 				if  ($dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}].'_'. $i}  eq $resourceID){
-					print STDOUT "skipped\n";
+					print STDOUT "skipped sha1\n";
 					last;
 				}else{
 					#move onto next slot
@@ -524,7 +524,29 @@ sub updateSHA1Hash(**){
 			#	create
 			}else{
 				$dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}].'_'. $i} = $resourceID;
-				print STDOUT "created\n";
+				print STDOUT "created sha1\n";
+				last;
+			}
+		}
+	}
+	untie(%dbase);
+	tie(%dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDWR|O_CREAT, 0666) or die "can't open fisi: $!";
+	foreach my $resourceID (keys $newDocuments){
+		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq '';
+		for (my $i=0; 1; $i++){
+			# if MD5 exists,
+			if (defined $dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i}){
+				# validate it is the same file, if so, skip, otherwise move onto another md5 slot
+				if  ($dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i}  eq $resourceID){
+					print STDOUT "skipped fisi\n";
+					last;
+				}else{
+					#move onto next slot
+				}
+			#	create
+			}else{
+				$dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i} = $resourceID;
+				print STDOUT "created fisi\n";
 				last;
 			}
 		}

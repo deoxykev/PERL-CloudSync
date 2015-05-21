@@ -33,7 +33,7 @@ sub getMD5String($){
   my $md5String = shift;
 
   my $md5 = Digest::MD5->new;
-  my $md5sum = $md5->addfile($md5String)->hexdigest;
+  my $md5sum = $md5->add($md5String)->hexdigest;
   return $md5sum;
 
 }

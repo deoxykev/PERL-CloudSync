@@ -23,13 +23,13 @@ sub new(*$) {
                _login_dbm => undef,
               _dbm => undef,
   			  _username => undef,
-  			  _db_md5 => undef,
+  			  _db_checksum => undef,
   			  _db_fisi => undef};
 
   	my $class = shift;
   	bless $self, $class;
 	$self->{_username} = shift;
-	$self->{_db_md5} = 'gd.'.$self->{_username} . '.md5.db';
+	$self->{_db_checksum} = 'gd.'.$self->{_username} . '.md5.db';
 	$self->{_db_fisi} = 'gd.'.$self->{_username} . '.fisi.db';
 
 
@@ -256,7 +256,7 @@ sub uploadFolder(*$$){
     			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
 
     			if ($file eq $currentFile and $md5 ne ''){
-    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_md5} ,O_RDONLY, 0666) or die "can't open md5: $!";
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";
     				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
     					$process = 0;
 				    	pDrive::masterLog("skipped file (md5 $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
@@ -407,7 +407,7 @@ sub getChangesAll(*){
 	my $self = shift;
 
 	my $nextURL = '';
-    tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_md5} ,O_RDONLY, 0666) or die "can't open md5: $!";
+    tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";
     my $changeID = $dbase{'LAST_CHANGE'};
     print STDOUT "changeID = " . $changeID . "\n";
     untie(%dbase);
@@ -432,7 +432,7 @@ sub updateMD5Hash(**){
 	my $newDocuments = shift;
 
 	my $count=0;
-	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_md5} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	foreach my $resourceID (keys $newDocuments){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '';
 		for (my $i=0; 1; $i++){
@@ -462,7 +462,7 @@ sub updateChange(**){
 	my $self = shift;
 	my $changeID = shift;
 
-	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_md5} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	$dbase{'LAST_CHANGE'} = $changeID;
 	untie(%dbase);
 

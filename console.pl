@@ -290,13 +290,13 @@ while (my $input = <$userInput>){
     	syncDrive();
 
 	}elsif($input =~ m%^dump md5%i){
-		my $dbase = $dbm->openDBM($services[$currentService]->{_db_md5});
+		my $dbase = $dbm->openDBM($services[$currentService]->{_db_checksum});
 		$dbm->dumpHash($dbase);
 		$dbm->closeDBM($dbase);
 
 	#
   	}elsif($input =~ m%^get changeid%i){
-		my $dbase = $dbm->openDBM($services[$currentService]->{_db_md5});
+		my $dbase = $dbm->openDBM($services[$currentService]->{_db_checksum});
 		$dbm->findKey($dbase,'LAST_CHANGE');
 		$dbm->closeDBM($dbase);
 
@@ -304,7 +304,7 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^search md5%i){
     	my ($filtermd5) = $input =~ m%^search md5\s([^\s]+)%i;
 
-		my $dbase = $dbm->openDBM($services[$currentService]->{_db_md5});
+		my $dbase = $dbm->openDBM($services[$currentService]->{_db_checksum});
 		my $value = $dbm->findKey($dbase,$filtermd5);
 		$dbm->closeDBM($dbase);
 		print STDOUT "complete\n";
@@ -313,7 +313,7 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^search file%i){
 	    my ($filtermd5) = $input =~ m%^search file\s([^\s]+)%i;
 
-		my $dbase = $dbm->openDBM($services[$currentService]->{_db_md5});
+		my $dbase = $dbm->openDBM($services[$currentService]->{_db_checksum});
 		my $value = $dbm->findValue($dbase,$filtermd5);
 		$dbm->closeDBM($dbase);
 		print STDOUT "complete\n";

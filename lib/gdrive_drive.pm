@@ -304,6 +304,8 @@ sub uploadFile(*$$){
 
   	#print STDERR 'uploading chunks [' . $chunkNumbers.  "]...\n";
   	my $fileID=0;
+  	my $retrycount=0;
+
   	for (my $i=0; $i < $chunkNumbers; $i++){
 		my $chunkSize = CHUNKSIZE;
 		my $chunk;
@@ -314,7 +316,7 @@ sub uploadFile(*$$){
     	sysread INPUT, $chunk, CHUNKSIZE;
     	print STDERR "\r".$i . '/'.$chunkNumbers;
     	my $status=0;
-    	my $retrycount=0;
+    	$retrycount=0;
     	while ($status eq '0' and $retrycount < 5){
 			$status = $self->{_gdrive}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
       		print STDOUT "\r"  . $status;
@@ -335,13 +337,18 @@ sub uploadFile(*$$){
 	      	}
 
     	}
-    	if ($retrycount >= 5){
-	    	pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
-	    	last;
-    	}
+		if ($retrycount >= 5){
+			print STDERR "\r" . $file . "'...retry\n";
+
+    		pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
+    		last;
+		}
 
     	$fileID=$status;
 		$pointerInFile += $chunkSize;
+  	}
+  	if ($retrycount < 5){
+		print STDOUT "\r" . $file . "'...success\n";
   	}
   	close(INPUT);
 }
@@ -383,7 +390,6 @@ sub getListAll(*){
 		print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
 	}
-	#print STDOUT $$driveListings . "\n";
 
 }
 

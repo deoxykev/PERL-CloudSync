@@ -1,4 +1,5 @@
 package pDrive::oneDrive;
+	use Fcntl;
 
 
 # magic numbers
@@ -21,13 +22,13 @@ sub new(*) {
                _login_dbm => undef,
               _dbm => undef,
   			  _username => undef,
-  			  _db_md5 => undef,
+  			  _db_sha1 => undef,
   			  _db_fisi => undef};
 
   	my $class = shift;
   	bless $self, $class;
 	$self->{_username} = shift;
-	$self->{_db_md5} = 'od.'.$self->{_username} . '.md5.db';
+	$self->{_db_sha1} = 'od.'.$self->{_username} . '.sha1.db';
 	$self->{_db_fisi} = 'od.'.$self->{_username} . '.fisi.db';
 
   	# initialize web connections
@@ -60,14 +61,6 @@ sub new(*) {
 	}
 
 
-  	# get contents
-  	#$self->{_oneDrive}->getList('https://api.onedrive.com/v1.0/drive/root/children');#?access_token='.$token);
-
-	#simple file
-  	#$self->uploadFile('/u01/pdrive/dtl_shattered_1_130705.flv', 'root','dtl_shattered_1_130705.flvi');
-	#complex file
-  	#$self->uploadFile('/tmp/TEST.txt');
-
 	return $self;
 
 
@@ -82,6 +75,70 @@ sub new(*) {
 
 }
 
+sub getListAll(*){
+
+	my $self = shift;
+
+	my $nextURL = '';
+	while (1){
+		my $driveListings = $self->{_oneDrive}->getList($nextURL);
+  		my $newDocuments = $self->{_oneDrive}->readDriveListings($driveListings);
+  		$nextURL = $self->{_oneDrive}->getNextURL($driveListings);
+#		$self->updateMD5Hash($newDocuments);
+		print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+	}
+
+}
+
+sub getChangesAll(*){
+
+	my $self = shift;
+
+	my $nextURL = '';
+
+	my $changeID = '';
+    if (tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_sha1} ,O_RDONLY, 0666)){
+    	$changeID = $dbase{'LAST_CHANGE'};
+    	print STDOUT "changeID = " . $changeID . "\n";
+    	untie(%dbase);
+    }
+
+	while (1){
+		my $driveListings = $self->{_oneDrive}->getChanges($nextURL, $changeID);
+  		$nextURL = $self->{_oneDrive}->getNextURL($driveListings);
+  		my $newDocuments = $self->{_oneDrive}->readChangeListings($driveListings);
+		$self->updateSHA1Hash($newDocuments);
+		$changeID = $self->{_oneDrive}->getChangeID($driveListings);
+		print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+	}
+	#print STDOUT $$driveListings . "\n";
+	$self->updateChange($changeID);
+
+}
+
+
+sub updateChange(**){
+
+	my $self = shift;
+	my $changeID = shift;
+
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_sha1} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	$dbase{'LAST_CHANGE'} = $changeID;
+	untie(%dbase);
+
+}
+
+sub createFolder(*$$){
+
+	my $self = shift;
+	my $folder = shift;
+	my $parentFolder = shift;
+
+	return $self->{_oneDrive}->createFolder('https://api.onedrive.com/v1.0/drive/root:/'.$parentFolder.':/children?nameConflict=fail', $folder);
+
+}
 
 sub uploadFolder(*$$){
 	my $self = shift;
@@ -94,9 +151,13 @@ sub uploadFolder(*$$){
    	my @fileList = pDrive::FileIO::getFilesDir($path);
 
 	print STDOUT "folder = $folder\n";
-#	my $folderID = $self->createFolder($folder, $parentFolder);
+	my $folderID = $self->createFolder($folder, $parentFolder);
 	#print "resource ID = " . $folderID . "\n";
-	my $folderID ='new';
+	if ($parentFolder ne ''){
+		$folderID = $parentFolder . '/' . $folder;
+	}else{
+		$folderID = $folder;
+	}
 
     for (my $i=0; $i <= $#fileList; $i++){
 
@@ -141,7 +202,8 @@ sub uploadFile(*$$){
 	my $self = shift;
 	my $file = shift;
 	my $folderID = shift;
-    my ($fileName) = $file =~ m%\/([^\/]+)$%;
+
+    my ($filename) = $file =~ m%\/([^\/]+)$%;
 
 	# get filesize
 	my $fileSize = -s $file;
@@ -193,8 +255,10 @@ sub uploadLargeFile(*$$$){
 	# calculate the number of chunks
 	my $chunkNumbers = int($fileSize/(pDrive::Config->CHUNKSIZE))+1;
 	my $pointerInFile=0;
-	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
+	#print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
   	my $fileID=0;
+  	my $retrycount=0;
+
 	for (my $i=0; $i < $chunkNumbers; $i++){
 		my $chunkSize = pDrive::Config->CHUNKSIZE;
     	my $chunk;
@@ -210,13 +274,14 @@ sub uploadLargeFile(*$$$){
 
     print STDERR "\r".$i . '/'.$chunkNumbers;
     my $status=0;
-	my $retrycount=0;
+	$retrycount=0;
 	while ($status eq '0' and $retrycount < 5){
 		$status = $self->{_oneDrive}->uploadFile($URL, \$chunk, $chunkSize, 'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
       	print STDOUT "\r"  . $status;
 	    if ($status eq '0'){
 	    	print STDERR "...retry\n";
  	 		my ($token,$refreshToken) = $self->{_oneDrive}->refreshToken();
+			$self->{_oneDrive}->setToken($token,$refreshToken);
 	  		$self->{_login_dbm}->writeLogin( pDrive::Config->USERNAME,$token,$refreshToken);
 
         	sleep (5);
@@ -224,11 +289,19 @@ sub uploadLargeFile(*$$$){
 	    }
 
 	}
-    pDrive::masterLog("retry failed $file\n") if ($retrycount >= 5);
+	if ($retrycount >= 5){
+		print STDERR "\r" . $file . "'...retry\n";
+
+    	pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
+    	last;
+	}
 
   	$fileID=$status;
     $pointerInFile += $chunkSize;
 
+  }
+  if ($retrycount < 5){
+		print STDOUT "\r" . $file . "'...success\n";
   }
   close(INPUT);
 
@@ -426,23 +499,40 @@ sub downloadFile(*$$$$$$*){
 }
 
 
-sub isNewResourceID($*){
-  my ($resourceID,$dbase) = @_;
 
-  if (not defined $resourceID or $$dbase{$resourceID} eq ''){
-    return 1;
-  }else{
-    return 0;
-  }
+
+
+sub updateSHA1Hash(**){
+
+	my $self = shift;
+	my $newDocuments = shift;
+
+	my $count=0;
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_sha1} ,O_RDWR|O_CREAT, 0666) or die "can't open sha1: $!";
+	foreach my $resourceID (keys $newDocuments){
+		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}] eq '';
+		for (my $i=0; 1; $i++){
+			# if MD5 exists,
+			if (defined $dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}].'_'. $i}){
+				# validate it is the same file, if so, skip, otherwise move onto another md5 slot
+				if  ($dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}].'_'. $i}  eq $resourceID){
+					print STDOUT "skipped\n";
+					last;
+				}else{
+					#move onto next slot
+				}
+			#	create
+			}else{
+				$dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}].'_'. $i} = $resourceID;
+				print STDOUT "created\n";
+				last;
+			}
+		}
+	}
+	untie(%dbase);
+
 }
 
-sub getPathResourceID($*){
-
-  my ($resourceID,$dbase) = @_;
-
-  return $$dbase{$resourceID};
-
-}
 
 1;
 

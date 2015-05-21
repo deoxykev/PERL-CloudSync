@@ -98,8 +98,8 @@ sub getToken(*$){
 	my $code = shift;
 
 #	my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.$self->{_clientID} . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
-#	my  $URL = 'https://login.live.com/oauth20_token.srf';
-	my  $URL = 'http://dmdsoftware.net/api/onedrive.php';
+	my  $URL = 'https://login.live.com/oauth20_token.srf';
+#	my  $URL = 'http://dmdsoftware.net/api/onedrive.php';
 
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
@@ -142,8 +142,8 @@ sub getToken(*$){
 sub refreshToken(*){
 	my $self = shift;
 
-	my  $URL = 'http://dmdsoftware.net/api/onedrive.php';
-#	my  $URL = 'https://login.live.com/oauth20_token.srf';
+#	my  $URL = 'http://dmdsoftware.net/api/onedrive.php';
+	my  $URL = 'https://login.live.com/oauth20_token.srf';
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
@@ -187,35 +187,110 @@ sub getList(*$){
   my $self = shift;
   my $URL = shift;
 
+	if ($URL eq ''){
+		$URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	}
 
-my $req = new HTTP::Request GET => $URL;
-$req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'bearer '.$self->{_token});
-my $res = $self->{_ua}->request($req);
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
 
-if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  print LOG $req->as_string;
-  print LOG $res->as_string;
-  close(LOG);
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+
+
+	}else{
+		#print STDOUT $res->as_string;
+		die($res->as_string."error in loading page");}
+
+  	return \$res->as_string;
+
 }
 
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
-  my $block = $res->as_string;
 
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
 
-    $block =~ s%[^\n]*\n%%;
 
-  }
+#
+# get the list of changes
+##
+sub getChanges(*$){
 
-}else{
-#print STDOUT $res->as_string;
-die($res->as_string."error in loading page");}
+	my $self = shift;
+	my $URL = shift;
+	my $changeID = shift;
 
-  return \$res->as_string;
+	if ($URL eq '' and $changeID ne ''){
+		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=name,webUrl,size,file,folder&token='.$changeID;
+	}elsif ($URL eq '' and $changeID eq ''){
+		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=name,webUrl,size,file,folder';
+	}
 
+	my $retryCount = 2;
+	while ($retryCount){
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+  		return \$res->as_string;
+
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+	}else{
+		#		print STDOUT $res->as_string;
+		die($res->as_string."error in loading page");}
+	}
+
+}
+
+
+#
+# get the next page URL
+##
+sub getNextURL(**){
+
+ 	my $self = shift;
+  	my $listing = shift;
+
+	my ($URL) = $$listing =~ m%\"\@odata.nextLink\"\:\s?\"([^\"]+)\"%;
+	my ($hasMore) = $$listing =~ m%\"\@changes.hasMoreChanges\"\:\s?([^\,]+)\,%;
+
+	if ($hasMore eq 'true'){
+		return $URL;
+	}else{
+		return;
+	}
+
+}
+
+#
+# get the next change ID
+##
+sub getChangeID(**){
+
+ 	my $self = shift;
+  	my $listing = shift;
+	my ($largestChangeId) = $$listing =~ m%\"\@changes.token\"\:\s?\"([^\"]+)\"%;
+	return $largestChangeId;
 }
 
 
@@ -247,42 +322,8 @@ sub testAccess(*){
 
 }
 
-sub getCreateURL(*$){
 
-  my $self = shift;
-  my $listing = shift;
 
-  my ($URL) = $$listing =~ m%\<link\s+rel\=\'http\:\/\/schemas.google.com\/g\/2005\#resumable-create-media\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
-
-  return $URL;
-
-}
-
-sub getNextURL(*$){
-
-  my $self = shift;
-  my $listing = shift;
-
-  my ($URL) = $$listing =~ m%\<link\s+rel\=\'next\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
-  print STDOUT 'NEXT URL = '.(defined $URL?$URL:'')."\n";
-#exit(0);
-  return $URL;
-
-}
-
-sub getListURL(*$){
-
-  my $self = shift;
-  my $timestamp = shift;
-
-  if (defined $timestamp and $timestamp ne ''){
-    return 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:'.$timestamp;
-  #  $listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:2012-08-10';
-  }else{
-    return 'https://docs.google.com/feeds/default/private/full?showfolders=true';
-  }
-
-}
 
 
 sub downloadFile(*$$$$$$){
@@ -383,7 +424,7 @@ if($res->is_success){
 ###
 # uplad a file in chunks
 ##
-sub uploadFile(*$$$$$){
+sub uploadFile(*$$$$){
 
 	my $self = shift;
 	my $URL = shift;
@@ -391,6 +432,9 @@ sub uploadFile(*$$$$$){
  	my $chunkSize = shift;
  	my $chunkRange = shift;
 
+
+	my $retryCount = 2;
+	while ($retryCount){
 
 	my $req = new HTTP::Request PUT => $URL;
 	$req->protocol('HTTP/1.1');
@@ -415,11 +459,18 @@ sub uploadFile(*$$$$$){
 		}
 
  	 	return $resourceID;
+	# need a new token?
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+
 	}else{
   		print STDERR "error";
   		print STDOUT $req->headers_as_string;
   		print STDOUT $res->as_string;
   		return 0;
+	}
 	}
 
 
@@ -438,34 +489,33 @@ sub uploadEntireFile(*$$$$){
 
 
 
+	my $retryCount = 2;
+	while ($retryCount){
 
-my $req = new HTTP::Request PUT => $URL;
-$req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'bearer '.$self->{_token});
-$req->content_type('application/octet-stream');
-$req->content_length($fileSize);
-$req->content($$chunk);
-my $res = $self->{_ua}->request($req);
+	my $req = new HTTP::Request PUT => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'bearer '.$self->{_token});
+	$req->content_type('application/octet-stream');
+	$req->content_length($fileSize);
+	$req->content($$chunk);
+	my $res = $self->{_ua}->request($req);
 
 
-if($res->is_success or $res->code == 308){
+	if($res->is_success or $res->code == 308){
 
-  	my $block = $res->as_string;
-	my ($resourceType,$resourceID);
-	while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-		$block =~ s%[^\n]*\n%%;
-
+		return 1;
+	# need a new token?
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+	}else{
+		print STDERR "error";
+  		print STDOUT $req->headers_as_string;
+  		print STDOUT $res->as_string;
+  		return 0;
 	}
-
-
-  return 1;
-}else{
-  print STDERR "error";
-  print STDOUT $req->headers_as_string;
-  print STDOUT $res->as_string;
-  return 0;
-}
+	}
 
 
 }
@@ -483,12 +533,23 @@ sub createFile(*$$){
 	my $path = shift;
 	my $filename = shift;
 
+	my $retryCount = 2;
+	while ($retryCount){
 	my $req = new HTTP::Request POST  => API_URL . '/drive/root:/'.$path.'/'.$filename.':/upload.createSession';
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'bearer '.$self->{_token});
 	$req->content_length(0);
 	$req->content('');
 	my $res = $self->{_ua}->request($req);
+
+
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
 
 	my $uploadURL;
 	if($res->is_success or $res->code == 308){
@@ -497,11 +558,19 @@ sub createFile(*$$){
 
   		($uploadURL) = $block =~ m%\"uploadUrl\"\:\"([^\"]+)\"%;
 		return $uploadURL;
+
+	# need a new token?
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+
 	}else{
   		print STDERR "error";
   		print STDOUT $req->headers_as_string;
   		print STDOUT $res->as_string;
   		return 0;
+	}
 	}
 
 }
@@ -561,23 +630,24 @@ sub createFolder(*$$){
   	my $folder = shift;
 
 
-  	my $content = '<?xml version="1.0" encoding="UTF-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-  <category scheme="http://schemas.google.com/g/2005#kind"
-      term="http://schemas.google.com/docs/2007#folder"/>
-        		<title>'.$folder.'</title>
-	</entry>'."\n\n";
+  	my $content = '
+{
+  "name": "'.$folder.'",
+  "folder":  {}
+}'."\n\n";
 
-	my $req = new HTTP::Request POST => $URL;
+	my $retryCount = 2;
+	while ($retryCount){
+
+	my $req = new HTTP::Request POST  => $URL;
 	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
+	$req->header('Authorization' => 'bearer '.$self->{_token});
 	$req->content_length(length $content);
-	$req->content_type('application/atom+xml');
+	$req->content_type('application/json');
 	$req->content($content);
-
 	my $res = $self->{_ua}->request($req);
+
+
 
 	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
   		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
@@ -595,18 +665,25 @@ sub createFolder(*$$){
 
     		$block =~ s%[^\n]*\n%%;
 
-		    if ($line =~ m%\<gd\:resourceId\>%){
-		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
+		    if ($line =~ m%\"id\"\:\s?\"\d+\"%){
+		    	my ($resourceID) = $line =~ m%\"id\"\:\s?\"(\d+)\"%;
 
 	      		return $resourceID;
     		}
 
   		}
 
+	# need a new token?
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+
 	}else{
-		print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
+#		print STDOUT $req->as_string;
+#  		print STDOUT $res->as_string;
   		return 0;
+	}
 	}
 
 }
@@ -852,6 +929,37 @@ my $count=0;
 
 print STDOUT "entries = $count\n";
 return %newDocuments;
+}
+
+
+#
+# Parse the change listings
+##
+sub readChangeListings(**){
+
+	my $self = shift;
+	my $driveListings = shift;
+	my %newDocuments;
+
+	my $count=0;
+
+  	$$driveListings =~ s%\n%%g;
+	#print $$driveListings;
+#  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
+#  	while ($$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"md5Checksum\"\:\s+\"[^\"]+\"\s+% ){
+while ($$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"% ){
+print STDERR "in";
+    	my ($resourceID,$sha1) = $$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?resid\=([^\"]+)\".*?\"sha1Hash\"\:\s?\"([^\"]+)\"%;
+		$$driveListings =~ s%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"%%;
+
+
+  		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}] = $sha1;
+  		print STDERR "sha1 = $sha1\n";
+    	$count++;
+  	}
+
+	print STDOUT "entries = $count\n";
+	return \%newDocuments;
 }
 
 1;

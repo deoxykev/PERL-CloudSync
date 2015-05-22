@@ -225,7 +225,8 @@ sub getList(*$){
 		$URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 
-
+	my $retryCount = 2;
+	while ($retryCount){
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -241,14 +242,63 @@ sub getList(*$){
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n";
 	  	return \$res->as_string;
-
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
 	}else{
 		#		print STDOUT $res->as_string;
 		die($res->as_string."error in loading page");}
 
+	}
 
 }
 
+
+#
+# get list of the content in the Google Drive
+##
+sub getFolderInfo(*$){
+
+	my $self = shift;
+	my $fileID = shift;
+
+	my $URL = 'https://www.googleapis.com/drive/v2/files/'.$fileID.'?fields=title%2Cparents';
+
+	my $retryCount = 2;
+	while ($retryCount){
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+  		my ($title) = $res->as_string =~ m%\"title\"\:\s?\"([^\"]+)\"%;
+		my ($resourceID) = $res->as_string =~ m%\"parentLink\"\:\s?\"[^\"]+\/([^\"]+)\"%;
+		my ($isRoot) = $res->as_string =~ m%\"isRoot\"\:\s?([^\s]+)%;
+		if ($isRoot eq 'true'){
+			return (0,$title,$resourceID);
+		}else{
+			return (1,$title,$resourceID);
+		}
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+	}else{
+		#		print STDOUT $res->as_string;
+		die($res->as_string."error in loading page");}
+
+	}
+}
 
 #
 # get the root ID for the Google Drive
@@ -262,7 +312,8 @@ sub getListRoot(*$){
 		$URL = 'https://www.googleapis.com/drive/v2/files/root';
 	}
 
-
+	my $retryCount = 2;
+	while ($retryCount){
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -278,15 +329,16 @@ sub getListRoot(*$){
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n";
   		my $block = $res->as_string;
-
-
 		my ($resourceID) = $block =~ m%\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s?\"([^\"]+)\"%;
 		return $resourceID;
-
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
 	}else{
 		#		print STDOUT $res->as_string;
 		die($res->as_string."error in loading page");}
-
+	}
   	return '';
 
 }
@@ -305,7 +357,8 @@ sub getChanges(*$){
 		$URL = 'https://www.googleapis.com/drive/v2/changes?startChangeId='.$changeID;
 	}
 
-
+	my $retryCount = 2;
+	while ($retryCount){
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -327,12 +380,15 @@ sub getChanges(*$){
     		$block =~ s%[^\n]*\n%%;
 
   		}
-
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
 	}else{
 		#		print STDOUT $res->as_string;
 		die($res->as_string."error in loading page");}
-
   	return \$res->as_string;
+	}
 
 }
 
@@ -404,48 +460,52 @@ sub downloadChunk {
 
 sub uploadFile(*$$$$){
 
-  my $self = shift;
-  my $URL = shift;
-  my $chunk = shift;
-  my $chunkSize = shift;
-  my $chunkRange = shift;
-  my $filetype = shift;
- my $resourceID = 0;
+	my $self = shift;
+  	my $URL = shift;
+  	my $chunk = shift;
+  	my $chunkSize = shift;
+  	my $chunkRange = shift;
+  	my $filetype = shift;
+ 	my $resourceID = 0;
 
-my $req = new HTTP::Request PUT => $URL;
-$req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'Bearer '.$self->{_token});
-$req->content_type($filetype);
-$req->content_length($chunkSize);
-$req->header('Content-Range' => $chunkRange);
-$req->content($$chunk);
-my $res = $self->{_ua}->request($req);
+	my $retryCount = 2;
+	while ($retryCount){
+	my $req = new HTTP::Request PUT => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	$req->content_type($filetype);
+	$req->content_length($chunkSize);
+	$req->header('Content-Range' => $chunkRange);
+	$req->content($$chunk);
+	my $res = $self->{_ua}->request($req);
 
 
-if($res->is_success or $res->code == 308){
+	if($res->is_success or $res->code == 308){
 
-  	my $block = $res->as_string;
-	my ($resourceType,$resourceID);
-	while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-		$block =~ s%[^\n]*\n%%;
+  		my $block = $res->as_string;
+		my ($resourceType,$resourceID);
+		while (my ($line) = $block =~ m%([^\n]*)\n%){
+			$block =~ s%[^\n]*\n%%;
 
 		    if ($line =~ m%\"id\"%){
 		    	my ($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
 	      		return $resourceID;
 	    	}
 
+		}
+
+		return $resourceID;
+	}elsif ($res->code == 401){
+ 		my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+	}else{
+  		print STDERR "error";
+  		print STDOUT $req->headers_as_string;
+  		print STDOUT $res->as_string;
+  		return 0;
 	}
-
-
-  return $resourceID;
-}else{
-  print STDERR "error";
-  print STDOUT $req->headers_as_string;
-  print STDOUT $res->as_string;
-  return 0;
-}
-
+	}
 
 }
 
@@ -471,7 +531,8 @@ sub createFile(*$$$$$){
   }]
 }'."\n\n";
 
-
+	my $retryCount = 2;
+	while ($retryCount){
 #  convert=false prevents plain/text from becoming docs
 	my $req = new HTTP::Request POST => $URL;
 	$req->protocol('HTTP/1.1');
@@ -506,11 +567,15 @@ sub createFile(*$$$$$){
     		}
 
   		}
-
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
 	}else{
 		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
+	}
 	}
 
 }
@@ -534,6 +599,8 @@ sub createFolder(*$$){
   	$content .= ' ,"parents": [{"id":"'.$parentFolder.'"}]' if $parentFolder ne '';
 	$content .= '}'."\n\n";
 
+	my $retryCount = 2;
+	while ($retryCount){
 	my $req = new HTTP::Request POST => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -565,11 +632,16 @@ sub createFolder(*$$){
     		}
 
   		}
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
 
 	}else{
 		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
+	}
 	}
 
 }

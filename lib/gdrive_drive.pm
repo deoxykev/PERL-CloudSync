@@ -24,7 +24,9 @@ sub new(*$) {
   	my $self = {_serviceapi => undef,
                _login_dbm => undef,
               _dbm => undef,
+  			  _nextURL => '',
   			  _username => undef,
+  			  _db_folders => undef,
   			  _db_checksum => undef,
   			  _db_fisi => undef};
 
@@ -33,6 +35,7 @@ sub new(*$) {
 	$self->{_username} = shift;
 	$self->{_db_checksum} = 'gd.'.$self->{_username} . '.md5.db';
 	$self->{_db_fisi} = 'gd.'.$self->{_username} . '.fisi.db';
+	$self->{_db_folders} = 'gd.'.$self->{_username} . '.folders.db';
 
   	# initialize web connections
   	$self->{_serviceapi} = pDrive::GoogleDriveAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
@@ -149,6 +152,28 @@ sub uploadFolder(*$$){
 	}
 }
 
+#
+# get list of the content in the Google Drive
+##
+sub getFolderInfo(*$){
+
+	my $self = shift;
+	my $id = shift;
+
+	my $hasMore=1;
+	my $title;
+	my $path = -1;
+	while ($hasMore){
+		($hasMore, $title,$id) = $self->{_serviceapi}->getFolderInfo($id);
+		if ($path == -1){
+			$path = '';
+		}else{
+			$path = $title  . '/' . $path;
+		}
+	    	print STDOUT "path = $path, title = $title, id = $id\n";
+	}
+	return $path;
+}
 
 sub uploadFile(*$$){
 
@@ -229,7 +254,7 @@ sub uploadFile(*$$){
 sub getList(*){
 
 	my $self = shift;
-	my $driveListings = $self->{_serviceapi}->getList('');
+	my $driveListings = $self->{_serviceapi}->getList($self->{_nextURL});
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
   	foreach my $resourceID (keys $newDocuments){
@@ -237,7 +262,7 @@ sub getList(*){
 	}
 
 	#print STDOUT $$driveListings . "\n";
-	#print STDOUT "next url " . $self->{_serviceapi}->getNextURL($driveListings) . "\n";
+	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
 	#$self->updateMD5Hash($newDocuments);
 	return $newDocuments;
 }

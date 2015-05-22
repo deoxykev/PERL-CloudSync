@@ -285,10 +285,20 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^get root id%i){
     	my ($rootID) = $services[$currentService]->getListRoot();
 
+  	}elsif($input =~ m%^get folder path\s+\S+%i){
+    	my ($id) = $input =~ m%^get folder path\s+(\S+)%i;
+
+		my ($path) =  $services[$currentService]->getFolderInfo($id);
+    	print STDOUT "returned path = $path\n";
+
+
+
 	# sync the entire drive in source current source with all other sources
-  	}elsif($input =~ m%^sync drive%i){
+  	}elsif($input =~ m%^sync drive\s+\S+\s+\S+%i){
+    	my ($service1,$service2) = $input =~ m%^sync drive\s+(\S+)\s+(\S+)%i;
+
     	#my ($rootID) = $services[$currentService]->getListRoot();
-    	syncDrive();
+    	syncDrive($service1,$service2);
 
 	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
     	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;
@@ -591,23 +601,32 @@ sub masterLog($){
 
 }
 
-sub syncDrive(){
-
+sub syncDrive($$){
+	my $service1 = shift;
+	my $service2 = shift;
+	my $dbase1 = $dbm->openDBM($services[$service1]->{_db_fisi});
+	my $dbase2 = $dbm->openDBM($services[$service2]->{_db_fisi});
 	my $nextURL = '';
 	while (1){
-		my $newDocuments =  $services[$currentService]->getList($nextURL);
+		my $newDocuments =  $services[$service1]->getList($nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
   		foreach my $resourceID (keys $newDocuments){
-			print STDOUT "downloading " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] . "\n";
-	    	$services[$currentService]->downloadFile($resourceID,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
-
+  			#already exists; skip
+  			if 	(defined($$dbase2{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $$dbase2{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}){
+ 				 print STDOUT "skipping " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] . "\n";
+ 				return;
+  			}else{
+				print STDOUT "downloading " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] . "\n";
+		    	#$services[$service1]->downloadFile($resourceID,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+  			}
 	  	}
-  		$nextURL =  $services[$currentService]->getNextURL($driveListings);
-		#$self->updateMD5Hash($newDocuments);
-		print STDOUT "next url " . $nextURL . "\n";
-  		last if $nextURL eq '';
-  		last;
+		print STDOUT "next url " . $services[$service1]->{_nextURL} . "\n";
+  		last if  $services[$service1]->{_nextURL} eq '';
+
 	}
+	$dbm->closeDBM($dbase1);
+	$dbm->closeDBM($dbase2);
+
 	#print STDOUT $$driveListings . "\n";
 
 }

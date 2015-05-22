@@ -61,6 +61,7 @@ require 'lib/gdrive_drive.pm';
 require 'lib/onedrive.pm';
 require './lib/googledriveapi2.pm';
 require './lib/onedriveapi1.pm';
+require './lib/cloudservice.pm';
 
 
 
@@ -288,6 +289,15 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^sync drive%i){
     	#my ($rootID) = $services[$currentService]->getListRoot();
     	syncDrive();
+
+	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
+    	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;
+		my $dbase1 = $dbm->openDBM($services[$service1]->{_db_fisi});
+		my $dbase2 = $dbm->openDBM($services[$service2]->{_db_fisi});
+		$dbm->compareHash($dbase1,$dbase2);
+		$dbm->closeDBM($dbase1);
+		$dbm->closeDBM($dbase2);
+
 
 	}elsif($input =~ m%^dump md5%i){
 		my $dbase = $dbm->openDBM($services[$currentService]->{_db_checksum});

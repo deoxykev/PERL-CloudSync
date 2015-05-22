@@ -340,6 +340,48 @@ sub dumpHash(*$){
 
 }
 
+
+#
+# Compare the DBM Hash to the screen
+#
+sub compareHash(***){
+
+	my $self = shift;
+  	my $dbase1 = shift;
+  	my $dbase2 = shift;
+
+	my $matchCount=0;
+	my $in1Count=0;
+	my $in1DuplicateCount=0;
+	my $in2Count=0;
+	my $in2DuplicateCount=0;
+  	foreach my $key (keys $dbase1) {
+  		if ($key =~ m%_0%){
+  			if (defined($$dbase2{$key}) and $$dbase2{$key} ne '' and $$dbase1{$key} ne ''){
+  				$matchCount++;
+  			}else{
+  				$in1Count++;
+  			}
+  		}elsif($key =~ m%_\d+%){
+  			$in1DuplicateCount++;
+  		}
+  }
+  foreach my $key (keys $dbase2) {
+  		if ($key =~ m%_0%){
+  			if (defined($$dbase1{$key}) and $$dbase2{$key} ne '' and $$dbase1{$key} ne ''){
+  			}else{
+  				$in2Count++;
+  			}
+  		}elsif($key =~ m%_\d+%){
+  			$in2DuplicateCount++;
+  			print STDERR "$key 1. $$dbase1{$key} 2. $$dbase2{$key}\n";
+
+  		}
+  }
+  print STDOUT 'match = '.$matchCount . "\n";
+  print STDOUT 'in first, unique = '.$in1Count . ', duplicates = '.$in1DuplicateCount."\n";
+  print STDOUT 'in second, unique = '.$in2Count . ', duplicates = '.$in2DuplicateCount."\n";
+}
 sub countHash(*$){
 
  	my $self = shift;

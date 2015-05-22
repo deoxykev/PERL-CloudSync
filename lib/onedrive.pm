@@ -119,16 +119,7 @@ sub getChangesAll(*){
 }
 
 
-sub updateChange(**){
 
-	my $self = shift;
-	my $changeID = shift;
-
-	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
-	$dbase{'LAST_CHANGE'} = $changeID;
-	untie(%dbase);
-
-}
 
 sub createFolder(*$$){
 

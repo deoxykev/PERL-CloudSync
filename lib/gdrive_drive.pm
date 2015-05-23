@@ -223,11 +223,11 @@ sub getFolderInfo(*$){
 	my $path = -1;
 	while ($hasMore){
 		($hasMore, $title,$id) = $self->{_serviceapi}->getFolderInfo($id);
-		if ($path == -1){
-			$path = '';
-		}else{
+#		if ($path == -1){
+#			$path = '';
+#		}else{
 			$path = $title  . '/' . $path;
-		}
+#		}
 	    	print STDOUT "path = $path, title = $title, id = $id\n";
 	}
 	return $path;
@@ -258,7 +258,6 @@ sub uploadFile(*$$){
 
   	binmode(INPUT);
 
-  	#print STDERR 'uploading chunks [' . $chunkNumbers.  "]...\n";
   	my $fileID=0;
   	my $retrycount=0;
 
@@ -277,7 +276,7 @@ sub uploadFile(*$$){
 			$status = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
       		print STDOUT "\r"  . $status;
 	      	if ($status eq '0'){
-	       		print STDERR "...retry\n";
+	       		print STDERR "...retrying\n";
 	       		#some other instance may have updated the tokens already, refresh with the latest
 	       		if ($retrycount == 0){
 	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($self->{_username});
@@ -294,7 +293,7 @@ sub uploadFile(*$$){
 
     	}
 		if ($retrycount >= 5){
-			print STDERR "\r" . $file . "'...retry\n";
+			print STDERR "\r" . $file . "'...retry failed - $file\n";
 
     		pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
     		last;
@@ -304,7 +303,7 @@ sub uploadFile(*$$){
 		$pointerInFile += $chunkSize;
   	}
   	if ($retrycount < 5){
-		print STDOUT "\r" . $file . "'...success\n";
+		print STDOUT "\r" . $file . "'...success - $file\n";
   	}
   	close(INPUT);
 }

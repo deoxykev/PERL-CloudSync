@@ -45,7 +45,6 @@ sub new(*) {
 
 
 
-
 #
 # Open the DBM provided
 #
@@ -56,6 +55,18 @@ sub openDBM(**$){
 	tie( my %dbase, pDrive::Config->DBM_TYPE, $file ,O_RDONLY, 0666) or die "can't open ". $file.": $!";
 	return \%dbase;
 }
+
+#
+# Open the DBM provided
+#
+sub openDBMForUpdating(**$){
+
+	my $self = shift;
+	my $file = shift;
+	tie( my %dbase, pDrive::Config->DBM_TYPE, $file ,O_RDWR|O_CREAT, 0666) or die "can't open ". $file.": $!";
+	return \%dbase;
+}
+
 
 #
 # Close the DBM provided
@@ -107,6 +118,42 @@ sub findKey(**$){
 	return;
 }
 
+
+#
+# Find folder ID given folder path
+#
+sub findFolder(**$){
+
+	my $self = shift;
+	my $dbase = shift;
+	my $folderName = shift;
+
+	$folderName =~ s%\/%%g;
+
+	$folderName = pDrive::FileIO::getMD5String($folderName);
+	if (defined($$dbase{$folderName})){
+		return $$dbase{$folderName};
+	}else{
+		return '';
+	}
+
+}
+
+
+#
+# Add folder ID given folder path
+#
+sub addFolder(**$){
+
+	my $self = shift;
+	my $dbase = shift;
+	my $folderName = shift;
+	my $folderID = shift;
+
+	$folderName =~ s%\/%%g;
+	$folderName = pDrive::FileIO::getMD5String($folderName);
+	$$dbase{$folderName} = $folderID;
+}
 #
 # Read login information from the login DBM
 #

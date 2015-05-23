@@ -393,6 +393,47 @@ sub getChanges(*$){
 }
 
 
+
+#
+# get the folderID for a subfolder
+##
+sub getSubFolderID(*$){
+
+	my $self = shift;
+	my $parentID = shift;
+	my $folderName = shift;
+
+	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
+
+	my $retryCount = 2;
+	while ($retryCount){
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		return \$res->as_string;
+
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+	}else{
+		#		print STDOUT $res->as_string;
+		die($res->as_string."error in loading page");}
+	}
+
+}
+
+
 #
 # get the next page URL
 ##
@@ -758,62 +799,6 @@ sub deleteFile(*$$){
 
 }
 
-sub editFile(*$$$$){
-
-  my $self = shift;
-  my $URL = shift;
-  my $fileSize = shift;
-  my $file = shift;
-  my $fileType = shift;
-my $content = '';
-
-#convert=false prevents plain/text from becoming docs
-my $req = new HTTP::Request PUT => $URL.'?new-revision=true';
-$req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-$req->header('GData-Version' => '3.0');
-#$req->header('X-Upload-Content-Type' => 'application/pdf');
-$req->header('If-Match' => '*');
-$req->content_type($fileType);
-$req->content_length(length $content);
-$req->header('X-Upload-Content-Type' => $fileType);
-$req->header('X-Upload-Content-Length' => $fileSize);
-$req->content('');
-my $res = $self->{_ua}->request($req);
-
-
-if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  print LOG $req->as_string;
-  print LOG $res->as_string;
-  close(LOG);
-}
-
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
-
-  my $block = $res->as_string;
-
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    $block =~ s%[^\n]*\n%%;
-
-    if ($line =~ m%^Location:%){
-      ($URL) = $line =~ m%^Location:\s+(\S+)%;
-      return $URL;
-    }
-
-  }
-
-}else{
-  print STDOUT $req->as_string;
-  print STDOUT $res->as_string;
-  return 0;
-}
-
-
-}
 
 #
 # Parse the drive listings
@@ -875,7 +860,10 @@ sub readDriveListings(**){
 #      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_edit'}] = $editURL;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}] = $resourceType;
+
+      		($parentID) = $parentID =~ m%\/([^\/]+)$%;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] = $parentID;
+
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}] = $published;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;

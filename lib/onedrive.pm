@@ -131,6 +131,30 @@ sub createFolder(*$$){
 
 }
 
+sub createFolderByPath(*$){
+
+	my $self = shift;
+	my $path = shift;
+
+	my $parentFolder= '';
+	my $folderID;
+	#$path =~ s%^\/%%;
+	while(my ($folder) = $path =~ m%^\/?([^\/]+)%){
+		#print STDERR "in $folder";
+    	$path =~ s%^\/?[^\/]+%%;
+		$folderID = $self->{_oneDrive}->createFolder('https://api.onedrive.com/v1.0/drive/root:/'.$parentFolder.':/children?nameConflict=fail', $folder);
+		if ($parentFolder eq ''){
+			$parentFolder .= $folder;
+		}else{
+			$parentFolder .= '/'.$folder;
+		}
+
+	}
+	return $folderID;
+
+}
+
+
 sub uploadFolder(*$$){
 	my $self = shift;
 	my $path = shift;
@@ -189,12 +213,15 @@ sub uploadFolder(*$$){
 
 }
 
-sub uploadFile(*$$){
+sub uploadFile(*$$$){
 	my $self = shift;
 	my $file = shift;
 	my $folderID = shift;
+	my $filename = shift;
 
-    my ($filename) = $file =~ m%\/([^\/]+)$%;
+	if ($filename eq ''){
+		($filename) = $file =~ m%\/([^\/]+)$%;
+	}
 
 	# get filesize
 	my $fileSize = -s $file;
@@ -227,6 +254,7 @@ sub uploadLargeFile(*$$$){
 	my $file = shift;
 	my $path = shift;
 	my $filename = shift;
+	$path =~ s%\/$%%;
 
 	# get filesize
 	my $fileSize = -s $file;
@@ -305,6 +333,7 @@ sub uploadSimpleFile(*$$$){
 	my $file = shift;
 	my $path = shift;
 	my $filename = shift;
+	$path =~ s%\/$%%;
 
 	# get filesize
 	my $fileSize = -s $file;
@@ -315,6 +344,7 @@ sub uploadSimpleFile(*$$$){
   	close(INPUT);
 
     print STDOUT 'uploading entire file '. "\n";
+
     my $URL = $self->{_oneDrive}->API_URL .'/drive/root:/'.$path.'/'.$filename.':/content';
     $self->{_oneDrive}->uploadEntireFile($URL, \$fileContents,$fileSize);
 

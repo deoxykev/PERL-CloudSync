@@ -26,7 +26,7 @@ sub new(*$) {
               _dbm => undef,
   			  _nextURL => '',
   			  _username => undef,
-  			  _db_folders => undef,
+  			  _folders_dbm => undef,
   			  _db_checksum => undef,
   			  _db_fisi => undef};
 
@@ -35,7 +35,8 @@ sub new(*$) {
 	$self->{_username} = shift;
 	$self->{_db_checksum} = 'gd.'.$self->{_username} . '.md5.db';
 	$self->{_db_fisi} = 'gd.'.$self->{_username} . '.fisi.db';
-	$self->{_db_folders} = 'gd.'.$self->{_username} . '.folders.db';
+
+
 
   	# initialize web connections
   	$self->{_serviceapi} = pDrive::GoogleDriveAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
@@ -44,6 +45,9 @@ sub new(*$) {
 #  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
   	$self->{_login_dbm} = $loginsDBM;
   	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
+
+	$self->{_folders_dbm} = $loginsDBM->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
+
 
 	# no token defined
 	if ($token eq '' or  $refreshToken  eq ''){
@@ -70,7 +74,15 @@ sub new(*$) {
 
 }
 
+sub loadFolders(*){
+	my $self = shift;
+	$self->{_folders_dbm} = $self->{_login_dbm}->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
+}
 
+sub unloadFolders(*){
+	my $self = shift;
+	untie($self->{_folders_dbm});
+}
 
 
 sub downloadFile(*$$$){
@@ -99,19 +111,65 @@ sub createFolder(*$$){
 
 }
 
+sub getSubFolderID(*$$){
+
+	my $self = shift;
+	my $folderName = shift;
+	my $parentID = shift;
+
+	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $parentID.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+
+	my $driveListings = $self->{_serviceapi}->getList($URL);
+  	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+
+  	foreach my $resourceID (keys $newDocuments){
+    	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq $folderName){
+    		return $resourceID;
+    	}
+	}
+	return '';
+
+}
 
 sub uploadFolder(*$$){
 	my $self = shift;
-	my $path = shift;
+	my $localPath = shift;
+	my $serverPath = shift;
 	my $parentFolder = shift;
 
-    my ($folder) = $path =~ m%\/([^\/]+)$%;
+    my ($folder) = $localPath =~ m%\/([^\/]+)$%;
 
-  	print STDOUT "path = $path\n";
-   	my @fileList = pDrive::FileIO::getFilesDir($path);
+#	if ($serverPath ne ''){
+		$serverPath .= $folder;
+#	}
+  	print STDOUT "path = $localPath\n";
+   	my @fileList = pDrive::FileIO::getFilesDir($localPath);
 
 	print STDOUT "folder = $folder\n";
-	my $folderID = $self->createFolder($folder, $parentFolder);
+
+	#check server-cache for folder
+	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	#folder doesn't exist, create it
+	if ($folderID eq ''){
+		#*** validate it truly doesn't exist on the server before creating
+		#this is the parent?
+		if ($parentFolder eq ''){
+			#look at the root
+			#get root's children, look for folder as child
+			$folderID = $self->getSubFolderID($folder,'root');
+		}else{
+			#look at the parent
+			#get parent's children, look for folder as child
+			$folderID = $self->getSubFolderID($folder,$parentFolder);
+		}
+		if ($folderID eq ''){
+			$folderID = $self->createFolder($folder, $parentFolder);
+		}
+		$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
+	}
+
+
+
 	print "resource ID = " . $folderID . "\n";
 
     for (my $i=0; $i <= $#fileList; $i++){
@@ -121,7 +179,7 @@ sub uploadFolder(*$$){
 			next;
     	#folder
     	}elsif (-d $fileList[$i]){
-	  		my $fileID = $self->uploadFolder($fileList[$i], $folderID);
+	  		my $fileID = $self->uploadFolder($fileList[$i], $serverPath, $folderID);
     	# file
     	}else{
     		my $process = 1;
@@ -193,7 +251,7 @@ sub uploadFile(*$$){
   	my $uploadURL = $self->{_serviceapi}->createFile('https://www.googleapis.com/upload/drive/v2/files?fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
 
 
-  	my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
+  	my $chunkNumbers = int($fileSize/(pDrive::CloudService->CHUNKSIZE))+1;
 	my $pointerInFile=0;
   	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
   	open(INPUT, "<".$file) or die ('cannot read file '.$file);
@@ -205,13 +263,13 @@ sub uploadFile(*$$){
   	my $retrycount=0;
 
   	for (my $i=0; $i < $chunkNumbers; $i++){
-		my $chunkSize = CHUNKSIZE;
+		my $chunkSize =pDrive::CloudService->CHUNKSIZE;
 		my $chunk;
     	if ($i == $chunkNumbers-1){
 	    	$chunkSize = $fileSize - $pointerInFile;
     	}
 
-    	sysread INPUT, $chunk, CHUNKSIZE;
+    	sysread INPUT, $chunk, pDrive::CloudService->CHUNKSIZE;
     	print STDERR "\r".$i . '/'.$chunkNumbers;
     	my $status=0;
     	$retrycount=0;
@@ -378,7 +436,49 @@ sub updateMD5Hash(**){
 }
 
 
+sub createFolderByPath(*$){
 
+	my $self = shift;
+	my $path = shift;
+
+	my $parentFolder= '';
+	my $folderID;
+	#$path =~ s%^\/%%;
+
+
+
+	my $serverPath = '';
+	while(my ($folder) = $path =~ m%^\/?([^\/]+)%){
+		#print STDERR "in $folder";
+    	$path =~ s%^\/?[^\/]+%%;
+		$serverPath .= $folder;
+
+		#check server-cache for folder
+	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	#folder doesn't exist, create it
+	if ($folderID eq ''){
+		#*** validate it truly doesn't exist on the server before creating
+		#this is the parent?
+		if ($parentFolder eq ''){
+			#look at the root
+			#get root's children, look for folder as child
+			$folderID = $self->getSubFolderID($folder,'root');
+		}else{
+			#look at the parent
+			#get parent's children, look for folder as child
+			$folderID = $self->getSubFolderID($folder,$parentFolder);
+		}
+		if ($folderID eq ''){
+			$folderID = $self->createFolder($folder, $parentFolder);
+		}
+		$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
+	}
+
+
+	}
+	return $folderID;
+
+}
 
 
 

@@ -456,6 +456,12 @@ while (my $input = <$userInput>){
 	  	my $folderID = $services[$currentService]->createFolder($folder);
 	    print "resource ID = " . $folderID . "\n";
 
+	}elsif($input =~ m%^create path%i){
+    	my ($path) = $input =~ m%^create path\s([^\n]+)\n%;
+
+	  	my $folderID = $services[$currentService]->createFolderByPath($path);
+	    print "resource ID = " . $folderID . "\n";
+
 
 	# remote upload using URL (OneDrive))
 	}elsif($input =~ m%^upload url%i){
@@ -475,100 +481,13 @@ while (my $input = <$userInput>){
 	        print STDOUT "no files\n";
         	next;
       	}
-  		$services[$currentService]->uploadFolder($dir . '/'. $folder, '');
-
+ #     	$services[$currentService]->loadFolders();
+  		$services[$currentService]->uploadFolder($dir . '/'. $folder);
+#		$services[$currentService]->unloadFolders();
     }
 
 
-  }elsif($input =~ m%^upload dir\s[^\n]+\n%i){
 
-    my ($dir) = $input =~ m%^upload dir\s([^\n]+)\n%;
-    my ($folder) = $dir =~ m%\/([^\/]+)$%;
-    print STDOUT "directory = $dir\n";
-    my @fileList = pDrive::FileIO::getFilesDir($dir);
-
-    print STDOUT "folder = $folder\n";
-  	my $folderID = $services[$currentService]->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$folder);
-    print "resource ID = " . $folderID . "\n";
-
-    for (my $i=0; $i <= $#fileList; $i++){
-		print STDOUT $fileList[$i] . "\n";
-
-    	my ($fileName) = $fileList[$i] =~ m%\/([^\/]+)$%;
-
-  		my $fileSize =  -s $fileList[$i];
-  		my $filetype = 'application/octet-stream';
-  		print STDOUT "file size for $fileList[$i] is $fileSize of type $filetype\n" if (pDrive::Config->DEBUG);
-
-  		my $uploadURL = $services[$currentService]->createFile($createFileURL,$fileSize,$fileName,$filetype);
-
-
-  		my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
-		my $pointerInFile=0;
-  		print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  		open(INPUT, "<".$fileList[$i]) or die ('cannot read file '.$fileList[$i]);
-
-  		binmode(INPUT);
-
-  		print STDERR 'uploading chunks [' . $chunkNumbers.  "]...";
-  		my $fileID=0;
-  		for (my $i=0; $i < $chunkNumbers; $i++){
-		    my $chunkSize = CHUNKSIZE;
-		    my $chunk;
-    		if ($i == $chunkNumbers-1){
-      			$chunkSize = $fileSize - $pointerInFile;
-    		}
-
-    		sysread INPUT, $chunk, CHUNKSIZE;
-    		print STDERR $i;
-    		my $status=0;
-    		my $retrycount=0;
-    		while ($status eq '0' and $retrycount < 5){
-			    $status = $services[$currentService]->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      			print STDOUT $status . "\n";
-	      		if ($status eq '0'){
-        			print STDERR "retry\n";
-        			sleep (5);
-        			$retrycount++;
-      			}
-
-    		}
-    		pDrive::masterLog("retry failed $fileList[$i]\n") if ($retrycount >= 5);
-
-    		$fileID=$status;
-		    $pointerInFile += $chunkSize;
-  		}
-  		close(INPUT);
-  	    $services[$currentService]->addFile('https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents',$fileID);
-  	    $services[$currentService]->deleteFile('root',$fileID);
-
-  		print STDOUT "\n";
-    }
-
-  }elsif($input =~ m%^set listurl%i){
-
-
-    my ($parameter) = $input =~ m%^set listurl\s+(\S+)%i;
-    if ($parameter ne ''){
-      $currentURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true&q=after:'.$parameter;
-    }else{
-      $currentURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
-    }
-    print STDOUT "list list URL = $currentURL\n";
-
-
-
-  }elsif($input =~ m%^get current%i){
-
-    my ($driveListings) = $services[$currentService]->getList($currentURL);
-
-    ($nextURL) = $services[$currentService]->getNextURL($driveListings);
-    $nextURL =~ s%\&amp\;%\&%g;
-    $nextURL =~ s%\%3A%\:%g;
-    $nextURL .= '&showfolders=true' if ($nextURL ne '' and !($nextURL =~ m%showfolders%));
-
-
-    print STDOUT "next list URL = $nextURL\n";
 
   }
 
@@ -614,12 +533,18 @@ sub syncDrive($$){
   			#already exists; skip
   			if 	(defined($$dbase2{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $$dbase2{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}){
  				 print STDOUT "skipping " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] . "\n";
- 				return;
+
   			}else{
 				print STDOUT "downloading " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] . "\n";
-		    	#$services[$service1]->downloadFile($resourceID,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+		    	$services[$service1]->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+		    	print STDERR "parent = ". $$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
+		    	my $path = $services[$service1]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
+				$services[$service2]->createFolderByPath($path);
+				$services[$service2]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $path, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
   			}
 	  	}
+	  	#		$services[$service1]->{_nextURL} =  $services[$service1]->{_serviceapi}->getNextURL($driveListings);
+
 		print STDOUT "next url " . $services[$service1]->{_nextURL} . "\n";
   		last if  $services[$service1]->{_nextURL} eq '';
 

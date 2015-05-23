@@ -446,6 +446,12 @@ sub uploadFile(*$$$$){
 	my $res = $self->{_ua}->request($req);
 
 
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		close(LOG);
+	}
+
 	if($res->is_success or $res->code == 308){
   		my $block = $res->as_string;
 		my ($resourceType,$resourceID);
@@ -468,6 +474,7 @@ sub uploadFile(*$$$$){
 	}else{
   		print STDERR "error";
   		print STDOUT $req->headers_as_string;
+  		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -500,6 +507,11 @@ sub uploadEntireFile(*$$$$){
 	$req->content($$chunk);
 	my $res = $self->{_ua}->request($req);
 
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		close(LOG);
+	}
 
 	if($res->is_success or $res->code == 308){
 
@@ -511,7 +523,7 @@ sub uploadEntireFile(*$$$$){
 		$retryCount--;
 	}else{
 		print STDERR "error";
-  		print STDOUT $req->headers_as_string;
+  		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}

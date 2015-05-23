@@ -223,12 +223,12 @@ sub getFolderInfo(*$){
 	my $path = -1;
 	while ($hasMore){
 		($hasMore, $title,$id) = $self->{_serviceapi}->getFolderInfo($id);
-#		if ($path == -1){
-#			$path = '';
-#		}else{
+		if ($path == -1){
+			$path = $title;
+		}else{
 			$path = $title  . '/' . $path;
-#		}
-#	    	print STDOUT "path = $path, title = $title, id = $id\n";
+		}
+	    	print STDOUT "path = $path, title = $title, id = $id\n";
 	}
 	return $path;
 }

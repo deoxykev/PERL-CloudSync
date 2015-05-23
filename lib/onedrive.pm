@@ -312,7 +312,7 @@ sub uploadLargeFile(*$$$){
 
 	}
 	if ($retrycount >= 5){
-		print STDERR "\r" . $file . "'...retry failed - $file\n";
+		print STDERR "\r" . $file . "'...retry failed - $path - $file\n";
 
     	pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
     	last;
@@ -323,7 +323,7 @@ sub uploadLargeFile(*$$$){
 
   }
   if ($retrycount < 5){
-		print STDOUT "\r" . $file . "'...success - $file\n";
+		print STDOUT "\r" . $file . "'...success - $path - $file\n";
   }
   close(INPUT);
 

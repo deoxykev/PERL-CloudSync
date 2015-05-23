@@ -48,7 +48,7 @@ sub traverseMKDIR($){
 
   #strip filenames
   $path =~ s%[^/]+$%%;
-  print STDOUT "mkdir test path $path\n";
+  print STDOUT "mkdir test path $path\n"  if (pDrive::Config->DEBUG);
   if (!(-e $path) and ($path =~ m%/.*/[^/]+/%)){
 #    my ($newPath) = ;
     &traverseMKDIR($path =~ m%(/.*/)[^/]+/%);

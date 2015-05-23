@@ -92,7 +92,7 @@ sub downloadFile(*$$$){
       my $finalPath = pDrive::Config->LOCAL_PATH."/$path";
 
       pDrive::FileIO::traverseMKDIR($finalPath);
-      print STDOUT "downloading $finalPath...\n";
+      print STDOUT "downloading $finalPath...";
 
       # a simple non-google-doc file
       $returnStatus = $self->{_serviceapi}->downloadFile($finalPath,$link,$updated);
@@ -228,7 +228,7 @@ sub getFolderInfo(*$){
 		}else{
 			$path = $title  . '/' . $path;
 		}
-	    	print STDOUT "path = $path, title = $title, id = $id\n";
+#	    	print STDOUT "path = $path, title = $title, id = $id\n";
 	}
 	return $path;
 }
@@ -314,9 +314,9 @@ sub getList(*){
 	my $driveListings = $self->{_serviceapi}->getList($self->{_nextURL});
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
-  	foreach my $resourceID (keys $newDocuments){
-    	print STDOUT 'new document -> '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ', '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\n";
-	}
+#  	foreach my $resourceID (keys $newDocuments){
+ #   	print STDOUT 'new document -> '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ', '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\n";
+#	}
 
 	#print STDOUT $$driveListings . "\n";
 	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);

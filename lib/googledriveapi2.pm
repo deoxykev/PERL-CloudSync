@@ -240,7 +240,7 @@ sub getList(*$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 	  	return \$res->as_string;
 	}elsif ($res->code == 401){
  	 	my ($token,$refreshToken) = $self->refreshToken();
@@ -280,7 +280,7 @@ sub getFolderInfo(*$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
   		my ($title) = $res->as_string =~ m%\"title\"\:\s?\"([^\"]+)\"%;
 		my ($resourceID) = $res->as_string =~ m%\"parentLink\"\:\s?\"[^\"]+\/([^\"]+)\"%;
 		my ($isRoot) = $res->as_string =~ m%\"isRoot\"\:\s?([^\s]+)%;
@@ -327,7 +327,7 @@ sub getListRoot(*$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
   		my $block = $res->as_string;
 		my ($resourceID) = $block =~ m%\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s?\"([^\"]+)\"%;
 		return $resourceID;
@@ -372,7 +372,7 @@ sub getChanges(*$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
   		my $block = $res->as_string;
 
   		while (my ($line) = $block =~ m%([^\n]*)\n%){
@@ -594,7 +594,7 @@ sub createFile(*$$$$$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 
   		my $block = $res->as_string;
 
@@ -659,7 +659,7 @@ sub createFolder(*$$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 
   		my $block = $res->as_string;
 
@@ -722,7 +722,7 @@ sub addFile(*$$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 
   		my $block = $res->as_string;
 

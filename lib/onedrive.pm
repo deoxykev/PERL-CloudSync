@@ -346,10 +346,15 @@ sub uploadSimpleFile(*$$$){
 	my $fileContents = do { local $/; <INPUT> };
   	close(INPUT);
 
-    print STDOUT 'uploading entire file '. "\n";
+    print STDOUT 'uploading entire file '.$file;
 
     my $URL = $self->{_oneDrive}->API_URL .'/drive/root:/'.$path.'/'.$filename.':/content';
-    $self->{_oneDrive}->uploadEntireFile($URL, \$fileContents,$fileSize);
+    my $status = $self->{_oneDrive}->uploadEntireFile($URL, \$fileContents,$fileSize);
+    if ($status == 1){
+    	print "\r...success - $file\n";
+    }else{
+    	print "\r...failure - $file\n";
+    }
 
 
 

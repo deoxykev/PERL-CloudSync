@@ -228,7 +228,7 @@ sub getFolderInfo(*$){
 #		}else{
 			$path = $title  . '/' . $path;
 #		}
-	    	print STDOUT "path = $path, title = $title, id = $id\n";
+#	    	print STDOUT "path = $path, title = $title, id = $id\n";
 	}
 	return $path;
 }

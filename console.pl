@@ -533,10 +533,10 @@ sub syncDrive($$){
   			next if  $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '';
   			#already exists; skip
   			if 	(defined($$dbase2{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $$dbase2{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
- 				 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] . "\n";
+ 				 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
 
   			}else{
-				print STDOUT "DOWNLOAD " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] . "\n";
+				print STDOUT "DOWNLOAD " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
 		    	$services[$service1]->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
 		    	#print STDERR "parent = ". $$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
 		    	my $path = $services[$service1]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);

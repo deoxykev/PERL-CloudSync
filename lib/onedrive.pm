@@ -351,9 +351,9 @@ sub uploadSimpleFile(*$$$){
     my $URL = $self->{_oneDrive}->API_URL .'/drive/root:/'.$path.'/'.$filename.':/content';
     my $status = $self->{_oneDrive}->uploadEntireFile($URL, \$fileContents,$fileSize);
     if ($status == 1){
-    	print "\r...success - $file\n";
+    	print "...success - $filename\n";
     }else{
-    	print "\r...failure - $file\n";
+    	print "...failure - $filename\n";
     }
 
 

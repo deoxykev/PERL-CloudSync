@@ -204,7 +204,7 @@ sub getList(*$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 
 
 	}else{
@@ -248,7 +248,7 @@ sub getChanges(*$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n" if (pDrive::Config->DEBUG);
   		return \$res->as_string;
 
 	}elsif ($res->code == 401){
@@ -312,7 +312,7 @@ sub testAccess(*){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n" if (pDrive::Config->DEBUG);
   		return 1;
 
 	}else{
@@ -373,7 +373,7 @@ sub downloadChunk {
 ###
 
 if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
+  print STDOUT "success --> $URL\n\n" if (pDrive::Config->DEBUG);
 
 #removed (slups entire file into memory)
 #  open (FILE, "> ".pDrive::Config->LOCAL_PATH."/$path") or die ("Cannot save image file".pDrive::Config->LOCAL_PATH."/$path: $!\n");
@@ -669,7 +669,7 @@ sub createFolder(*$$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n" if (pDrive::Config->DEBUG);
 
   		my $block = $res->as_string;
 
@@ -731,7 +731,7 @@ sub addFile(*$$){
 	}
 
 	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 
   		my $block = $res->as_string;
 
@@ -837,7 +837,7 @@ if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
 }
 
 if($res->is_success){
-  print STDOUT "success --> $URL\n\n";
+  print STDOUT "success --> $URL\n\n" if (pDrive::Config->DEBUG);
 
   my $block = $res->as_string;
 

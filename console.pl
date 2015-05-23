@@ -539,7 +539,7 @@ sub syncDrive($$){
 		    	$services[$service1]->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
 		    	print STDERR "parent = ". $$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
 		    	my $path = $services[$service1]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
-				$services[$service2]->createFolderByPath($path);
+				$services[$service2]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
 				$services[$service2]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $path, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
   			}
 	  	}

@@ -1,4 +1,7 @@
 package pDrive::oneDrive;
+
+our @ISA = qw(pDrive::CloudService);
+
 	use Fcntl;
 
 

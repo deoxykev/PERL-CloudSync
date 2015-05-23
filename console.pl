@@ -530,6 +530,7 @@ sub syncDrive($$){
 		my $newDocuments =  $services[$service1]->getList($nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
   		foreach my $resourceID (keys $newDocuments){
+  			next if  $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '';
   			#already exists; skip
   			if 	(defined($$dbase2{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $$dbase2{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
  				 print STDOUT "skipping " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] . "\n";

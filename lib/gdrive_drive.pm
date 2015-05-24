@@ -487,12 +487,16 @@ sub createFolderByPath(*$){
 			#look at the root
 			#get root's children, look for folder as child
 			$folderID = $self->getSubFolderID($folder,'root');
+			print STDERR "1";
 		}else{
 			#look at the parent
 			#get parent's children, look for folder as child
 			$folderID = $self->getSubFolderID($folder,$parentFolder);
+						print STDERR "2";
 		}
 		if ($folderID eq '' and $parentFolder ne ''){
+									print STDERR "3";
+
 			$folderID = $self->createFolder($folder, $parentFolder);
 		}elsif ($folderID eq '' and  $parentFolder eq ''){
 			$folderID = $self->createFolder($folder, 'root');
@@ -502,7 +506,7 @@ sub createFolderByPath(*$){
 
 
 	}
-	print STDERR "FOLDER !  == $folderID\n";
+	print STDERR "FOLDER !  == $folderID $parentFolder\n";
 	return $folderID;
 
 }

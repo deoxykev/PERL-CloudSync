@@ -294,6 +294,8 @@ sub getFolderInfo(*$){
 		$self->setToken($token,$refreshToken);
 		$retryCount--;
 	}else{
+		return $fileID;
+
 		#		print STDOUT $res->as_string;
 		#die($res->as_string."error in loading page");
 	}

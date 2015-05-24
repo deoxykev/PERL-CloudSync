@@ -258,10 +258,13 @@ sub uploadFile(*$$){
 	my $self = shift;
 	my $file = shift;
 	my $folder = shift;
+	my $fileName = shift;
+
+	if ($fileName eq ''){
+		($fileName) = $file =~ m%\/([^\/]+)$%;
+	}
 
 	print STDOUT $file . "\n";
-
-    my ($fileName) = $file =~ m%\/([^\/]+)$%;
 
   	my $fileSize =  -s $file;
   	return 0 if $fileSize == 0;

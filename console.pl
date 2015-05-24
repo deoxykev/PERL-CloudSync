@@ -618,8 +618,8 @@ sub syncFolder($){
 		    	my $path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
 				for(my $i=1; $i <= $#drives; $i++){
 					#print STDERR "inx";
-					$services[$drives[$i]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
-					$services[$drives[$i]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $path, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+					my $mypath = $services[$drives[$i]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
+					$services[$drives[$i]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
 				}
   			}
   			 }

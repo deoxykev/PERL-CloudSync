@@ -139,12 +139,13 @@ sub createFolderByPath(*$){
 	my $self = shift;
 	my $path = shift;
 
+	my $tmppath = $path;
 	my $parentFolder= '';
 	my $folderID;
 	#$path =~ s%^\/%%;
-	while(my ($folder) = $path =~ m%^\/?([^\/]+)%){
+	while(my ($folder) = $tmppath =~ m%^\/?([^\/]+)%){
 		#print STDERR "in $folder";
-    	$path =~ s%^\/?[^\/]+%%;
+    	$tmppath =~ s%^\/?[^\/]+%%;
 		$folderID = $self->{_oneDrive}->createFolder('https://api.onedrive.com/v1.0/drive/root:/'.$parentFolder.':/children?nameConflict=fail', $folder);
 		if ($parentFolder eq ''){
 			$parentFolder .= $folder;
@@ -153,7 +154,7 @@ sub createFolderByPath(*$){
 		}
 
 	}
-	return $folderID;
+	return $path;
 
 }
 

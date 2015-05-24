@@ -473,12 +473,12 @@ sub createFolderByPath(*$){
 
 	my $serverPath = '';
 	while(my ($folder) = $path =~ m%^\/?([^\/]+)%){
-		#print STDERR "in $folder";
+
     	$path =~ s%^\/?[^\/]+%%;
 		$serverPath .= $folder;
 
 		#check server-cache for folder
-	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	$folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 	#folder doesn't exist, create it
 	if ($folderID eq ''){
 		#*** validate it truly doesn't exist on the server before creating
@@ -487,26 +487,22 @@ sub createFolderByPath(*$){
 			#look at the root
 			#get root's children, look for folder as child
 			$folderID = $self->getSubFolderID($folder,'root');
-			print STDERR "1";
 		}else{
 			#look at the parent
 			#get parent's children, look for folder as child
 			$folderID = $self->getSubFolderID($folder,$parentFolder);
-						print STDERR "2";
 		}
-		if ($folderID eq '' and $parentFolder ne ''){
-									print STDERR "3";
 
+		if ($folderID eq '' and $parentFolder ne ''){
 			$folderID = $self->createFolder($folder, $parentFolder);
 		}elsif ($folderID eq '' and  $parentFolder eq ''){
 			$folderID = $self->createFolder($folder, 'root');
 		}
-		$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
+		#$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
 	}
 
 
 	}
-	print STDERR "FOLDER !  == $folderID $parentFolder\n";
 	return $folderID;
 
 }

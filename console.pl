@@ -311,7 +311,7 @@ while (my $input = <$userInput>){
 		$drives[0] = $service1;
 		$drives[1] = $service2;
     	#my ($rootID) = $services[$currentService]->getListRoot();
-    	syncFolder($folder,@drives);
+    	syncFolder($folder,'',@drives);
   	}elsif($input =~ m%^sync folderid\s+\S+\s+\S+\s+\S+%i){
     	my ($folderID,$service1,$service2,$service3) = $input =~ m%^sync folderid\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)%i;
 
@@ -320,7 +320,7 @@ while (my $input = <$userInput>){
 		$drives[1] = $service2;
 		$drives[2] = $service3;
     	#my ($rootID) = $services[$currentService]->getListRoot();
-    	syncFolder($folderID,@drives);
+    	syncFolder('',$folderID,@drives);
 	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
     	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;
 		my $dbase1 = $dbm->openDBM($services[$service1]->{_db_fisi});
@@ -582,7 +582,8 @@ sub syncDrive($){
 
 sub syncFolder($){
 	my ($folder, $folderID, @drives) = @_;
-	my @dbase; print STDERR "folder = $folder\n";
+	my @dbase;
+	 print STDERR "folder = $folder\n";
 	for(my $i=0; $i <= $#drives; $i++){
 			$dbase[$drives[$i]] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
 	}

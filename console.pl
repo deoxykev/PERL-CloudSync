@@ -312,7 +312,15 @@ while (my $input = <$userInput>){
 		$drives[1] = $service2;
     	#my ($rootID) = $services[$currentService]->getListRoot();
     	syncFolder($folder,@drives);
+  	}elsif($input =~ m%^sync folderid\s+\S+\s+\S+\s+\S+%i){
+    	my ($folderID,$service1,$service2,$service3) = $input =~ m%^sync folderid\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)%i;
 
+		my @drives;
+		$drives[0] = $service1;
+		$drives[1] = $service2;
+		$drives[2] = $service3;
+    	#my ($rootID) = $services[$currentService]->getListRoot();
+    	syncFolder($folderID,@drives);
 	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
     	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;
 		my $dbase1 = $dbm->openDBM($services[$service1]->{_db_fisi});
@@ -573,14 +581,17 @@ sub syncDrive($){
 }
 
 sub syncFolder($){
-	my ($folder, @drives) = @_;
+	my ($folder, $folderID, @drives) = @_;
 	my @dbase; print STDERR "folder = $folder\n";
 	for(my $i=0; $i <= $#drives; $i++){
 			$dbase[$drives[$i]] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
 	}
 	my $nextURL = '';
 	my @subfolders;
-	my $folderID =  $services[$drives[0]]->getSubFolderID($folder,'root');
+
+	if ($folderID eq ''){
+		$folderID =  $services[$drives[0]]->getSubFolderID($folder,'root');
+	}
 	push(@subfolders, $folderID);
 
 	for (my $i=0; $i <= $#subfolders;$i++){
@@ -604,8 +615,10 @@ sub syncFolder($){
 		    	$services[$drives[0]]->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
 		    	#print STDERR "parent = ". $$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
 		    	my $path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
-				$services[$drives[1]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
-				$services[$drives[1]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $path, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+				for(my $i=1; $i <= $#drives; $i++){
+					$services[$drives[$i]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
+					$services[$drives[$i]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $path, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+				}
   			}
   			 }
 	  	}

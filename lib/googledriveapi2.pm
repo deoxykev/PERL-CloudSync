@@ -295,7 +295,8 @@ sub getFolderInfo(*$){
 		$retryCount--;
 	}else{
 		#		print STDOUT $res->as_string;
-		die($res->as_string."error in loading page");}
+		#die($res->as_string."error in loading page");
+	}
 
 	}
 }

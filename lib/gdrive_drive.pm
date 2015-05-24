@@ -131,6 +131,26 @@ sub getSubFolderID(*$$){
 
 }
 
+sub getSubFolderIDList(*$$){
+
+	my $self = shift;
+	my $folderName = shift;
+	my $URL = shift;
+
+	if ($URL eq ''){
+		$URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	}
+
+
+	my $driveListings = $self->{_serviceapi}->getList($URL);
+  	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+
+	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
+	#$self->updateMD5Hash($newDocuments);
+	return $newDocuments;
+
+}
+
 sub uploadFolder(*$$){
 	my $self = shift;
 	my $localPath = shift;

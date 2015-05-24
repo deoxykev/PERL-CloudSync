@@ -297,8 +297,21 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^sync drive\s+\S+\s+\S+%i){
     	my ($service1,$service2) = $input =~ m%^sync drive\s+(\S+)\s+(\S+)%i;
 
+		my @drives;
+		$drives[0] = $service1;
+		$drives[1] = $service2;
     	#my ($rootID) = $services[$currentService]->getListRoot();
-    	syncDrive($service1,$service2);
+    	syncDrive(@drives);
+
+	# sync the entire drive in source current source with all other sources
+  	}elsif($input =~ m%^sync folder\s+\S+\s+\S+\s+\S+%i){
+    	my ($folder,$service1,$service2) = $input =~ m%^sync folder\s+(\S+)\s+(\S+)\s+(\S+)%i;
+
+		my @drives;
+		$drives[0] = $service1;
+		$drives[1] = $service2;
+    	#my ($rootID) = $services[$currentService]->getListRoot();
+    	syncFolder($folder,@drives);
 
 	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
     	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;
@@ -520,42 +533,96 @@ sub masterLog($){
 
 }
 
-sub syncDrive($$){
-	my $service1 = shift;
-	my $service2 = shift;
-	my $dbase1 = $dbm->openDBM($services[$service1]->{_db_fisi});
-	my $dbase2 = $dbm->openDBM($services[$service2]->{_db_fisi});
+sub syncDrive($){
+	my (@drives) = @_;
+	my @dbase;
+	for(my $i=0; $i <= $#drives; $i++){
+			$dbase[$drives[$i]] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
+	}
 	my $nextURL = '';
 	while (1){
-		my $newDocuments =  $services[$service1]->getList($nextURL);
+		my $newDocuments =  $services[$drives[0]]->getList($nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
   		foreach my $resourceID (keys $newDocuments){
   			next if  $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '';
   			#already exists; skip
-  			if 	(defined($$dbase2{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $$dbase2{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
+  			if 	(defined($dbase[$drives[1]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[1]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
  				 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
 
   			}else{
 				print STDOUT "DOWNLOAD " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
-		    	$services[$service1]->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+		    	$services[$drives[0]]->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
 		    	#print STDERR "parent = ". $$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
-		    	my $path = $services[$service1]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
-				$services[$service2]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
-				$services[$service2]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $path, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+		    	my $path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
+				$services[$drives[1]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
+				$services[$drives[1]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $path, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
   			}
 	  	}
 	  	#		$services[$service1]->{_nextURL} =  $services[$service1]->{_serviceapi}->getNextURL($driveListings);
 
-		print STDOUT "next url " . $services[$service1]->{_nextURL} . "\n";
-  		last if  $services[$service1]->{_nextURL} eq '';
+		print STDOUT "next url " . $services[0]->{_nextURL} . "\n";
+  		last if  $services[0]->{_nextURL} eq '';
 
 	}
-	$dbm->closeDBM($dbase1);
-	$dbm->closeDBM($dbase2);
+	for(my $i=0; $i < $#drives; $i++){
+		$dbm->closeDBM($dbase[$drives[$i]]);
+	}
 
 	#print STDOUT $$driveListings . "\n";
 
 }
+
+sub syncFolder($){
+	my ($folder, @drives) = @_;
+	my @dbase; print STDERR "folder = $folder\n";
+	for(my $i=0; $i <= $#drives; $i++){
+			$dbase[$drives[$i]] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
+	}
+	my $nextURL = '';
+	my @subfolders;
+	my $folderID =  $services[$drives[0]]->getSubFolderID($folder,'root');
+	push(@subfolders, $folderID);
+
+	for (my $i=0; $i <= $#subfolders;$i++){
+		$folderID = $subfolders[$i];
+	while (1){
+		my $newDocuments =  $services[$drives[0]]->getSubFolderIDList($folderID, $nextURL);
+  		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
+  		foreach my $resourceID (keys $newDocuments){
+
+  			#folder
+  			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
+				push(@subfolders, $resourceID);
+  			 }else{
+
+  			#already exists; skip
+  			if 	(defined($dbase[$drives[1]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[1]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
+ 				 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
+
+  			}else{
+				print STDOUT "DOWNLOAD " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
+		    	$services[$drives[0]]->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+		    	#print STDERR "parent = ". $$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
+		    	my $path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
+				$services[$drives[1]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
+				$services[$drives[1]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $path, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+  			}
+  			 }
+	  	}
+	  	#		$services[$service1]->{_nextURL} =  $services[$service1]->{_serviceapi}->getNextURL($driveListings);
+
+		print STDOUT "next url " . $services[0]->{_nextURL} . "\n";
+  		last if  $services[0]->{_nextURL} eq '';
+
+	}
+	}
+	for(my $i=0; $i < $#drives; $i++){
+		$dbm->closeDBM($dbase[$drives[$i]]);
+	}
+
+
+}
+
 __END__
 
 =head1 AUTHORS

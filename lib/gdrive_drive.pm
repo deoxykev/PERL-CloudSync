@@ -182,8 +182,10 @@ sub uploadFolder(*$$){
 			#get parent's children, look for folder as child
 			$folderID = $self->getSubFolderID($folder,$parentFolder);
 		}
-		if ($folderID eq ''){
+		if ($folderID eq '' and $parentFolder ne ''){
 			$folderID = $self->createFolder($folder, $parentFolder);
+		}elsif ($folderID eq '' and  $parentFolder eq ''){
+			$folderID = $self->createFolder($folder, 'root');
 		}
 		$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
 	}
@@ -490,14 +492,17 @@ sub createFolderByPath(*$){
 			#get parent's children, look for folder as child
 			$folderID = $self->getSubFolderID($folder,$parentFolder);
 		}
-		if ($folderID eq ''){
+		if ($folderID eq '' and $parentFolder ne ''){
 			$folderID = $self->createFolder($folder, $parentFolder);
+		}elsif ($folderID eq '' and  $parentFolder eq ''){
+			$folderID = $self->createFolder($folder, 'root');
 		}
 		$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
 	}
 
 
 	}
+	print STDERR "FOLDER !  == $folderID\n";
 	return $folderID;
 
 }

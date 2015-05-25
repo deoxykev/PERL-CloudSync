@@ -590,6 +590,7 @@ sub syncFolder($){
 	my $nextURL = '';
 	my @subfolders;
 
+	#no folder ID provided, look it up from looking at the root folder
 	if ($folderID eq ''){
 		$folderID =  $services[$drives[0]]->getSubFolderID($folder,'root');
 	}
@@ -598,6 +599,7 @@ sub syncFolder($){
 	for (my $i=0; $i <= $#subfolders;$i++){
 		$folderID = $subfolders[$i];
 	while (1){
+
 		my $newDocuments =  $services[$drives[0]]->getSubFolderIDList($folderID, $nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
   		foreach my $resourceID (keys $newDocuments){
@@ -618,7 +620,7 @@ sub syncFolder($){
 		    	my $path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
 				for(my $i=1; $i <= $#drives; $i++){
 					#print STDERR "inx";
-					my $mypath = $services[$drives[$i]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
+					my $mypath = $services[$drives[$i]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');print STDERR "path $path mypath $mypath\n";
 					$services[$drives[$i]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
 				}
   			}

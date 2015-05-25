@@ -866,7 +866,6 @@ sub readDriveListings(**){
     		$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\,\s+%%;
 		}
 
-#		print STDERR "IN" . $entry;
 
     	my ($title) = $entry =~ m%\"title\"\:\s?\"([^\"]+)\"%;
 		my ($updated) = $entry =~ m%\"modifiedDate\"\:\s?\"([^\"]+)\"%;

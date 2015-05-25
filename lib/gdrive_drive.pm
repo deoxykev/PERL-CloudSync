@@ -271,7 +271,7 @@ sub uploadFile(*$$){
   	my $fileSize =  -s $file;
   	return 0 if $fileSize == 0;
   	my $filetype = 'application/octet-stream';
-  	print STDOUT "file size for $file  is $fileSize of type $filetype to folder $folder\n" if (pDrive::Config->DEBUG);
+  	print STDOUT "file size for $file ($fileName)  is $fileSize to folder $folder\n" if (pDrive::Config->DEBUG);
 
   	my $uploadURL = $self->{_serviceapi}->createFile('https://www.googleapis.com/upload/drive/v2/files?fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
 
@@ -478,29 +478,32 @@ sub createFolderByPath(*$){
 		$serverPath .= $folder;
 
 		#check server-cache for folder
-	$folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
-	#folder doesn't exist, create it
-	if ($folderID eq ''){
-		#*** validate it truly doesn't exist on the server before creating
-		#this is the parent?
-		if ($parentFolder eq ''){
-			#look at the root
-			#get root's children, look for folder as child
-			$folderID = $self->getSubFolderID($folder,'root');
-		}else{
-			#look at the parent
-			#get parent's children, look for folder as child
-			$folderID = $self->getSubFolderID($folder,$parentFolder);
-		}
+		$folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+		#	folder doesn't exist, create it
+		if ($folderID eq ''){
+			#*** validate it truly doesn't exist on the server before creating
+			#this is the parent?
+			if ($parentFolder eq ''){
+				#look at the root
+				#	get root's children, look for folder as child
+				$folderID = $self->getSubFolderID($folder,'root');
+				$parentFolder =$folderID if ($folderID ne '');
+			}else{
+				#look at the parent
+				#get parent's children, look for folder as child
+				$folderID = $self->getSubFolderID($folder,$parentFolder);
+				$parentFolder =$folderID if ($folderID ne '');
+			}
 
-		if ($folderID eq '' and $parentFolder ne ''){
-			$folderID = $self->createFolder($folder, $parentFolder);
-		}elsif ($folderID eq '' and  $parentFolder eq ''){
-			$folderID = $self->createFolder($folder, 'root');
+			if ($folderID eq '' and $parentFolder ne ''){
+				$folderID = $self->createFolder($folder, $parentFolder);
+				$parentFolder =$folderID if ($folderID ne '');
+			}elsif ($folderID eq '' and  $parentFolder eq ''){
+				$folderID = $self->createFolder($folder, 'root');
+				$parentFolder =$folderID if ($folderID ne '');
+			}
+			#	$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
 		}
-		#$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
-	}
-
 
 	}
 	return $folderID;

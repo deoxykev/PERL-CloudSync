@@ -412,7 +412,7 @@ if($res->is_success){
   }
 }
 
-  print STDOUT $req->as_string;
+ # print STDOUT $req->as_string;
   print STDOUT $res->as_string;
   return 0;
 }
@@ -473,8 +473,8 @@ sub uploadFile(*$$$$){
 
 	}else{
   		print STDERR "error";
-  		print STDOUT $req->headers_as_string;
-  		print STDOUT $req->as_string;
+#  		print STDOUT $req->headers_as_string;
+#  		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -523,7 +523,7 @@ sub uploadEntireFile(*$$$$){
 		$retryCount--;
 	}else{
 		print STDERR "error";
-  		print STDOUT $req->as_string;
+#  		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -579,7 +579,7 @@ sub createFile(*$$){
 
 	}else{
   		print STDERR "error";
-  		print STDOUT $req->headers_as_string;
+#  		print STDOUT $req->headers_as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -629,7 +629,7 @@ sub uploadRemoteFile(*$$$){
 		return $statusURL;
 	}else{
   		print STDERR "error";
-  		print STDOUT $req->headers_as_string;
+#  		print STDOUT $req->headers_as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -748,7 +748,7 @@ sub addFile(*$$){
   		}
 
 	}else{
-		print STDOUT $req->as_string;
+		#print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -797,7 +797,7 @@ sub deleteFile(*$$){
   		}
 
 	}else{
-		print STDOUT $req->as_string;
+		#print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -853,7 +853,7 @@ if($res->is_success){
   }
 
 }else{
-  print STDOUT $req->as_string;
+  #print STDOUT $req->as_string;
   print STDOUT $res->as_string;
   return 0;
 }

@@ -583,7 +583,7 @@ sub uploadFile(*$$$$){
 		$retryCount--;
 	}else{
   		print STDERR "error";
-  		print STDOUT $req->headers_as_string;
+  	#	print STDOUT $req->headers_as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -654,7 +654,7 @@ sub createFile(*$$$$$){
 		$self->setToken($token,$refreshToken);
 		$retryCount--;
 	}else{
-		print STDOUT $req->as_string;
+	#	print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -720,7 +720,7 @@ sub createFolder(*$$){
 		$retryCount--;
 
 	}else{
-		print STDOUT $req->as_string;
+		#print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -780,7 +780,7 @@ sub addFile(*$$){
   		}
 
 	}else{
-		print STDOUT $req->as_string;
+		#print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}
@@ -833,7 +833,7 @@ sub deleteFile(*$$){
   		}
 
 	}else{
-		print STDOUT $req->as_string;
+		#print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}

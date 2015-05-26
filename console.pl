@@ -312,14 +312,6 @@ while (my $input = <$userInput>){
 		$drives[1] = $service2;
     	#my ($rootID) = $services[$currentService]->getListRoot();
     	syncFolder($folder,'',@drives);
-  	}elsif($input =~ m%^sync folderid\s+\S+\s+\S+%i){
-    	my ($folderID,$service1,$service2,$service3) = $input =~ m%^sync folderid\s+(\S+)\s+(\S+)\s+(\S+)%i;
-
-		my @drives;
-		$drives[0] = $service1;
-		$drives[1] = $service2;
-    	#my ($rootID) = $services[$currentService]->getListRoot();
-    	syncFolder('',$folderID,@drives);
   	}elsif($input =~ m%^sync folderid\s+\S+\s+\S+\s+\S+%i){
     	my ($folderID,$service1,$service2,$service3) = $input =~ m%^sync folderid\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)%i;
 
@@ -327,6 +319,14 @@ while (my $input = <$userInput>){
 		$drives[0] = $service1;
 		$drives[1] = $service2;
 		$drives[2] = $service3;
+    	#my ($rootID) = $services[$currentService]->getListRoot();
+    	syncFolder('',$folderID,@drives);
+  	}elsif($input =~ m%^sync folderid\s+\S+\s+\S+%i){
+    	my ($folderID,$service1,$service2,$service3) = $input =~ m%^sync folderid\s+(\S+)\s+(\S+)\s+(\S+)%i;
+
+		my @drives;
+		$drives[0] = $service1;
+		$drives[1] = $service2;
     	#my ($rootID) = $services[$currentService]->getListRoot();
     	syncFolder('',$folderID,@drives);
 	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
@@ -592,8 +592,8 @@ sub syncFolder($){
 	my ($folder, $folderID, @drives) = @_;
 	my @dbase;
 	 print STDERR "folder = $folder\n";
-	for(my $i=0; $i <= $#drives; $i++){
-			$dbase[$drives[$i]] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
+	for(my $i=1; $i <= $#drives; $i++){
+			$dbase[$drives[$i]] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
 	}
 	my $nextURL = '';
 	my @subfolders;
@@ -619,11 +619,11 @@ sub syncFolder($){
 				push(@subfolders, $resourceID);
   			 }else{
 
-				for(my $i=1; $i <= $#drives; $i++){
+				for(my $j=1; $j <= $#drives; $j++){
 	  			#Google Drive (MD5 comparision) already exists; skip
-  				if 	(Scalar::Util::blessed($dbase[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($dbase[$drives[$i]]) eq 'pDrive::gDrive'  and  defined($dbase[$drives[$i]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$i]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne ''){
+  				if 	(Scalar::Util::blessed($dbase[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($dbase[$drives[$j]]) eq 'pDrive::gDrive'  and  defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''){
 	  			#	already exists; skip
-  				}elsif 	(defined($dbase[$drives[$i]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$i]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
+  				}elsif 	(defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
   				}else{
   					$doDownload=1;
   				}
@@ -631,20 +631,25 @@ sub syncFolder($){
 
 				my $path;
   				if ($doDownload){
-					print STDOUT "DOWNLOAD " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
-		    		$services[$drives[0]]->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+					print STDOUT "DOWNLOAD " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ' ' . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. "\n";
+		    		#$services[$drives[0]]->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
 			    	#	print STDERR "parent = ". $$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
 		    	 	$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
 
-					for(my $i=1; $i <= $#drives; $i++){
+					for(my $j=1; $j <= $#drives; $j++){
 			  			#	Google Drive (MD5 comparision) already exists; skip
-  						if 	(Scalar::Util::blessed($dbase[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($dbase[$drives[$i]]) eq 'pDrive::gDrive'  and  defined($dbase[$drives[$i]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$i]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne ''){
+  						if 	(Scalar::Util::blessed($dbase[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($dbase[$drives[$j]]) eq 'pDrive::gDrive'  and  defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''){
+							print STDOUT  "skip  to service $j ";
 			  			#		already exists; skip
-  						}elsif 	(defined($dbase[$drives[$i]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$i]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
+#  						}elsif 	(defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
+						}elsif 	( defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''){
+							print STDOUT  "skip  to service $j ";
+
   						}else{
-							my $mypath = $services[$drives[$i]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
-							print STDOUT  "upload to service $i ";
-							$services[$drives[$i]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+							my $mypath = $services[$drives[$j]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
+							print STDOUT  "upload to service $j ". $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}."\n";
+							return;
+							#$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
   						}
 					}
 

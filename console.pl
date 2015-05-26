@@ -5,6 +5,7 @@ package pDrive;
 
 use strict;
 use Fcntl ':flock';
+use Scalar::Util;
 
 use FindBin;
 
@@ -306,7 +307,6 @@ while (my $input = <$userInput>){
 	# sync the entire drive in source current source with all other sources
   	}elsif($input =~ m%^sync folder\s+\S+\s+\S+\s+\S+%i){
     	my ($folder,$service1,$service2) = $input =~ m%^sync folder\s+(\S+)\s+(\S+)\s+(\S+)%i;
-
 		my @drives;
 		$drives[0] = $service1;
 		$drives[1] = $service2;
@@ -609,8 +609,14 @@ sub syncFolder($){
 				push(@subfolders, $resourceID);
   			 }else{
 
+    	print "bless = " . Scalar::Util::blessed($services[0]) . "\n";
+
+  			#Google Drive (MD5 comparision) already exists; skip
+  			if 	(Scalar::Util::blessed($dbase[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($dbase[$drives[1]]) eq 'pDrive::gDrive'  and  defined($dbase[$drives[1]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[1]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne ''){
+ 				 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
+
   			#already exists; skip
-  			if 	(defined($dbase[$drives[1]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[1]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
+  			}elsif 	(Scalar::Util::blessed($dbase[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($dbase[$drives[1]]) eq 'pDrive::gDrive'  and  defined($dbase[$drives[1]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[1]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
  				 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
 
   			}else{
@@ -620,7 +626,7 @@ sub syncFolder($){
 		    	my $path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
 				for(my $i=1; $i <= $#drives; $i++){
 					#print STDERR "inx";
-					my $mypath = $services[$drives[$i]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');print STDERR "path $path mypath $mypath\n";
+					my $mypath = $services[$drives[$i]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
 					$services[$drives[$i]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
 				}
   			}

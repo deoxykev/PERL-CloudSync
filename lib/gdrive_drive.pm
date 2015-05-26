@@ -210,6 +210,7 @@ sub uploadFolder(*$$){
     			my $value = $fileList[$i];
     			my ($file,$md5) = $fileList[$j] =~ m%[^\/]+\/\.(.*?)\.([^\.]+)$%;
     			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
+    				print STDERR "current file $currentFile file $file\n";
 
     			if ($file eq $currentFile and $md5 ne ''){
     				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";

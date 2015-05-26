@@ -643,6 +643,7 @@ sub syncFolder($){
   						}elsif 	(defined($dbase[$drives[$i]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$i]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
   						}else{
 							my $mypath = $services[$drives[$i]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
+							print STDOUT  "upload to service $i ";
 							$services[$drives[$i]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
   						}
 					}

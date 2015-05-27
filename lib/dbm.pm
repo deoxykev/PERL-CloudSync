@@ -109,7 +109,7 @@ sub findKey(**$){
 	my $findKey = shift;
 
 	foreach my $key (keys $dbase){
-			if ($key eq $findKey  or $key eq $findKey.'_0' or $key eq $findKey.'_1'){
+			if ($key eq $findKey  or $key eq $findKey.'_0' or $key eq $findKey.'_'){
 				print STDOUT 'found key = '.$key . "\n";
 				print STDOUT $$dbase{$key} . "\n";
 				return $$dbase{$key};

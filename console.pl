@@ -593,7 +593,8 @@ sub syncFolder($){
 	my @dbase;
 	 print STDERR "folder = $folder\n";
 	for(my $i=1; $i <= $#drives; $i++){
-			$dbase[$drives[$i]] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
+			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
+			$dbase[$drives[$i]][1] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
 	}
 	my $nextURL = '';
 	my @subfolders;
@@ -621,9 +622,9 @@ sub syncFolder($){
 
 				for(my $j=1; $j <= $#drives; $j++){
 	  			#Google Drive (MD5 comparision) already exists; skip
-  				if 	(Scalar::Util::blessed($dbase[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($dbase[$drives[$j]]) eq 'pDrive::gDrive'  and  defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''){
+  				if 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive'  and  defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''){
 	  			#	already exists; skip
-  				}elsif 	(defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
+  				}elsif 	(defined($dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}) and  $dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'} ne ''){
   				}else{
   					$doDownload=1;
   				}
@@ -639,16 +640,15 @@ sub syncFolder($){
 
 					for(my $j=1; $j <= $#drives; $j++){
 			  			#	Google Drive (MD5 comparision) already exists; skip
-  						if 	(Scalar::Util::blessed($dbase[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($dbase[$drives[$j]]) eq 'pDrive::gDrive'  and  defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''){
+  						if 	(Scalar::Util::blessed($services[$drives[0]][0]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]][0]) eq 'pDrive::gDrive'  and  defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''){
 							print STDOUT  "skip  to service $j ";
 			  			#		already exists; skip
 #  						}elsif 	(defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
-						}elsif 	( defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''){
+						}elsif ( defined($dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}) and  $dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'} ne ''){
 							print STDOUT  "skip  to service $j ";
-
   						}else{
 							my $mypath = $services[$drives[$j]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
-							print STDOUT  "upload to service $j ". $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}."\n";
+							print STDOUT  "upload to service $j ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}."\n";
 
 							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
   						}
@@ -670,7 +670,9 @@ sub syncFolder($){
 	}
 	}
 	for(my $i=0; $i < $#drives; $i++){
-		$dbm->closeDBM($dbase[$drives[$i]]);
+		$dbm->closeDBM($dbase[$drives[$i]][0]);
+		$dbm->closeDBM($dbase[$drives[$i]][1]);
+
 	}
 
 

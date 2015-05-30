@@ -542,6 +542,54 @@ sub downloadChunk {
 
 sub uploadFile(*$$$$){
 
+  my $self = shift;
+  my $URL = shift;
+  my $chunk = shift;
+  my $chunkSize = shift;
+  my $chunkRange = shift;
+  my $filetype = shift;
+
+
+my $req = new HTTP::Request PUT => $URL;
+$req->protocol('HTTP/1.1');
+$req->header('Authorization' => 'Bearer '.$self->{_token});
+#$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
+$req->content_type($filetype);
+$req->content_length($chunkSize);
+$req->header('Content-Range' => $chunkRange);
+$req->content($$chunk);
+my $res = $self->{_ua}->request($req);
+
+
+if($res->is_success or $res->code == 308){
+
+  	my $block = $res->as_string;
+	my ($resourceType,$resourceID);
+	while (my ($line) = $block =~ m%([^\n]*)\n%){
+
+		$block =~ s%[^\n]*\n%%;
+
+	    if ($line =~ m%\<gd\:resourceId\>%){
+	    	($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
+	    }
+
+	}
+
+
+  return $resourceID;
+}else{
+  print STDERR "error";
+  print STDOUT $req->headers_as_string;
+  print STDOUT $res->as_string;
+  return 0;
+}
+
+
+}
+
+
+sub uploadFileN(*$$$$){
+
 	my $self = shift;
   	my $URL = shift;
   	my $file = shift;
@@ -623,10 +671,85 @@ EOM
 }
 
 
+
+sub createFile(*$$$$){
+
+	my $self = shift;
+  	my $URL = shift;
+  	my $fileSize = shift;
+  	my $file = shift;
+  	my $fileType = shift;
+
+
+  	my $content = '<?xml version="1.0" encoding="UTF-8"?>
+	<entry xmlns="http://www.w3.org/2005/Atom" xmlns:docs="http://schemas.google.com/docs/2007">
+  	<title>'.$file.'</title>
+	</entry>'."\n\n";
+	my $content  = <<EOM;
+<entry xmlns='http://www.w3.org/2005/Atom'>
+  <title>$file</title>
+  <summary>Real cat wants attention too.</summary>
+  <category scheme=\"http://schemas.google.com/g/2005#kind"
+    term=\"http://schemas.google.com/photos/2007#photo"/>
+</entry>
+EOM
+
+#  convert=false prevents plain/text from becoming docs
+	my $req = new HTTP::Request POST => $URL;#.'?convert=false';
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+#	$req->header('X-Upload-Content-Type' => 'application/pdf');
+	$req->header('X-Upload-Content-Type' => $fileType);
+	$req->header('X-Upload-Content-Length' => $fileSize);
+	$req->header('Slug' => $file);
+	$req->content_length(length $content);
+	$req->content_type('application/atom+xml');
+	$req->content($content);
+	$self->{_ua}->requests_redirectable([]);
+	$self->{_ua}->max_redirect(0);
+
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+
+  		my $block = $res->as_string;
+
+  		while (my ($line) = $block =~ m%([^\n]*)\n%){
+
+    		$block =~ s%[^\n]*\n%%;
+
+#		    if ($line =~ m%\<gd\:resourceId\>%){
+#		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
+#
+#	      		return $resourceID;
+ #   		}
+
+		    if ($line =~ m%^Location:%){
+      			($URL) = $line =~ m%^Location:\s+(\S+)%;
+	      		return $URL;
+    		}
+
+  		}
+
+	}else{
+		print STDOUT $req->as_string;
+  		print STDOUT $res->as_string;
+  		return 0;
+	}
+
+}
 #
 # Create a file
 ##
-sub createFile(*$$$$$){
+sub createFileN(*$$$$$){
 
 	my $self = shift;
   	my $URL = shift;

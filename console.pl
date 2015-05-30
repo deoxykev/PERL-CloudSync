@@ -59,10 +59,12 @@ require 'lib/dbm.pm';
 require 'lib/time.pm';
 require 'lib/fileio.pm';
 require 'lib/gdrive_drive.pm';
+require 'lib/gdrive_photos.pm';
 require 'lib/onedrive.pm';
 require './lib/googledriveapi2.pm';
 require './lib/onedriveapi1.pm';
 require './lib/cloudservice.pm';
+require './lib/googlephotosapi2.pm';
 
 
 
@@ -208,6 +210,25 @@ while (my $input = <$userInput>){
     	my ($account,$login) = $input =~ m%^load gd\s(\d+)\s([^\s]+)%i;
 		#my ($dbase,$folders) = $dbm->readHash();
 		$services[$account] = pDrive::gDrive->new($login);
+		$currentService = $account;
+
+		$loggedInUser = $bindIP;
+		for (my $i=0;$i <= $#services;$i++){
+			if (defined $services[$i]){
+				$loggedInUser .= ', ' if $i > 1;
+				if ($currentService == $i){
+					$loggedInUser .= '*'.$i. '*. ' . $services[$i]->{_username};
+				}else{
+					$loggedInUser .= $i. '. ' . $services[$i]->{_username};
+				}
+
+			}
+		}
+
+  	}elsif($input =~ m%^load pd\s\d+\s([^\s]+)%i){
+    	my ($account,$login) = $input =~ m%^load pd\s(\d+)\s([^\s]+)%i;
+		#my ($dbase,$folders) = $dbm->readHash();
+		$services[$account] = pDrive::gDrive::Photos->new($login);
 		$currentService = $account;
 
 		$loggedInUser = $bindIP;

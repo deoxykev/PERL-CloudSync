@@ -41,12 +41,12 @@ sub new(*$) {
   	# initialize web connections
   	$self->{_serviceapi} = pDrive::GooglePhotosAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
 
-  	my $loginsDBM = pDrive::DBM->new('./gd.'.$self->{_username}.'.db');
+  	my $loginsDBM = pDrive::DBM->new('./pd.'.$self->{_username}.'.db');
 #  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
   	$self->{_login_dbm} = $loginsDBM;
   	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
 
-	$self->{_folders_dbm} = $loginsDBM->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
+	$self->{_folders_dbm} = $loginsDBM->openDBMForUpdating( 'pd.'.$self->{_username} . '.folders.db');
 
 
 	# no token defined
@@ -76,7 +76,7 @@ sub new(*$) {
 
 sub loadFolders(*){
 	my $self = shift;
-	$self->{_folders_dbm} = $self->{_login_dbm}->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
+	$self->{_folders_dbm} = $self->{_login_dbm}->openDBMForUpdating( 'pd.'.$self->{_username} . '.folders.db');
 }
 
 sub unloadFolders(*){

@@ -632,10 +632,9 @@ sub syncFolder($){
 
 		my $newDocuments =  $services[$drives[0]]->getSubFolderIDList($folderID, $nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
-  		my $doDownload=0;
 
   		foreach my $resourceID (keys $newDocuments){
-
+			my $doDownload=0;
   			#folder
   			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
 				push(@subfolders, $resourceID);

@@ -549,6 +549,8 @@ sub uploadFile(*$$$$){
   my $chunkRange = shift;
   my $filetype = shift;
 
+	my $retryCount = 2;
+	while ($retryCount){
 
 my $req = new HTTP::Request PUT => $URL;
 $req->protocol('HTTP/1.1');
@@ -577,13 +579,17 @@ if($res->is_success or $res->code == 308){
 
 
   return $resourceID;
+	}elsif ($res->code == 401){
+ 		my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
 }else{
   print STDERR "error";
   print STDOUT $req->headers_as_string;
   print STDOUT $res->as_string;
   return 0;
 }
-
+	}
 
 }
 
@@ -620,7 +626,7 @@ Content-Type: application/atom+xml
 
 <entry xmlns='http://www.w3.org/2005/Atom'>
   <title>test23.mp4</title>
-  <summary>Real cat wants attention too.</summary>
+
   <category scheme=\"http://schemas.google.com/g/2005#kind"
     term=\"http://schemas.google.com/photos/2007#photo"/>
 </entry>
@@ -688,7 +694,7 @@ sub createFile(*$$$$){
 	my $content  = <<EOM;
 <entry xmlns='http://www.w3.org/2005/Atom'>
   <title>$file</title>
-  <summary>Real cat wants attention too.</summary>
+
   <category scheme=\"http://schemas.google.com/g/2005#kind"
     term=\"http://schemas.google.com/photos/2007#photo"/>
 </entry>

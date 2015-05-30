@@ -36,8 +36,6 @@ sub new(*$) {
 	$self->{_db_checksum} = 'pd.'.$self->{_username} . '.md5.db';
 	$self->{_db_fisi} = 'pd.'.$self->{_username} . '.fisi.db';
 
-
-
   	# initialize web connections
   	$self->{_serviceapi} = pDrive::GooglePhotosAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
 
@@ -237,6 +235,11 @@ sub uploadFile(*$$){
 	my $self = shift;
 	my $file = shift;
 	my $URL = shift;
+	my $fileName = shift;
+
+	if ($fileName eq ''){
+		($fileName) = $file =~ m%\/([^\/]+)$%;
+	}
 
 	# get filesize
 	my $fileSize = -s $file;
@@ -250,10 +253,8 @@ sub uploadFile(*$$){
 	#my $fileSize = length $fileContents;
 	print STDOUT "file size for $file is $fileSize\n" if (pDrive::Config->DEBUG);
 
-	my	($fileName) = $file =~ m%\/([^\/]+)$%;
-
 	# create file on server
-	my $uploadURL = $self->{_serviceapi}->createFile('https://picasaweb.google.com/data/upload/resumable/photos/create-session/feed/api/user/default/albumid/default',$fileSize, $fileName, 'image/jpeg');
+	my $uploadURL = $self->{_serviceapi}->createFile('https://picasaweb.google.com/data/upload/resumable/photos/create-session/feed/api/user/default/albumid/default',$fileSize, $fileName, 'video/msvideo');
 
 	# calculate the number of chunks
 	my $chunkNumbers = int($fileSize/(pDrive::CloudService->CHUNKSIZE))+1;
@@ -265,21 +266,53 @@ sub uploadFile(*$$){
     	if ($i == $chunkNumbers-1){
       		$chunkSize = $fileSize - $pointerInFile;
     	}
-	# read chunk from file
-    read INPUT, $chunk, $chunkSize;
+		# read chunk from file
+    	read INPUT, $chunk, $chunkSize;
 
-   	# - don't slurp the entire file
-	#$chunk = substr($fileContents, $pointerInFile, $chunkSize);
+	   	# 	- don't slurp the entire file
+		#$chunk = substr($fileContents, $pointerInFile, $chunkSize);
 
-    print STDOUT 'uploading chunk ' . $i.  "\n";
-    $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
-    print STDOUT 'next location = '.$uploadURL."\n";
-    $pointerInFile += $chunkSize;
+    	print STDERR   "\r".$i . '/'.$chunkNumbers;
+    	my $status=0;
+    	$retrycount=0;
+    	while ($status eq '0' and $retrycount < 5){
 
-  }
-  close(INPUT);
+    		$status = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
 
+	    	if ($status eq '0'){
+	    		print STDERR "...retrying\n";
+		       	#some other instance may have updated the tokens already, refresh with the latest
+	       		if ($retrycount == 0){
+	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($self->{_username});
+	       			$self->{_serviceapi}->setToken($token,$refreshToken);
+		       	#	multiple failures, force-fech a new token
+		       	}else{
+ 	 				my ($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
+	  				$self->{_login_dbm}->writeLogin( $self->{_username},$token,$refreshToken);
+		       		$self->{_serviceapi}->setToken($token,$refreshToken);
+		       	}
+        		sleep (5);
+        		$retrycount++;
+	    	}
+
+		    #	print STDOUT 'next location = '.$uploadURL."\n";
+    		$pointerInFile += $chunkSize;
+	        #	$fileID=$status;
+
+			if ($retrycount >= 5){
+				print STDERR "\r" . $file . "'...retry failed - $file\n";
+
+    			pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
+    			last;
+			}
+    	}
+  	}
+    if ($retrycount < 5){
+		print STDOUT "\r" . $file . "'...success - $file\n";
+  	}
+  	close(INPUT);
 }
+
 sub uploadFileN(*$$){
 
 	my $self = shift;
@@ -461,48 +494,7 @@ sub createFolderByPath(*$){
 	my $self = shift;
 	my $path = shift;
 
-	my $parentFolder= '';
-	my $folderID;
-	#$path =~ s%^\/%%;
-
-
-
-	my $serverPath = '';
-	while(my ($folder) = $path =~ m%^\/?([^\/]+)%){
-
-    	$path =~ s%^\/?[^\/]+%%;
-		$serverPath .= $folder;
-
-		#check server-cache for folder
-		$folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
-		#	folder doesn't exist, create it
-		if ($folderID eq ''){
-			#*** validate it truly doesn't exist on the server before creating
-			#this is the parent?
-			if ($parentFolder eq ''){
-				#look at the root
-				#	get root's children, look for folder as child
-				$folderID = $self->getSubFolderID($folder,'root');
-				$parentFolder =$folderID if ($folderID ne '');
-			}else{
-				#look at the parent
-				#get parent's children, look for folder as child
-				$folderID = $self->getSubFolderID($folder,$parentFolder);
-				$parentFolder =$folderID if ($folderID ne '');
-			}
-
-			if ($folderID eq '' and $parentFolder ne ''){
-				$folderID = $self->createFolder($folder, $parentFolder);
-				$parentFolder =$folderID if ($folderID ne '');
-			}elsif ($folderID eq '' and  $parentFolder eq ''){
-				$folderID = $self->createFolder($folder, 'root');
-				$parentFolder =$folderID if ($folderID ne '');
-			}
-			#	$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
-		}
-
-	}
-	return $folderID;
+	return 'default';
 
 }
 

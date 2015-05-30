@@ -244,6 +244,11 @@ sub uploadFile(*$$){
 	# get filesize
 	my $fileSize = -s $file;
 
+	if ($fileSize > 1073741824){
+		print STDOUT "exceeds max filesize " . $file . "'...skip\n";
+		return;
+	}
+
 	open(INPUT, "<".$file) or die ('cannot read file '.$file);
 	binmode(INPUT);
 	my $fileContents;

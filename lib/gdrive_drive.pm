@@ -460,8 +460,8 @@ sub updateMD5Hash(**){
 		}
 	}
 	untie(%dbase);
-	print STDOUT "MD5: created = $createdCountMD5, skipped = $createdCountMD5\n";
-	print STDOUT "FISI: created = $createdCountFISI, skipped = $createdCountFISI\n";
+	print STDOUT "MD5: created = $createdCountMD5, skipped = $skippedCountMD5\n";
+	print STDOUT "FISI: created = $createdCountFISI, skipped = $skippedCountFISI\n";
 
 
 }

@@ -942,6 +942,10 @@ sub readChangeListings(**){
 #		$$driveListings =~ s%drive\#file%%;
 
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
+#   		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
+ #  		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
+	#	$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
+
     	$count++;
   	}
 

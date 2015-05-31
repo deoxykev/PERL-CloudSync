@@ -4,21 +4,48 @@ PERL-CloudSync
 
 A PERL implementation of Google Drive for cross-platform
 
-move file on server
-- old path is cached; track by resourceID
-- need to move files
-- add hash of resourceIDs
+Google Docs API 3 -
+-------------------------------
+*obsolete, no longer being developed
+what works:
+- client login with username & password or username & application password
+- downloading all files
+- downloading all owner files
+- upload files
+- create folders, add files to folders, delete files from folders
+- uploading all files in a folder supplied by user (in list or adhoc)
+- track local files vs server files (dropbox sync ability)
+- constructing a memory hash of files in local vs server copy
 
-upload
-cache config
-console mode
-service mode -- wrapper
-multiple accounts
+Google Drive API 2 -
+-------------------------------
+what works:
+- OAUTH2 auhentication
+- upload files
+- create folders
+- recurisively uploading all files in a folder supplied by user (in list or adhoc)
+- constructing a memory hash of files using md5 and fisi against file id (for purposes of syncing)
+- multiple accounts
 
-phase 2
-- OAUTH1
-- OAUTH2
+being worked on:
+- downloading all files
+- downloading all owner files
+- track local files vs server files (dropbox sync ability)
 
-phase 3
-- google drive API / SDK
+One Drive API 1:
+-------------------------
+what works:
+- OAUTH2 auhentication
+- upload files
+- create folders
+- recurisively uploading all files in a folder supplied by user (in list or adhoc)
+- constructing a memory hash of files using md5 and fisi against file id (for purposes of syncing)
+- multiple accounts
+
+being worked on:
+- downloading all files
+- downloading all owner files
+- track local files vs server files (dropbox sync ability)
+
+
 

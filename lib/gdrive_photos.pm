@@ -183,7 +183,6 @@ sub uploadFolder(*$$){
     			my $value = $fileList[$i];
     			my ($file,$md5) = $fileList[$j] =~ m%[^\/]+\/\.(.*?)\.([^\.]+)$%;
     			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
-    				print STDERR "current file $currentFile file $file\n";
 
     			if ($file eq $currentFile and $md5 ne ''){
     				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";
@@ -261,6 +260,14 @@ sub uploadFile(*$$){
 	# create file on server
 	my $uploadURL = $self->{_serviceapi}->createFile('https://picasaweb.google.com/data/upload/resumable/photos/create-session/feed/api/user/default/albumid/default',$fileSize, $fileName, 'video/msvideo');
 
+	if ($readyURL eq ''){
+		print STDERR "\r" . $file . "'...no URL, failed - $file\n";
+		close(INPUT);
+
+    	pDrive::masterLog("failed, no URL - $file\n");
+    	return;
+	}
+
 	# calculate the number of chunks
 	my $chunkNumbers = int($fileSize/(pDrive::CloudService->CHUNKSIZE))+1;
 	my $pointerInFile=0;
@@ -304,13 +311,13 @@ sub uploadFile(*$$){
     		$pointerInFile += $chunkSize;
 	        #	$fileID=$status;
 
-			if ($retrycount >= 5){
+    	}
+		if ($retrycount >= 5){
 				print STDERR "\r" . $file . "'...retry failed - $file\n";
 
     			pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
     			last;
-			}
-    	}
+		}
   	}
     if ($retrycount < 5){
 		print STDOUT "\r" . $file . "'...success - $file\n";

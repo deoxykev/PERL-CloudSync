@@ -412,7 +412,10 @@ sub updateMD5Hash(**){
 	my $self = shift;
 	my $newDocuments = shift;
 
-	my $count=0;
+	my $createdCountMD5=0;
+	my $skippedCountMD5=0;
+	my $createdCountFISI=0;
+	my $skippedCountFISI=0;
 	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	foreach my $resourceID (keys $newDocuments){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '';
@@ -421,7 +424,7 @@ sub updateMD5Hash(**){
 			if (defined $dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'. $i}){
 				# validate it is the same file, if so, skip, otherwise move onto another md5 slot
 				if  ($dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'. $i}  eq $resourceID){
-					print STDOUT "skipped\n";
+					$skippedCountMD5++;
 					last;
 				}else{
 					#move onto next slot
@@ -429,7 +432,7 @@ sub updateMD5Hash(**){
 			#	create
 			}else{
 				$dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'. $i} = $resourceID;
-				print STDOUT "created\n";
+				$createdCountMD5++;
 				last;
 			}
 		}
@@ -443,7 +446,7 @@ sub updateMD5Hash(**){
 			if (defined $dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i}){
 				# validate it is the same file, if so, skip, otherwise move onto another md5 slot
 				if  ($dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i}  eq $resourceID){
-					print STDOUT "skipped\n";
+					$skippedCountFISI++;
 					last;
 				}else{
 					#move onto next slot
@@ -451,12 +454,15 @@ sub updateMD5Hash(**){
 			#	create
 			}else{
 				$dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i} = $resourceID;
-				print STDOUT "created\n";
+				$createdCountFISI++;
 				last;
 			}
 		}
 	}
 	untie(%dbase);
+
+	print STDOUT "MD5: created = $createdCountMD5, skipped = $createdCountMD5\n";
+	print STDOUT "FISI: created = $createdCountFISI, skipped = $createdCountFISI\n";
 
 }
 

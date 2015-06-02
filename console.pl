@@ -9,6 +9,10 @@ use Scalar::Util;
 
 use FindBin;
 
+#for forking
+use Socket;
+use IO::Handle;
+
 # fetch hostname
 use Sys::Hostname;
 use constant HOSTNAME => hostname;
@@ -155,6 +159,8 @@ my $bindIP;
 my @services;
 my $currentService;
 my $dbm = pDrive::DBM->new();
+my @forkPID;
+my @forkChannels;
 
 # scripted input
 my $userInput;
@@ -224,6 +230,46 @@ while (my $input = <$userInput>){
 
 			}
 		}
+
+  	}elsif($input =~ m%^fork\s+\d+%i){
+    	my ($forkCount) = $input =~ m%^fork\s+(\d+)%i;
+		#my ($dbase,$folders) = $dbm->readHash();
+		#CHILD,PARENT
+		socketpair($forkChannels[$forkCount][0], $forkChannels[$forkCount][1], AF_UNIX, SOCK_STREAM, PF_UNSPEC) or  die "socketpair: $!";
+		$forkChannels[$forkCount][0]->autoflush(1);
+		$forkChannels[$forkCount][1]->autoflush(1);
+
+		my $line;
+		if ($forkPID[$forkCount] = fork) {
+    		close $forkChannels[$forkCount][1];
+
+    		print {$forkChannels[$forkCount][0]} "Parent Pid $$ is sending this work\n";
+    		chomp($line = readline($forkChannels[$forkCount][0]));
+    		print "Parent Pid $$ just read this: `$line' -- confirmation\n";
+    		print {$forkChannels[$forkCount][0]} "Parent Pid $$ is sending this1 -- next\n";
+ #   		chomp($line = readline($forkChannels[$forkCount][0]));
+ #   		print "Parent Pid $$ just read this: `$line' -- confirmation\n";
+ #   		close $forkChannels[$forkCount][0];
+#    		waitpid($forkPID[$forkCount],0);
+		} else {
+    		die "cannot fork: $!" unless defined $forkPID[$forkCount];
+		    close $forkChannels[$forkCount][0];
+
+    		chomp($line = readline($forkChannels[$forkCount][1]));
+    		print "Child Pid $$ just read this: `$line' -- work to process\n";
+    		print {$forkChannels[$forkCount][1]} "Child Pid $$ is sending this -- done the work\n";
+    		sleep 5;
+    		chomp($line = readline($forkChannels[$forkCount][1]));
+    		print "Child Pid $$ just read this: `$line'\n";
+    		print {$forkChannels[$forkCount][1]} "Child Pid $$ is sending this -- done\n";
+
+    		chomp($line = readline($forkChannels[$forkCount][1]));
+    		close $forkChannels[$forkCount][1];
+    		exit;
+		}
+
+#  	}elsif($input =~ m%^\d+fork\s+\d+%i){
+ #   	my ($forkCount) = $input =~ m%^fork\s+(\d+)%i;
 
   	}elsif($input =~ m%^load pd\s\d+\s([^\s]+)%i){
     	my ($account,$login) = $input =~ m%^load pd\s(\d+)\s([^\s]+)%i;
@@ -534,6 +580,8 @@ while (my $input = <$userInput>){
  #     	$services[$currentService]->loadFolders();
   		$services[$currentService]->uploadFolder($dir . '/'. $folder);
 #		$services[$currentService]->unloadFolders();
+
+
     }
 
 

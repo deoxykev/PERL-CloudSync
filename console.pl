@@ -230,6 +230,17 @@ while (my $input = <$userInput>){
 
 			}
 		}
+  	}elsif($input =~ m%^spawn\s+\d+\s+\-\s?[^\-]+%i){
+    	my ($PID,$cmd) = $input =~ m%^spawn\s+(\d+)\s+\-\s?([^\-]+)%i;
+		# send request
+		print "in $cmd\n";
+    	print {$forkChannels[$PID][0]} "$cmd\n";
+
+		# receive request
+		my $response;
+    	chomp($response = readline($forkChannels[$PID][0]));
+    	print "Parent Pid $$ just read this: `$response' -- confirmation\n";
+
 
   	}elsif($input =~ m%^fork\s+\d+%i){
     	my ($forkCount) = $input =~ m%^fork\s+(\d+)%i;
@@ -243,33 +254,49 @@ while (my $input = <$userInput>){
 		if ($forkPID[$forkCount] = fork) {
     		close $forkChannels[$forkCount][1];
 
+			# send request
     		print {$forkChannels[$forkCount][0]} "Parent Pid $$ is sending this work\n";
+
+			# receive request
     		chomp($line = readline($forkChannels[$forkCount][0]));
     		print "Parent Pid $$ just read this: `$line' -- confirmation\n";
-    		print {$forkChannels[$forkCount][0]} "Parent Pid $$ is sending this1 -- next\n";
- #   		chomp($line = readline($forkChannels[$forkCount][0]));
- #   		print "Parent Pid $$ just read this: `$line' -- confirmation\n";
+
  #   		close $forkChannels[$forkCount][0];
 #    		waitpid($forkPID[$forkCount],0);
+
 		} else {
     		die "cannot fork: $!" unless defined $forkPID[$forkCount];
 		    close $forkChannels[$forkCount][0];
+			my $forkCmd;
+			while(1){
+				# receive request
+	    		chomp($forkCmd = readline($forkChannels[$forkCount][1]));
+    			print "Child Pid $$ just read this: `$forkCmd' -- work to process\n";
+  		if($forkCmd =~ m%^load gd\s\d+\s([^\s]+)%i){
+    	my ($account,$login) = $forkCmd =~ m%^load gd\s(\d+)\s([^\s]+)%i;
+		$services[$account] = pDrive::gDrive->new($login);
+		$currentService = $account;
 
-    		chomp($line = readline($forkChannels[$forkCount][1]));
-    		print "Child Pid $$ just read this: `$line' -- work to process\n";
-    		print {$forkChannels[$forkCount][1]} "Child Pid $$ is sending this -- done the work\n";
-    		sleep 5;
-    		chomp($line = readline($forkChannels[$forkCount][1]));
-    		print "Child Pid $$ just read this: `$line'\n";
-    		print {$forkChannels[$forkCount][1]} "Child Pid $$ is sending this -- done\n";
+		$loggedInUser = $bindIP;
+		for (my $i=0;$i <= $#services;$i++){
+			if (defined $services[$i]){
+				$loggedInUser .= ', ' if $i > 1;
+				if ($currentService == $i){
+					$loggedInUser .= '*'.$i. '*. ' . $services[$i]->{_username};
+				}else{
+					$loggedInUser .= $i. '. ' . $services[$i]->{_username};
+				}
 
-    		chomp($line = readline($forkChannels[$forkCount][1]));
+			}
+		}
+  		}
+    			# send request
+    			print {$forkChannels[$forkCount][1]} "Child Pid $$ is sending this -- done the work\n";
+			}
     		close $forkChannels[$forkCount][1];
     		exit;
 		}
 
-#  	}elsif($input =~ m%^\d+fork\s+\d+%i){
- #   	my ($forkCount) = $input =~ m%^fork\s+(\d+)%i;
 
   	}elsif($input =~ m%^load pd\s\d+\s([^\s]+)%i){
     	my ($account,$login) = $input =~ m%^load pd\s(\d+)\s([^\s]+)%i;

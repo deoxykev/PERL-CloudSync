@@ -406,14 +406,16 @@ while (my $input = <$userInput>){
 		$drives[1] = $service2;
     	#my ($rootID) = $services[$currentService]->getListRoot();
     	syncFolder($folder,'',@drives);
-  	}elsif($input =~ m%^sync folderid\s+\S+\s+\S+\s+\S+\s+\S+%i){
-    	my ($folderID,$service1,$service2,$service3) = $input =~ m%^sync folderid\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)%i;
-
+  	}elsif($input =~ m%^sync folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^sync folderid\s+(\S+)%i;
+		$input =~ s%^sync folderid\s+\S+%%;
 		my @drives;
-		$drives[0] = $service1;
-		$drives[1] = $service2;
-		$drives[2] = $service3;
-    	#my ($rootID) = $services[$currentService]->getListRoot();
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+		}
     	syncFolder('',$folderID,@drives);
   	}elsif($input =~ m%^sync folderid\s+\S+\s+\S+%i){
     	my ($folderID,$service1,$service2) = $input =~ m%^sync folderid\s+(\S+)\s+(\S+)\s+(\S+)%i;

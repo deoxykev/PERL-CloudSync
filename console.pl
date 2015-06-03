@@ -567,7 +567,7 @@ while (my $input = <$userInput>){
 
 
 	}elsif($input =~ m%^create dir\s[^\n]+\n%i){
-    	my ($dir) = $input =~ m%^create dir\s([^\n]+)\n%;
+   	my ($dir) = $input =~ m%^create dir\s([^\n]+)\n%;
 
   		my $folderID = $services[$currentService]->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$dir);
     	print "resource ID = " . $folderID . "\n";
@@ -608,8 +608,50 @@ while (my $input = <$userInput>){
   		$services[$currentService]->uploadFolder($dir . '/'. $folder);
 #		$services[$currentService]->unloadFolders();
 
+    	}
+    	close(LIST);
+	}elsif($input =~ m%^upload list%i){
+    	my ($list) = $input =~ m%^upload list\s([^\n]+)\n%;
+
+		open (LIST, '<./'.$list) or  die ('cannot read file ./'.$list);
+    	while (my $line = <LIST>){
+		my ($file,$folderID) = $line =~ m%([^\t]+)\t([^\n]+)\n%;
+      	print STDOUT "folder = $folderID, file = $file\n";
+
+      	if ($folderID eq ''){
+	        print STDOUT "no files\n";
+        	next;
+      	}
+
+		$services[$currentService]->uploadFile($file, $folderID);
+
+    	}
+    	close(LIST);
+
+	}elsif($input =~ m%^create list%i){
+    	my ($list) = $input =~ m%^create list\s([^\n]+)\n%;
+
+		my $fileHandler;
+		open (LIST, '<./'.$list) or  die ('cannot read file ./'.$list);
+		open (OUTPUT, '>./'.$list.'.output') or  die ('cannot read file ./'.$list.'.output');
+
+    	while (my $line = <LIST>){
+		my ($dir,$folder,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;
+      	print STDOUT "folder = $folder, type = $filetype\n";
+
+      	if ($folder eq ''){
+	        print STDOUT "no files\n";
+        	next;
+      	}
+ #     	$services[$currentService]->loadFolders();
+  		$services[$currentService]->createUploadListForFolder($dir . '/'. $folder, '', '',*OUTPUT);
+#		$services[$currentService]->unloadFolders();
+
 
     }
+    close(LIST);
+    close(OUTPUT);
+
 
 
 

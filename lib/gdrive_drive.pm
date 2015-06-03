@@ -232,6 +232,89 @@ sub uploadFolder(*$$){
 	}
 }
 
+
+sub createUploadListForFolder(*$$$$){
+	my $self = shift;
+	my $localPath = shift;
+	my $serverPath = shift;
+	my $parentFolder = shift;
+	my $listHandler = shift;
+
+    my ($folder) = $localPath =~ m%\/([^\/]+)$%;
+
+#	if ($serverPath ne ''){
+		$serverPath .= $folder;
+#	}
+  	print STDOUT "path = $localPath\n";
+   	my @fileList = pDrive::FileIO::getFilesDir($localPath);
+
+	print STDOUT "folder = $folder\n";
+
+	#check server-cache for folder
+	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	#folder doesn't exist, create it
+	if ($folderID eq ''){
+		#*** validate it truly doesn't exist on the server before creating
+		#this is the parent?
+		if ($parentFolder eq ''){
+			#look at the root
+			#get root's children, look for folder as child
+			$folderID = $self->getSubFolderID($folder,'root');
+		}else{
+			#look at the parent
+			#get parent's children, look for folder as child
+			$folderID = $self->getSubFolderID($folder,$parentFolder);
+		}
+		if ($folderID eq '' and $parentFolder ne ''){
+			$folderID = $self->createFolder($folder, $parentFolder);
+		}elsif ($folderID eq '' and  $parentFolder eq ''){
+			$folderID = $self->createFolder($folder, 'root');
+		}
+		$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
+	}
+
+
+
+	print "resource ID = " . $folderID . "\n";
+
+    for (my $i=0; $i <= $#fileList; $i++){
+
+    	#empty file; skip
+    	if (-z $fileList[$i]){
+			next;
+    	#folder
+    	}elsif (-d $fileList[$i]){
+	  		my $fileID = $self->createUploadListForFolder($fileList[$i], $serverPath, $folderID, $listHandler);
+    	# file
+    	}else{
+    		my $process = 1;
+    		#look for md5 file
+    		for (my $j=0; $j <= $#fileList; $j++){
+    			my $value = $fileList[$i];
+    			my ($file,$md5) = $fileList[$j] =~ m%[^\/]+\/\.(.*?)\.([^\.]+)$%;
+    			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
+
+    			if ($file eq $currentFile and $md5 ne ''){
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";
+    				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
+    					$process = 0;
+    					last;
+	    			}
+    				untie(%dbase);
+    			}
+    		}
+			if ($process){
+				print STDOUT "Upload $fileList[$i]\n";
+				print {$listHandler} "$fileList[$i]	$folderID\n";
+
+    		}else{
+				print STDOUT "SKIP $fileList[$i]\n";
+	    	}
+    	}
+	  	print STDOUT "\n";
+	}
+}
+
 #
 # get list of the content in the Google Drive
 ##

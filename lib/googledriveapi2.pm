@@ -1,8 +1,8 @@
 package pDrive::GoogleDriveAPI2;
 
-use HTTP::Cookies;
+#use HTTP::Cookies;
 #use HTML::Form;
-use URI;
+#use URI;
 use LWP::UserAgent;
 use LWP;
 use strict;
@@ -50,8 +50,8 @@ sub new() {
   	$self->{_ua}->timeout(30);		# set the timeout
 
 
-  	$self->{_cookiejar} = HTTP::Cookies->new();
-  	$self->{_ua}->cookie_jar($self->{_cookiejar});
+  	#$self->{_cookiejar} = HTTP::Cookies->new();
+  	#$self->{_ua}->cookie_jar($self->{_cookiejar});
 	#  $self->{_ua}->max_redirect(0);
 	#  $self->{_ua}->requests_redirectable([]);
 

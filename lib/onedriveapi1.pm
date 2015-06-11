@@ -1,8 +1,8 @@
 package pDrive::OneDriveAPI1;
 
-use HTTP::Cookies;
+#use HTTP::Cookies;
 #use HTML::Form;
-use URI;
+#use URI;
 use LWP::UserAgent;
 use LWP;
 use strict;
@@ -48,8 +48,8 @@ sub new() {
   	$self->{_ua}->timeout(30);		# set the timeout
 
 
-  	$self->{_cookiejar} = HTTP::Cookies->new();
-  	$self->{_ua}->cookie_jar($self->{_cookiejar});
+  	#$self->{_cookiejar} = HTTP::Cookies->new();
+  	#$self->{_ua}->cookie_jar($self->{_cookiejar});
 	#  $self->{_ua}->max_redirect(0);
 	#  $self->{_ua}->requests_redirectable([]);
 
@@ -347,7 +347,7 @@ if ($URL =~ m%\&exportFormat%){
   $req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
 }
 $req->header('GData-Version' => '3.0');
-  $self->{_cookiejar}->add_cookie_header($req);
+  #$self->{_cookiejar}->add_cookie_header($req);
 #my $res = $self->{_ua}->request($req);
 my $res;
   open (FILE, "> ".pDrive::Config->LOCAL_PATH."/$path") or die ("Cannot save image file".pDrive::Config->LOCAL_PATH."/$path: $!\n");

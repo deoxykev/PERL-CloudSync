@@ -210,8 +210,6 @@ sub uploadFolder(*$$){
 			my $fileSize = -s $fileList[$i];
  			my $fisi = pDrive::FileIO::getMD5String($fileName .$fileSize);
     		tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDONLY, 0666) or die "can't open fisi: $!";
-			print STDERR "fisi = $fisi ".$dbase{$fisi.'_0'}."\n";
-			return;
     		if (  (defined $dbase{$fisi.'_'} and $dbase{$fisi.'_'} ne '') or (defined $dbase{$fisi.'_0'} and $dbase{$fisi.'_0'} ne '')){
     					$process = 0;
 				    	pDrive::masterLog("skipped file (fisi $fisi exists ".$dbase{$fisi.'_0'}.") - $fileList[$i]\n");

@@ -459,6 +459,13 @@ while (my $input = <$userInput>){
 		$dbm->closeDBM($dbase);
 		print STDOUT "complete\n";
 
+  	}elsif($input =~ m%^search fisi%i){
+    	my ($filtermd5) = $input =~ m%^search fisi\s([^\s]+)%i;
+
+		my $dbase = $dbm->openDBM($services[$currentService]->{_db_fisi});
+		my $value = $dbm->findKey($dbase,$filtermd5);
+		$dbm->closeDBM($dbase);
+		print STDOUT "complete\n";
 
   	}elsif($input =~ m%^search file%i){
 	    my ($filtermd5) = $input =~ m%^search file\s([^\s]+)%i;

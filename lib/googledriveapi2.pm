@@ -936,15 +936,18 @@ sub readChangeListings(**){
 	while ($$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"quotaBytesUsed\"\:\s+\"[^\"]+\"% ){
 
     	my ($resourceID,$md5) = $$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"([^\"]+)\".*?\"md5Checksum\"\:\s+\"([^\"]+)\"%;
+    	my ($title) = $$driveListings =~ m%\"title\"\:\s?\"([^\"]+)\"%;
+		my ($fileSize) = $$driveListings =~ m%\"fileSize\"\:\s?\"([^\"]+)\"%;
+
 		$$driveListings =~ s%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"quotaBytesUsed\"\:\s+\"[^\"]+\"%%;
 
     	next if $md5 eq '';
 #		$$driveListings =~ s%drive\#file%%;
 
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
-#   		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
- #  		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
-	#	$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
+   		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
+  		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
+		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
 
     	$count++;
   	}

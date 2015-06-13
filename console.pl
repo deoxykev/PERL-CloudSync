@@ -595,23 +595,21 @@ while (my $input = <$userInput>){
 		print STDOUT $statusURL . "\n";
 
 	}elsif($input =~ m%^upload dir list%i){
-    	my ($list) = $input =~ m%^upload dir list\s([^\n]+)\n%;
+		my ($list) = $input =~ m%^upload dir list\s([^\n]+)\n%;
 
 		open (LIST, '<./'.$list) or  die ('cannot read file ./'.$list);
     	while (my $line = <LIST>){
-		my ($dir,$folder,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;
-      	print STDOUT "folder = $folder, type = $filetype\n";
+			my ($dir,$folder,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;
+      		print STDOUT "folder = $folder, type = $filetype\n";
 
-      	if ($folder eq ''){
-	        print STDOUT "no files\n";
-        	next;
-      	}
- #     	$services[$currentService]->loadFolders();
-  		$services[$currentService]->uploadFolder($dir . '/'. $folder);
-#		$services[$currentService]->unloadFolders();
-
+      		if ($folder eq ''){
+	        	print STDOUT "no files\n";
+        		next;
+      		}
+  			$services[$currentService]->uploadFolder($dir . '/'. $folder);
     	}
     	close(LIST);
+
 	}elsif($input =~ m%^upload list%i){
     	my ($list) = $input =~ m%^upload list\s([^\n]+)\n%;
 

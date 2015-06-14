@@ -546,12 +546,7 @@ sub createFile(*$$){
 	my $path = shift;
 	my $filename = shift;
 
-
-	$path =~ s/\(/%28/g;
-	$path =~ s/\)/%29/g;
-	$filename =~ s/\(/%28/g;
-	$filename =~ s/\)/%29/g;
-
+	$path =~ s%^/%%;
 	my $retryCount = 2;
 	while ($retryCount){
 	my $req = new HTTP::Request POST  => API_URL . '/drive/root:/'.$path.'/'.$filename.':/upload.createSession';

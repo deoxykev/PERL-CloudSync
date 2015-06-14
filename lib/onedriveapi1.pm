@@ -433,8 +433,7 @@ sub uploadFile(*$$$$){
  	my $chunkRange = shift;
 
 
-	$URL =~ s/\(/%28/g;
-	$URL =~ s/\)/%29/g;
+
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -497,8 +496,6 @@ sub uploadEntireFile(*$$$$){
 	my $chunk = shift;
   	my $fileSize = shift;
 
-	$URL =~ s/\(/%28/g;
-	$URL =~ s/\)/%29/g;
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -548,6 +545,12 @@ sub createFile(*$$){
 	my $self = shift;
 	my $path = shift;
 	my $filename = shift;
+
+
+	$path =~ s/\(/%28/g;
+	$path =~ s/\)/%29/g;
+	$filename =~ s/\(/%28/g;
+	$filename =~ s/\)/%29/g;
 
 	my $retryCount = 2;
 	while ($retryCount){

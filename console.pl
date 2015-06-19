@@ -811,9 +811,9 @@ sub syncFolder($){
 			}
 
 	  	}
-
-		print STDOUT "next url " . $services[$drives[0]]->{_nextURL} . "\n";
-  		last if  $services[$drives[0]]->{_nextURL} eq '';
+		$nextURL = $services[$drives[0]]->{_nextURL};
+		print STDOUT "next url " . $nextURL. "\n";
+  		last if  $nextURL eq '';
 
 	}
 	}

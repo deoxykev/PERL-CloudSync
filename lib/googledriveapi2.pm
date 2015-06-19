@@ -6,6 +6,7 @@ package pDrive::GoogleDriveAPI2;
 use LWP::UserAgent;
 use LWP;
 use strict;
+use IO::Handle;
 
 use constant IS_ROOT => 1;
 use constant NOT_ROOT => 0;
@@ -514,6 +515,7 @@ sub downloadFile(*$$$){
 #	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	my $res;
   	open (FILE, "> ".$path) or die ("Cannot save image file".$path.": $!\n");
+  	FILE->autoflush;
   	binmode(FILE);
     $res = $self->{_ua}->get($URL,':content_cb' => \&downloadChunk,':read_size_hint' => 8192,'Authorization' => 'Bearer '.$self->{_token});
 	close(FILE);

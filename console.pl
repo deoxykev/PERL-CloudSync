@@ -811,10 +811,10 @@ sub syncFolder($){
 			}
 
 	  	}
-	  	#		$services[$service1]->{_nextURL} =  $services[$service1]->{_serviceapi}->getNextURL($driveListings);
+	  	$services[$drives[0]]->{_nextURL} =  $services[$drives[0]]->{_serviceapi}->getNextURL($newDocuments);
 
-		print STDOUT "next url " . $services[0]->{_nextURL} . "\n";
-  		last if  $services[0]->{_nextURL} eq '';
+		print STDOUT "next url " . $services[$drives[0]]->{_nextURL} . "\n";
+  		last if  $services[$drives[0]]->{_nextURL} eq '';
 
 	}
 	}

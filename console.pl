@@ -811,7 +811,6 @@ sub syncFolder($){
 			}
 
 	  	}
-	  	$services[$drives[0]]->{_nextURL} =  $services[$drives[0]]->{_serviceapi}->getNextURL($newDocuments);
 
 		print STDOUT "next url " . $services[$drives[0]]->{_nextURL} . "\n";
   		last if  $services[$drives[0]]->{_nextURL} eq '';

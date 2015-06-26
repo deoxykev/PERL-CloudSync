@@ -533,16 +533,23 @@ sub downloadFile(*$$$){
   	my $timestamp = shift;
 
 
-#	my $req = new HTTP::Request GET => $URL;
-#	$req->protocol('HTTP/1.1');
-#	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res;
-  	open (FILE, "> ".$path) or die ("Cannot save image file".$path.": $!\n");
-  	FILE->autoflush;
-  	binmode(FILE);
-    $res = $self->{_ua}->get($URL,':content_cb' => \&downloadChunk,':read_size_hint' => 8192,'Authorization' => 'Bearer '.$self->{_token});
-	close(FILE);
-  	print STDOUT "saved\n";
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req, $path);
+	 if ($res->is_success) {
+     print "ok\n";
+  }  else {
+     print $res->status_line, "\n";
+  }
+
+#  	open (FILE, "> ".$path) or die ("Cannot save image file".$path.": $!\n");
+ # 	FILE->autoflush;
+  #	binmode(FILE);
+  #  $res = $self->{_ua}->get($URL,':content_cb' => \&downloadChunk,':read_size_hint' => 8192,'Authorization' => 'Bearer '.$self->{_token});
+#	close(FILE);
+ # 	print STDOUT "saved\n";
+
 
  	 # set timestamp on file as server last updated timestamp
  	#utime $timestamp, $timestamp, pDrive::Config->LOCAL_PATH.'/'.$path;

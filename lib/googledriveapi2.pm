@@ -148,6 +148,9 @@ sub refreshToken(*){
 #	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
 
 	my  $URL = 'http://dmdsoftware.net/api/gdrive.php';
+
+	my $retryCount = 2;
+	while ($retryCount){
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
@@ -169,13 +172,18 @@ sub refreshToken(*){
 	  	my $block = $res->as_string;
 
 		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
+		$retryCount=0;
 
 	}else{
-		#print STDOUT $res->as_string;
-		die ($res->as_string."error in loading page");}
-
+		print STDOUT $res->as_string;
+		$retryCount--;
+		sleep(10);
+		#die ($res->as_string."error in loading page");}
+	}
 	if ($token ne ''){
 		$self->{_token} = $token;
+	}
+
 	}
 		return ($self->{_token},$self->{_refreshToken});
 
@@ -248,8 +256,11 @@ sub getList(*$){
 		$self->setToken($token,$refreshToken);
 		$retryCount--;
 	}else{
-		#		print STDOUT $res->as_string;
-		die($res->as_string."error in loading page");}
+		print STDOUT $res->as_string;
+		$retryCount--;
+		sleep(10);
+		#die($res->as_string."error in loading page");
+	}
 
 	}
 
@@ -340,8 +351,11 @@ sub getListRoot(*$){
 		$self->setToken($token,$refreshToken);
 		$retryCount--;
 	}else{
-		#		print STDOUT $res->as_string;
-		die($res->as_string."error in loading page");}
+		print STDOUT $res->as_string;
+		$retryCount--;
+		sleep(10);
+		#die($res->as_string."error in loading page");
+	}
 	}
   	return '';
 
@@ -389,8 +403,11 @@ sub getChanges(*$){
 		$self->setToken($token,$refreshToken);
 		$retryCount--;
 	}else{
-		#		print STDOUT $res->as_string;
-		die($res->as_string."error in loading page");}
+		print STDOUT $res->as_string;
+		$retryCount--;
+		sleep(10);
+		#die($res->as_string."error in loading page");}
+	}
   	return \$res->as_string;
 	}
 
@@ -431,8 +448,11 @@ sub getSubFolderID(*$){
 		$self->setToken($token,$refreshToken);
 		$retryCount--;
 	}else{
-		#		print STDOUT $res->as_string;
-		die($res->as_string."error in loading page");}
+		print STDOUT $res->as_string;
+		$retryCount--;
+		sleep(10);
+		#die($res->as_string."error in loading page");
+	}
 	}
 
 }
@@ -470,8 +490,11 @@ sub getSubFolderIDList(*$){
 		$self->setToken($token,$refreshToken);
 		$retryCount--;
 	}else{
-		#		print STDOUT $res->as_string;
-		die($res->as_string."error in loading page");}
+		print STDOUT $res->as_string;
+		$retryCount--;
+		sleep(10);
+		#die($res->as_string."error in loading page");
+	}
 	}
 
 }
@@ -579,10 +602,10 @@ sub uploadFile(*$$$$){
 		}
 
 		return $resourceID;
-	}elsif ($res->code == 401){
- 		my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
+#	}elsif ($res->code == 401){
+# 		my ($token,$refreshToken) = $self->refreshToken();
+#		$self->setToken($token,$refreshToken);
+#		$retryCount--;
 	}else{
   		print STDERR "error";
   	#	print STDOUT $req->headers_as_string;

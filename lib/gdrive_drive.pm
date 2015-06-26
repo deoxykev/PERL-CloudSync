@@ -215,7 +215,7 @@ sub uploadFolder(*$$){
     				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";
     				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
     					$process = 0;
-				    	pDrive::masterLog("skipped file (checksum $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
+				    	#pDrive::masterLog("skipped file (checksum $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
     					last;
 	    			}
     				untie(%dbase);
@@ -228,7 +228,7 @@ sub uploadFolder(*$$){
     		tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDONLY, 0666) or die "can't open fisi: $!";
     		if (  (defined $dbase{$fisi.'_'} and $dbase{$fisi.'_'} ne '') or (defined $dbase{$fisi.'_0'} and $dbase{$fisi.'_0'} ne '')){
     					$process = 0;
-				    	pDrive::masterLog("skipped file (fisi $fisi exists ".$dbase{$fisi.'_0'}.") - $fileList[$i]\n");
+				    	#pDrive::masterLog("skipped file (fisi $fisi exists ".$dbase{$fisi.'_0'}.") - $fileList[$i]\n");
 	    	}
     		untie(%dbase);
 			if ($process){
@@ -390,7 +390,7 @@ sub uploadFile(*$$){
     	print STDERR "\r".$i . '/'.$chunkNumbers;
     	my $status=0;
     	$retrycount=0;
-    	while ($status eq '0' and $retrycount < 5){
+    	while ($status eq '0' and $retrycount < 10){
 			$status = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
       		print STDOUT "\r"  . $status;
 	      	if ($status eq '0'){
@@ -405,12 +405,12 @@ sub uploadFile(*$$){
 	  				$self->{_login_dbm}->writeLogin( $self->{_username},$token,$refreshToken);
 	       			$self->{_serviceapi}->setToken($token,$refreshToken);
 	       		}
-        		sleep (5);
+        		sleep (10);
         		$retrycount++;
 	      	}
 
     	}
-		if ($retrycount >= 5){
+		if ($retrycount >= 10){
 			print STDERR "\r" . $file . "'...retry failed - $file\n";
 
     		pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
@@ -420,7 +420,7 @@ sub uploadFile(*$$){
     	$fileID=$status;
 		$pointerInFile += $chunkSize;
   	}
-  	if ($retrycount < 5){
+  	if ($retrycount < 10){
 		print STDOUT "\r" . $file . "'...success - $file\n";
   	}
   	close(INPUT);

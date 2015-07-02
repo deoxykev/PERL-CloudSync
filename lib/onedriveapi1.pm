@@ -967,15 +967,15 @@ sub readChangeListings(**){
 
 	my $count=0;
 
+
   	$$driveListings =~ s%\n%%g;
 	#print $$driveListings;
 #  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
 #  	while ($$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"md5Checksum\"\:\s+\"[^\"]+\"\s+% ){
 while ($$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"% ){
-print STDERR "in";
     	my ($fileName, $resourceID, $fileSize,$sha1) = $$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"name\"\:\s?\"([^\"]+)\".*?resid\=([^\"]+)\".*?\"size\"\:\s?([^\,]+)\,.*?\"sha1Hash\"\:\s?\"([^\"]+)\"%;
 		$$driveListings =~ s%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"%%;
-
+print "in " . $fileName . "\n";
 
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}] = $sha1;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;

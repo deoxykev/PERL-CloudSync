@@ -309,7 +309,7 @@ sub uploadLargeFile(*$$$){
     print STDERR "\r".$i . '/'.$chunkNumbers;
     my $status=0;
 	$retrycount=0;
-	while ($status eq '0' and $retrycount < 5){
+	while ($status eq '0' and $retrycount < 10){
 		$status = $self->{_oneDrive}->uploadFile($URL, \$chunk, $chunkSize, 'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
       	print STDOUT "\r"  . $status;
 	    if ($status eq '0'){
@@ -554,7 +554,10 @@ sub updateSHA1Hash(**){
 
 	my $self = shift;
 	my $newDocuments = shift;
-
+	my $createdCountMD5=0;
+	my $skippedCountMD5=0;
+	my $createdCountFISI=0;
+	my $skippedCountFISI=0;
 	my $count=0;
 	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open sha1: $!";
 	foreach my $resourceID (keys $newDocuments){
@@ -564,7 +567,7 @@ sub updateSHA1Hash(**){
 			if (defined $dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}].'_'. $i}){
 				# validate it is the same file, if so, skip, otherwise move onto another md5 slot
 				if  ($dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}].'_'. $i}  eq $resourceID){
-					print STDOUT "skipped sha1\n";
+					$skippedCountMD5++;
 					last;
 				}else{
 					#move onto next slot
@@ -572,7 +575,7 @@ sub updateSHA1Hash(**){
 			#	create
 			}else{
 				$dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}].'_'. $i} = $resourceID;
-				print STDOUT "created sha1\n";
+				$createdCountMD5++;
 				last;
 			}
 		}
@@ -586,7 +589,7 @@ sub updateSHA1Hash(**){
 			if (defined $dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i}){
 				# validate it is the same file, if so, skip, otherwise move onto another md5 slot
 				if  ($dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i}  eq $resourceID){
-					print STDOUT "skipped fisi\n";
+					$skippedCountFISI++;
 					last;
 				}else{
 					#move onto next slot
@@ -594,12 +597,15 @@ sub updateSHA1Hash(**){
 			#	create
 			}else{
 				$dbase{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'. $i} = $resourceID;
-				print STDOUT "created fisi\n";
+				$createdCountFISI++;
 				last;
 			}
 		}
 	}
 	untie(%dbase);
+
+	print STDOUT "MD5: created = $createdCountMD5, skipped = $skippedCountMD5\n";
+	print STDOUT "FISI: created = $createdCountFISI, skipped = $skippedCountFISI\n";
 
 }
 

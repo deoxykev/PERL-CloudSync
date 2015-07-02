@@ -175,6 +175,7 @@ sub uploadFolder(*$$){
 			next;
     	#folder
     	}elsif (-d $fileList[$i]){
+	  		my $fileID = $self->uploadFolder($fileList[$i], $serverPath, $folderID);
     	# file
     	}else{
     		my $process = 1;

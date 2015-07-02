@@ -955,7 +955,6 @@ print STDOUT "entries = $count\n";
 return %newDocuments;
 }
 
-use utf8;
 
 #
 # Parse the change listings
@@ -976,14 +975,15 @@ sub readChangeListings(**){
 while ($$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"% ){
     	my ($fileName, $resourceID, $fileSize,$sha1) = $$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"name\"\:\s?\"([^\"]+)\".*?resid\=([^\"]+)\".*?\"size\"\:\s?([^\,]+)\,.*?\"sha1Hash\"\:\s?\"([^\"]+)\"%;
 		$$driveListings =~ s%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"%%;
-		$fileName =~ s/\\u([0-9a-fA-F]{4})/chr(hex($1))/egix;
-print "in " . $fileName . "\n";
+		$fileName =~ s{ \\u([0-9A-F]{4}) }{ chr hex $1 }egix;
+		utf8::encode($fileName);
+
 
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}] = $sha1;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
-
+print "in " . $fileName . ' f ' . $fileSize . ' '. $newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].  "\n";
 
   		print STDERR "sha1 = $sha1, title = $fileName, size = $fileSize\n";
     	$count++;

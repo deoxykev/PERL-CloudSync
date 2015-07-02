@@ -314,16 +314,23 @@ sub uploadLargeFile(*$$$){
       	print STDOUT "\r"  . $status;
 	    if ($status eq '0'){
 	    	print STDERR "...retry\n";
- 	 		my ($token,$refreshToken) = $self->{_oneDrive}->refreshToken();
-			$self->{_oneDrive}->setToken($token,$refreshToken);
-	  		$self->{_login_dbm}->writeLogin( pDrive::Config->USERNAME,$token,$refreshToken);
+	       		#some other instance may have updated the tokens already, refresh with the latest
+	       		if ($retrycount == 0){
+	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($self->{_username});
+	       			$self->{_serviceapi}->setToken($token,$refreshToken);
+	       		#multiple failures, force-fech a new token
+	       		}else{
+ 	 				my ($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
+	  				$self->{_login_dbm}->writeLogin( $self->{_username},$token,$refreshToken);
+	       			$self->{_serviceapi}->setToken($token,$refreshToken);
+	       		}
+        		sleep (10);
 
-        	sleep (5);
         	$retrycount++;
 	    }
 
 	}
-	if ($retrycount >= 5){
+	if ($retrycount >= 10){
 		print STDERR "\r" . $file . "'...retry failed - $path - $file\n";
 
     	pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
@@ -334,7 +341,7 @@ sub uploadLargeFile(*$$$){
     $pointerInFile += $chunkSize;
 
   }
-  if ($retrycount < 5){
+  if ($retrycount < 10){
 		print STDOUT "\r" . $file . "'...success - $path - $file\n";
   }
   close(INPUT);

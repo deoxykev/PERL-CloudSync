@@ -191,6 +191,8 @@ sub getList(*$){
 		$URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 
+	my $retryCount = 2;
+	while ($retryCount){
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'bearer '.$self->{_token});
@@ -208,11 +210,15 @@ sub getList(*$){
 
 
 	}else{
+		print STDOUT $res->as_string;
+		$retryCount--;
+		sleep(10);
 		#print STDOUT $res->as_string;
-		die($res->as_string."error in loading page");}
+		#die($res->as_string."error in loading page");
+	}
 
   	return \$res->as_string;
-
+	}
 }
 
 
@@ -256,8 +262,12 @@ sub getChanges(*$){
 		$self->setToken($token,$refreshToken);
 		$retryCount--;
 	}else{
+		print STDOUT $res->as_string;
+		$retryCount--;
+		sleep(10);
 		#		print STDOUT $res->as_string;
-		die($res->as_string."error in loading page");}
+		#die($res->as_string."error in loading page");
+	}
 	}
 
 }
@@ -468,14 +478,14 @@ sub uploadFile(*$$$$){
 
  	 	return $resourceID;
 	# need a new token?
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
+#	}elsif ($res->code == 401){
+ #	 	my ($token,$refreshToken) = $self->refreshToken();
+#		$self->setToken($token,$refreshToken);
+#		$retryCount--;
 
 	}else{
   		print STDERR "error";
-#  		print STDOUT $req->headers_as_string;
+  		print STDOUT $req->headers_as_string;
 #  		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;

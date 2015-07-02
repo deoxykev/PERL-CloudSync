@@ -261,7 +261,7 @@ sub uploadFile(*$$){
 	# create file on server
 	my $uploadURL = $self->{_serviceapi}->createFile('https://picasaweb.google.com/data/upload/resumable/photos/create-session/feed/api/user/default/albumid/default',$fileSize, $fileName, 'video/msvideo');
 
-	if ($readyURL eq ''){
+	if ($uploadURL eq ''){
 		print STDERR "\r" . $file . "'...no URL, failed - $file\n";
 		close(INPUT);
 

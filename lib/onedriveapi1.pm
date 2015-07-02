@@ -955,6 +955,7 @@ print STDOUT "entries = $count\n";
 return %newDocuments;
 }
 
+use utf8;
 
 #
 # Parse the change listings
@@ -975,9 +976,7 @@ sub readChangeListings(**){
 while ($$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"% ){
     	my ($fileName, $resourceID, $fileSize,$sha1) = $$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"name\"\:\s?\"([^\"]+)\".*?resid\=([^\"]+)\".*?\"size\"\:\s?([^\,]+)\,.*?\"sha1Hash\"\:\s?\"([^\"]+)\"%;
 		$$driveListings =~ s%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"%%;
-		$fileName =~ s/\\u([0-9a-fA-F]{4})/chr(hex($1))/eg;
-		binmode(STDOUT, ':utf8');
-	
+		$fileName =~ s/\\u([0-9a-fA-F]{4})/chr(hex($1))/egix;
 print "in " . $fileName . "\n";
 
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}] = $sha1;

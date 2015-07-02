@@ -21,7 +21,7 @@ my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 
 
 sub new(*) {
 
-	my $self = {_oneDrive => undef,
+	my $self = {_serviceapi => undef,
                _login_dbm => undef,
               _dbm => undef,
   			  _username => undef,
@@ -35,7 +35,7 @@ sub new(*) {
 	$self->{_db_fisi} = 'od.'.$self->{_username} . '.fisi.db';
 
   	# initialize web connections
-  	$self->{_oneDrive} = pDrive::OneDriveAPI1->new(pDrive::Config->ODCLIENT_ID,pDrive::Config->ODCLIENT_SECRET);
+  	$self->{_serviceapi} = pDrive::OneDriveAPI1->new(pDrive::Config->ODCLIENT_ID,pDrive::Config->ODCLIENT_SECRET);
 
   	my $loginsDBM = pDrive::DBM->new('./od.'.$self->{_username}.'.db');
   	$self->{_login_dbm} = $loginsDBM;
@@ -49,17 +49,17 @@ sub new(*) {
 		print STDOUT 'Input Code:';
 		$code = <>;
 		print STDOUT "code = $code\n";
- 	  	($token,$refreshToken) = $self->{_oneDrive}->getToken($code);
+ 	  	($token,$refreshToken) = $self->{_serviceapi}->getToken($code);
 	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
 	}else{
-		$self->{_oneDrive}->setToken($token,$refreshToken);
+		$self->{_serviceapi}->setToken($token,$refreshToken);
 	}
 
 	# token expired?
-	if (!($self->{_oneDrive}->testAccess())){
+	if (!($self->{_serviceapi}->testAccess())){
 		# refresh token
- 	 	($token,$refreshToken) = $self->{_oneDrive}->refreshToken();
-		$self->{_oneDrive}->setToken($token,$refreshToken);
+ 	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
+		$self->{_serviceapi}->setToken($token,$refreshToken);
 	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
 	}
 
@@ -84,9 +84,9 @@ sub getListAll(*){
 
 	my $nextURL = '';
 	while (1){
-		my $driveListings = $self->{_oneDrive}->getList($nextURL);
-  		my $newDocuments = $self->{_oneDrive}->readDriveListings($driveListings);
-  		$nextURL = $self->{_oneDrive}->getNextURL($driveListings);
+		my $driveListings = $self->{_serviceapi}->getList($nextURL);
+  		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+  		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
 #		$self->updateMD5Hash($newDocuments);
 		print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
@@ -108,11 +108,11 @@ sub getChangesAll(*){
     }
 
 	while (1){
-		my $driveListings = $self->{_oneDrive}->getChanges($nextURL, $changeID);
-  		$nextURL = $self->{_oneDrive}->getNextURL($driveListings);
-  		my $newDocuments = $self->{_oneDrive}->readChangeListings($driveListings);
+		my $driveListings = $self->{_serviceapi}->getChanges($nextURL, $changeID);
+  		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
+  		my $newDocuments = $self->{_serviceapi}->readChangeListings($driveListings);
 		$self->updateSHA1Hash($newDocuments);
-		$changeID = $self->{_oneDrive}->getChangeID($driveListings);
+		$changeID = $self->{_serviceapi}->getChangeID($driveListings);
 		print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
 	}
@@ -130,7 +130,7 @@ sub createFolder(*$$){
 	my $folder = shift;
 	my $parentFolder = shift;
 
-	return $self->{_oneDrive}->createFolder('https://api.onedrive.com/v1.0/drive/root:/'.$parentFolder.':/children?nameConflict=fail', $folder);
+	return $self->{_serviceapi}->createFolder('https://api.onedrive.com/v1.0/drive/root:/'.$parentFolder.':/children?nameConflict=fail', $folder);
 
 }
 
@@ -146,7 +146,7 @@ sub createFolderByPath(*$){
 	while(my ($folder) = $tmppath =~ m%^\/?([^\/]+)%){
 		#print STDERR "in $folder";
     	$tmppath =~ s%^\/?[^\/]+%%;
-		$folderID = $self->{_oneDrive}->createFolder('https://api.onedrive.com/v1.0/drive/root:/'.$parentFolder.':/children?nameConflict=fail', $folder);
+		$folderID = $self->{_serviceapi}->createFolder('https://api.onedrive.com/v1.0/drive/root:/'.$parentFolder.':/children?nameConflict=fail', $folder);
 		if ($parentFolder eq ''){
 			$parentFolder .= $folder;
 		}else{
@@ -258,7 +258,7 @@ sub uploadRemoteFile(*$$$){
 	my $path = shift;
 	my $filename = shift;
 
-	return $self->{_oneDrive}->uploadRemoteFile($URL, $path, $filename);
+	return $self->{_serviceapi}->uploadRemoteFile($URL, $path, $filename);
 
 }
 
@@ -284,7 +284,7 @@ sub uploadLargeFile(*$$$){
 	print STDOUT "file size for $file is $fileSize\n" if (pDrive::Config->DEBUG);
 
 
-    my $URL = $self->{_oneDrive}->createFile($path, $filename);
+    my $URL = $self->{_serviceapi}->createFile($path, $filename);
 
 	# calculate the number of chunks
 	my $chunkNumbers = int($fileSize/(pDrive::Config->CHUNKSIZE))+1;
@@ -310,7 +310,7 @@ sub uploadLargeFile(*$$$){
     my $status=0;
 	$retrycount=0;
 	while ($status eq '0' and $retrycount < 10){
-		$status = $self->{_oneDrive}->uploadFile($URL, \$chunk, $chunkSize, 'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
+		$status = $self->{_serviceapi}->uploadFile($URL, \$chunk, $chunkSize, 'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
       	print STDOUT "\r"  . $status;
 	    if ($status eq '0'){
 	    	print STDERR "...retry\n";
@@ -367,8 +367,8 @@ sub uploadSimpleFile(*$$$){
 
     print STDOUT 'uploading entire file '.$file;
 
-    my $URL = $self->{_oneDrive}->API_URL .'/drive/root:/'.$path.'/'.$filename.':/content';
-    my $status = $self->{_oneDrive}->uploadEntireFile($URL, \$fileContents,$fileSize);
+    my $URL = $self->{_serviceapi}->API_URL .'/drive/root:/'.$path.'/'.$filename.':/content';
+    my $status = $self->{_serviceapi}->uploadEntireFile($URL, \$fileContents,$fileSize);
     if ($status == 1){
     	print "...success - $path - $filename\n";
     }else{
@@ -466,7 +466,7 @@ sub downloadFile(*$$$$$$*){
           $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
         }
 
-        $returnStatus = $self->{_oneDrive}->downloadFile($link,$path,'',$appendex,$updated);
+        $returnStatus = $self->{_serviceapi}->downloadFile($link,$path,'',$appendex,$updated);
       # a google-doc file
       }else{
         print STDOUT 'download using '.$types->{$resourceType}.' wise - '. $resourceType  if (pDrive::Config->DEBUG);
@@ -485,7 +485,7 @@ sub downloadFile(*$$$$$$*){
               $finalPath .= '.local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}];
             }
 #wise
-            $returnStatus = $self->{_oneDrive}->downloadFile($link.'&exportFormat='.$types->{$resourceType}[$i],$path,$types->{$resourceType}[$i],$appendex,$updated);
+            $returnStatus = $self->{_serviceapi}->downloadFile($link.'&exportFormat='.$types->{$resourceType}[$i],$path,$types->{$resourceType}[$i],$appendex,$updated);
           }
         }else{
           my $appendex='';
@@ -498,7 +498,7 @@ sub downloadFile(*$$$$$$*){
             $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
           }
 #wise
-          $returnStatus = $self->{_oneDrive}->downloadFile($link.'&exportFormat='.$types->{$resourceType},$path,$types->{$resourceType},$appendex,$updated);
+          $returnStatus = $self->{_serviceapi}->downloadFile($link.'&exportFormat='.$types->{$resourceType},$path,$types->{$resourceType},$appendex,$updated);
         }
 
         #ignore export if fails; just try to download
@@ -514,7 +514,7 @@ sub downloadFile(*$$$$$$*){
             $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
           }
 #wise
-          $returnStatus = $self->{_oneDrive}->downloadFile($link,$path,$types->{$resourceType},$appendex,$updated);
+          $returnStatus = $self->{_serviceapi}->downloadFile($link,$path,$types->{$resourceType},$appendex,$updated);
         }
       }
 

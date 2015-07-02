@@ -559,6 +559,7 @@ sub createFile(*$$){
 	my $self = shift;
 	my $path = shift;
 	my $filename = shift;
+   $filename =~ s/\+//g;
 
 	$path =~ s%^/%%;
 	my $retryCount = 2;
@@ -980,6 +981,7 @@ while ($$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s
     	my ($fileName, $resourceID, $fileSize,$sha1) = $$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"name\"\:\s?\"([^\"]+)\".*?resid\=([^\"]+)\".*?\"size\"\:\s?([^\,]+)\,.*?\"sha1Hash\"\:\s?\"([^\"]+)\"%;
 		$$driveListings =~ s%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"%%;
 		$fileName =~ s{ \\u([0-9A-F]{4}) }{ chr hex $1 }egix;
+		$fileName =~ s/\+//g;
 		utf8::encode($fileName);
 
 

@@ -309,10 +309,10 @@ sub uploadLargeFile(*$$$){
     print STDERR "\r".$i . '/'.$chunkNumbers;
     my $status=0;
 	$retrycount=0;
-	while ($status eq '0' and $retrycount < 10){
+	while (($status eq '0' or $status eq '-1') and $retrycount < 10){
 		$status = $self->{_serviceapi}->uploadFile($URL, \$chunk, $chunkSize, 'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize);
       	print STDOUT "\r"  . $status;
-	    if ($status eq '0'){
+	    if ($status eq '-1'){
 	    	print STDERR "...retry\n";
 	       		#some other instance may have updated the tokens already, refresh with the latest
 	       		if ($retrycount == 0){
@@ -324,7 +324,12 @@ sub uploadLargeFile(*$$$){
 	  				$self->{_login_dbm}->writeLogin( $self->{_username},$token,$refreshToken);
 	       			$self->{_serviceapi}->setToken($token,$refreshToken);
 	       		}
-        		sleep (10);
+        		sleep (2);
+
+        	$retrycount++;
+	    }elsif ($status eq '0'){
+	    	print STDERR "...retry\n";
+      		sleep (10);
 
         	$retrycount++;
 	    }

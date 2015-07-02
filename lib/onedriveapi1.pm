@@ -478,11 +478,15 @@ sub uploadFile(*$$$$){
 
  	 	return $resourceID;
 	# need a new token?
-#	}elsif ($res->code == 401){
- #	 	my ($token,$refreshToken) = $self->refreshToken();
+	}elsif ($res->code == 401 or $res->code == 403 ){
+# 	 	my ($token,$refreshToken) = $self->refreshToken();
 #		$self->setToken($token,$refreshToken);
 #		$retryCount--;
-
+  		print STDERR "error";
+  		print STDOUT $req->headers_as_string;
+#  		print STDOUT $req->as_string;
+  		print STDOUT $res->as_string;
+  		return -1;
 	}else{
   		print STDERR "error";
   		print STDOUT $req->headers_as_string;

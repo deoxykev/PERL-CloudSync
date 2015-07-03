@@ -478,19 +478,27 @@ sub uploadFile(*$$$$){
 
  	 	return $resourceID;
 	# need a new token?
+	}elsif ($res->code == 400 ){
+		if ($res->as_string =~ m%Max file size exceeded%){
+	  		print STDERR "error - exceed max size";
+  			return -2;
+		}else{
+	  		print STDOUT $req->headers_as_string;
+  			print STDOUT $res->as_string;
+  			return 0;
+		}
+
 	}elsif ($res->code == 401 or $res->code == 403 ){
 # 	 	my ($token,$refreshToken) = $self->refreshToken();
 #		$self->setToken($token,$refreshToken);
 #		$retryCount--;
   		print STDERR "error";
   		print STDOUT $req->headers_as_string;
-#  		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return -1;
 	}else{
   		print STDERR "error";
   		print STDOUT $req->headers_as_string;
-#  		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}

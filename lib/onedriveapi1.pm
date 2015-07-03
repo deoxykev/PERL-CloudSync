@@ -481,13 +481,15 @@ sub uploadFile(*$$$$){
 	}elsif ($res->code == 400 ){
 		if ($res->as_string =~ m%Max file size exceeded%){
 	  		print STDERR "error - exceed max size";
-  			return -2;
+  			return -2;  #do not retry
 		}else{
 	  		print STDOUT $req->headers_as_string;
   			print STDOUT $res->as_string;
   			return 0;
 		}
-
+	}elsif ($res->code == 416 ){
+	  		print STDERR "range error";
+  			return -2; #do not retry
 	}elsif ($res->code == 401 or $res->code == 403 ){
 # 	 	my ($token,$refreshToken) = $self->refreshToken();
 #		$self->setToken($token,$refreshToken);
@@ -567,7 +569,7 @@ sub createFile(*$$){
 	my $self = shift;
 	my $path = shift;
 	my $filename = shift;
-   $filename =~ s/\+//g;
+   $filename =~ s/\+//g; #remove +s in title, will be interpret as space
 
 	$path =~ s%^/%%;
 	my $retryCount = 2;
@@ -988,8 +990,10 @@ sub readChangeListings(**){
 while ($$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"% ){
     	my ($fileName, $resourceID, $fileSize,$sha1) = $$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"name\"\:\s?\"([^\"]+)\".*?resid\=([^\"]+)\".*?\"size\"\:\s?([^\,]+)\,.*?\"sha1Hash\"\:\s?\"([^\"]+)\"%;
 		$$driveListings =~ s%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"%%;
+
+		#fix unicode
 		$fileName =~ s{ \\u([0-9A-F]{4}) }{ chr hex $1 }egix;
-		$fileName =~ s/\+//g;
+		$fileName =~ s/\+//g; #remove +s in title for fisi
 		utf8::encode($fileName);
 
 

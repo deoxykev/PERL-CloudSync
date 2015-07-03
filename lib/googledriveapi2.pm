@@ -939,6 +939,8 @@ sub readDriveListings(**){
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}] = $published;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
+
+      		$title =~ s/\+//g; #remove +s in title for fisi)
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
 
     	}

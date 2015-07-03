@@ -327,6 +327,9 @@ sub uploadLargeFile(*$$$){
         		sleep (2);
 
         	$retrycount++;
+	    }elsif ($status == -2){
+			$retrycount = 10;
+
 	    }elsif ($status eq '0'){
 	    	print STDERR "...retry\n";
       		sleep (10);

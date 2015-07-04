@@ -364,6 +364,7 @@ sub uploadSimpleFile(*$$$){
 	my $path = shift;
 	my $filename = shift;
 	$path =~ s%\/$%%;
+	$path =~ s%^/%%;
 
 	# get filesize
 	my $fileSize = -s $file;

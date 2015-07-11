@@ -532,6 +532,8 @@ sub downloadFile(*$$$){
   	my $URL = shift;
   	my $timestamp = shift;
 
+	my $retryCount = 2;
+	while ($retryCount){
 
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
@@ -539,10 +541,18 @@ sub downloadFile(*$$$){
 	my $res = $self->{_ua}->request($req, $path);
 	 if ($res->is_success) {
      print "ok\n";
-  }  else {
-     print $res->status_line, "\n";
-  }
+     return;
+	}elsif ($res->code == 401 or $res->code == 403){
 
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+  }  else {
+
+     print $res->status_line, "\n";
+     return;
+  }
+	}
 #  	open (FILE, "> ".$path) or die ("Cannot save image file".$path.": $!\n");
  # 	FILE->autoflush;
   #	binmode(FILE);

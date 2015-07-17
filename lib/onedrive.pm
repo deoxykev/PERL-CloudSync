@@ -269,7 +269,10 @@ sub uploadLargeFile(*$$$){
 	my $file = shift;
 	my $path = shift;
 	my $filename = shift;
-	$path =~ s%\/$%%;
+
+	$filename =~ s%^\s%%; #remove leading spaces
+	$path =~ s%\/*$%%; #remove tailing /
+	$path =~ s%^\/*%%; #remove leading /
 
 	# get filesize
 	my $fileSize = -s $file;
@@ -363,8 +366,11 @@ sub uploadSimpleFile(*$$$){
 	my $file = shift;
 	my $path = shift;
 	my $filename = shift;
-	$path =~ s%\/$%%;
-	$path =~ s%^/%%;
+
+
+	$filename =~ s%^\s%%; #remove leading spaces
+	$path =~ s%\/*$%%; #remove tailing /
+	$path =~ s%^\/*%%; #remove leading /
 
 	# get filesize
 	my $fileSize = -s $file;

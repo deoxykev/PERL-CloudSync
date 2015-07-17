@@ -548,7 +548,8 @@ sub uploadEntireFile(*$$$$){
 		$retryCount--;
 	}else{
 		print STDERR "error";
-#  		print STDOUT $req->as_string;
+  		print STDOUT 'URL ' . $URL . "\n";
+  		print STDOUT $req->headers_as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}

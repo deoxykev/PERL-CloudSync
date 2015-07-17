@@ -569,9 +569,9 @@ sub createFile(*$$){
 	my $self = shift;
 	my $path = shift;
 	my $filename = shift;
-   $filename =~ s/\+//g; #remove +s in title, will be interpret as space
+	$filename =~ s/\+//g; #remove +s in title, will be interpret as space
+	$path =~ s%^/%%; #remove leading /
 
-	$path =~ s%^/%%;
 	my $retryCount = 2;
 	while ($retryCount){
 	my $req = new HTTP::Request POST  => API_URL . '/drive/root:/'.$path.'/'.$filename.':/upload.createSession';
@@ -606,6 +606,7 @@ sub createFile(*$$){
 
 	}else{
   		print STDERR "error";
+  		print STDOUT "URL = " . API_URL . '/drive/root:/'.$path.'/'.$filename.':/upload.createSession';
   		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;

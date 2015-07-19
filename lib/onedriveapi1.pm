@@ -570,8 +570,11 @@ sub createFile(*$$){
 	my $self = shift;
 	my $path = shift;
 	my $filename = shift;
+
 	$filename =~ s/\+//g; #remove +s in title, will be interpret as space
-	$path =~ s%^/%%; #remove leading /
+	$filename =~ s%^\s%%; #remove leading spaces
+	$path =~ s%\/*$%%; #remove tailing /
+	$path =~ s%^\/*%%; #remove leading /
 
 	my $retryCount = 2;
 	while ($retryCount){

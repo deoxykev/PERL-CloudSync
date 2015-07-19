@@ -367,7 +367,7 @@ sub uploadSimpleFile(*$$$){
 	my $path = shift;
 	my $filename = shift;
 
-
+	$filename =~ s/\+//g; #remove +s in title, will be interpret as space
 	$filename =~ s%^\s%%; #remove leading spaces
 	$path =~ s%\/*$%%; #remove tailing /
 	$path =~ s%^\/*%%; #remove leading /

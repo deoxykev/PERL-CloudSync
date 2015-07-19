@@ -23,7 +23,10 @@ use constant D => {
   'local_md5' => 7,
   'parent' => 8,
   'title' => 9,
-  'published' => 10
+  'published' => 10,
+  'size' => 11,
+  'server_fisi' => 12
+
 };
 
 

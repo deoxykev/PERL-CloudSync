@@ -138,6 +138,7 @@ sub createFolderByPath(*$){
 
 	my $self = shift;
 	my $path = shift;
+	$path =~ s%^\/*%%; #remove leading /
 
 	my $tmppath = $path;
 	my $parentFolder= '';

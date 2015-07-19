@@ -532,7 +532,7 @@ sub downloadFile(*$$$){
   	my $URL = shift;
   	my $timestamp = shift;
     print STDERR "URL = $URL $self->{_token} $path\n";
-    `wget --header="Authorization: Bearder $self->{_token}" "$URL" -O $path`;
+    `wget --header="Authorization: Bearer $self->{_token}" "$URL" -O $path`;
     return;
 	my $retryCount = 2;
 	while ($retryCount){

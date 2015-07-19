@@ -572,9 +572,7 @@ sub createFile(*$$){
 	my $filename = shift;
 
 	$filename =~ s/\+//g; #remove +s in title, will be interpret as space
-	$filename =~ s%^\s%%; #remove leading spaces
-	$path =~ s%\/*$%%; #remove tailing /
-	$path =~ s%^\/*%%; #remove leading /
+
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -1007,7 +1005,6 @@ while ($$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
 
-  		print STDERR "sha1 = $sha1, title = $fileName, size = $fileSize\n";
     	$count++;
   	}
 

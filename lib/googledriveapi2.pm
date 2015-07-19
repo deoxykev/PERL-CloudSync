@@ -531,7 +531,7 @@ sub downloadFile(*$$$){
   	my $path = shift;
   	my $URL = shift;
   	my $timestamp = shift;
-   print STDERR "URL = $URL\n";
+   print STDERR "URL = $URL $self->{_token} $path\n";
 	my $retryCount = 2;
 	while ($retryCount){
 

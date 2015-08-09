@@ -45,26 +45,12 @@ sub new(*) {
 	$password = <>;
 	($token) = $self->{_serviceapi}->authenticate($password);
 
-	# token expired?
-	if (!($self->{_serviceapi}->testAccess())){
-		# refresh token
- 	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
-		$self->{_serviceapi}->setToken($token,$refreshToken);
-	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
-	}
 
 
 	return $self;
 
 
 
-  	my $dbm = pDrive::DBM->new(pDrive::Config->DBM_CONTAINER_FILE);
-  	$self->{_dbm} = $dbm;
-  	my ($dbase,$folders) = $dbm->readHash();
-
-	my $resourceIDHash = $dbm->constructResourceIDHash($dbase);
-
-  return $self;
 
 }
 

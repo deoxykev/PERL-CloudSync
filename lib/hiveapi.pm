@@ -26,14 +26,12 @@ sub new() {
               _clientID => undef,
               _clientSecret => undef,
               _refreshToken  => undef,
+ 			  _username => undef,
               _token => undef};
 
   	my $class = shift;
   	bless $self, $class;
-	my $clientID = shift;
-	my $clientSecret = shift;
-	$self->{_clientID} = $clientID;
-	$self->{_clientSecret} = $clientSecret;
+  	$self->{_username} = shift;
 
  	######
 	 #  Useragent
@@ -77,6 +75,49 @@ sub bindIP(*$){
 
 }
 
+
+#
+# authenticate
+##
+sub authenticate(*$){
+  	my $self = shift;
+  	my $password = shift;
+
+	my  $URL = 'https://www.google.com/accounts/ClientLogin';
+	my $req = new HTTP::Request POST => $URL;
+	$req->content_type("application/x-www-form-urlencoded");
+	$req->protocol('HTTP/1.1');
+	$req->content('Email='.$self->{_username}.'&Passwd='.$password);
+	my $res = $self->{_ua}->request($req);
+
+
+	my $SID;
+	my $LSID;
+
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+
+  		my $block = $res->as_string;
+
+  		while (my ($line) = $block =~ m%([^\n]*)\n%){
+
+    		$block =~ s%[^\n]*\n%%;
+
+    		if ($line =~ m%^SID%){
+      			($SID) = $line =~ m%SID\=(.*)%;
+		    }
+
+  		}
+ 		 print STDOUT "SID = $SID\n" if pDrive::Config->DEBUG;
+  		print STDOUT "LSID = $LSID\n" if pDrive::Config->DEBUG;
+  		print STDOUT "AUTH = $self->{_authwritely}\n" if pDrive::Config->DEBUG;
+
+	}else{
+		#print STDOUT $res->as_string;
+		die ($res->as_string."error in loading page");}
+}
+
 #
 # setTokens: access & refresh
 ##
@@ -97,9 +138,7 @@ sub getToken(*$){
 	my $self = shift;
 	my $code = shift;
 
-#	my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.$self->{_clientID} . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
 	my  $URL = 'https://login.live.com/oauth20_token.srf';
-#	my  $URL = 'http://dmdsoftware.net/api/onedrive.php';
 
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");

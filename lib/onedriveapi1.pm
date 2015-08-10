@@ -234,7 +234,8 @@ sub getChanges(*$){
 	my $changeID = shift;
 
 	if ($URL eq '' and $changeID ne ''){
-		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=name,webUrl,size,file,folder&token='.$changeID;
+		#$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=name,webUrl,size,file,folder&token='.$changeID;
+		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?token='.$changeID;
 	}elsif ($URL eq '' and $changeID eq ''){
 		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=name,webUrl,size,file,folder';
 	}

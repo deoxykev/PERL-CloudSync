@@ -235,9 +235,9 @@ sub getChanges(*$){
 
 	if ($URL eq '' and $changeID ne ''){
 		#$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=name,webUrl,size,file,folder&token='.$changeID;
-		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?token='.$changeID;
+		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?%40content.downloadUrl%2Cname%2Cid%2Csize%2Cfile%2Cfolder&token='.$changeID;
 	}elsif ($URL eq '' and $changeID eq ''){
-		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=name,webUrl,size,file,folder';
+		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=%40content.downloadUrl%2Cname%2Cid%2Csize%2Cfile%2Cfolder';
 	}
 
 	my $retryCount = 2;

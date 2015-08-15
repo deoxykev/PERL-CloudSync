@@ -216,7 +216,7 @@ sub uploadFolder(*$$){
 				    	pDrive::masterLog("skipped file (fisi $fisi exists ".$dbase{$fisi.'_0'}.") - $fileList[$i]\n");
 	    	}
     		untie(%dbase);
-			print "filename = $filename $fisi\n";
+			print "filename = $fileName $fisi\n";
 			if ($process){
 				print STDOUT "Upload $fileList[$i]\n";
 		  		my $fileID = $self->uploadFile($fileList[$i], $folderID);

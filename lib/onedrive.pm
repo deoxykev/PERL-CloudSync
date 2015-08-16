@@ -599,6 +599,7 @@ sub updateSHA1Hash(**){
 	untie(%dbase);
 	tie(%dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDWR|O_CREAT, 0666) or die "can't open fisi: $!";
 	foreach my $resourceID (keys $newDocuments){
+		$count++;
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq '';
 		for (my $i=0; 1; $i++){
 			# if MD5 exists,
@@ -622,7 +623,7 @@ sub updateSHA1Hash(**){
 
 	print STDOUT "MD5: created = $createdCountMD5, skipped = $skippedCountMD5\n";
 	print STDOUT "FISI: created = $createdCountFISI, skipped = $skippedCountFISI\n";
-
+	print STDOUT "count = $count\n";
 }
 
 

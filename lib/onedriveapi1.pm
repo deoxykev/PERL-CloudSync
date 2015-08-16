@@ -235,9 +235,9 @@ sub getChanges(*$){
 
 	if ($URL eq '' and $changeID ne ''){
 		#$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=name,webUrl,size,file,folder&token='.$changeID;
-		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?%40content.downloadUrl%2Cname%2Cid%2Csize%2Cfile%2Cfolder&token='.$changeID;
+		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=%40content.downloadUrl%2Cname%2Cid%2Csize%2Cfile&token='.$changeID;
 	}elsif ($URL eq '' and $changeID eq ''){
-		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=%40content.downloadUrl%2Cname%2Cid%2Csize%2Cfile%2Cfolder';
+		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=%40content.downloadUrl%2Cname%2Cid%2Csize%2Cfile';
 	}
 
 	my $retryCount = 2;
@@ -991,9 +991,10 @@ sub readChangeListings(**){
 	#print $$driveListings;
 #  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
 #  	while ($$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"md5Checksum\"\:\s+\"[^\"]+\"\s+% ){
-while ($$driveListings =~ m%\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"% ){
-    	my ($fileName, $resourceID, $fileSize,$sha1) = $$driveListings =~ m%\"\@content\.downloadUrl\"\:.*?\"name\"\:\s?\"([^\"]+)\".*?\"id\"\:\s?\"([^\"]+)\".*?\"size\"\:\s?([^\,]+)\,.*?\"sha1Hash\"\:\s?\"([^\"]+)\"%;
-		$$driveListings =~ s%\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"%%;
+#print STDERR $$driveListings ;
+while ($$driveListings =~ m%\{\"\@content.downloadUrl\"\:\"[^\"]+\"\,\"name\"\:\"[^\"]+\"\,\"id\"\:\"[^\"]+\"\,\"size\"\:\d+\,\"file\"\:\{\"hashes\"\:\{\"crc32Hash\"\:\"[^\"]+\"\,\"sha1Hash\"\:\"[^\"]+\"\}% ){
+    	my ($fileName, $resourceID, $fileSize,$sha1) = $$driveListings =~ m%\{\"\@content.downloadUrl\"\:\"[^\"]+\"\,\"name\"\:\"([^\"]+)\"\,\"id\"\:\"([^\"]+)\"\,\"size\"\:(\d+)\,\"file\"\:\{\"hashes\"\:\{\"crc32Hash\"\:\"[^\"]+\"\,\"sha1Hash\"\:\"([^\"]+)\"\}%;
+		$$driveListings =~ s%\{\"\@content.downloadUrl\"\:\"[^\"]+\"\,\"name\"\:\"[^\"]+\"\,\"id\"\:\"[^\"]+\"\,\"size\"\:\d+\,\"file\"\:\{\"hashes\"\:\{\"crc32Hash\"\:\"[^\"]+\"\,\"sha1Hash\"\:\"[^\"]+\"\}%%;
 
 		#fix unicode
 		$fileName =~ s{ \\u([0-9A-F]{4}) }{ chr hex $1 }egix;
@@ -1005,7 +1006,7 @@ while ($$driveListings =~ m%\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
-		print "FISI = $fileName $fileSize $newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]\n";
+		print "FISI = $fileName $resourceID $fileSize $newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]\n";
     	$count++;
   	}
 

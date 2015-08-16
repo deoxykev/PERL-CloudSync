@@ -113,6 +113,7 @@ sub getChangesAll(*){
   		my $newDocuments = $self->{_serviceapi}->readChangeListings($driveListings);
 		$self->updateSHA1Hash($newDocuments);
 		$changeID = $self->{_serviceapi}->getChangeID($driveListings);
+		$nextURL =~ s/select\=name/select\=%40content.downloadUrl%2Cname/;
 		print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
 	}

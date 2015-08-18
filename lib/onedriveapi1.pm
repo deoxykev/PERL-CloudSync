@@ -223,7 +223,6 @@ sub getList(*$){
 
 
 
-
 #
 # get the list of changes
 ##
@@ -1006,7 +1005,7 @@ while ($$driveListings =~ m%\{\"\@content.downloadUrl\"\:\"[^\"]+\"\,\"name\"\:\
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
-		print "FISI = $fileName $resourceID $fileSize $newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]\n";
+		#print "FISI = $fileName $resourceID $fileSize $newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]\n";
     	$count++;
   	}
 

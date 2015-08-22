@@ -179,44 +179,8 @@ sub getToken(*$){
 # refreshToken (writely and wise)
 ##
 sub refreshToken(*){
-	my $self = shift;
 
-#	my  $URL = 'http://dmdsoftware.net/api/onedrive.php';
-	my  $URL = 'https://login.live.com/oauth20_token.srf';
-	my $req = new HTTP::Request POST => $URL;
-	$req->content_type("application/x-www-form-urlencoded");
-	$req->protocol('HTTP/1.1');
-	$req->content('client_id='.$self->{_clientID}.'&redirect_uri=https://login.live.com/oauth20_desktop.srf&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
-	my $res = $self->{_ua}->request($req);
-
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
- 	 open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
- 	 print LOG $req->as_string;
- 	 print LOG $res->as_string;
- 	 close(LOG);
-	}
-
-	my $token;
-	my $refreshToken;
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
-
-	  	my $block = $res->as_string;
-
-		($token) = $block =~ m%\"access_token\"\:\"([^\"]+)\"%;
-		($refreshToken) = $block =~ m%\"refresh_token\"\:\"([^\"]+)\"%;
-
-	}else{
-		#print STDOUT $res->as_string;
-		die ($res->as_string."error in loading page");}
-
-	if ($token ne '' and $refreshToken ne ''){
-		$self->{_token} = $token;
-		$self->{_refreshToken} = $refreshToken;
-	}
-		return ($self->{_token},$self->{_refreshToken});
-
+	return; #not implemented
 
 }
 
@@ -664,46 +628,10 @@ sub createFile(*$$){
 ##
 sub uploadRemoteFile(*$$$){
 
-	my $self = shift;
-	my $URL = shift;
-	my $path = shift;
-	my $filename = shift;
-
-	my $req = new HTTP::Request POST  => API_URL . '/drive/root/children';
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'bearer '.$self->{_token});
-#	$req->content_length(0);
-	$req->header('Prefer' => 'respond-async');
-	$req->header('Content-Type' => 'application/json');
-	$req->content('{
-  "@content.sourceUrl": "'.$URL.'",
-  "name": "'.$filename.'",
-  "file":  {}
-}');
-	my $res = $self->{_ua}->request($req);
-
-	my $uploadURL;
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-	if($res->is_success or $res->code == 308){
-
-  		my $block = $res->as_string;
-
-  		my ($statusURL) = $block =~ m%Location\:\s?([^\n]+)%;
-		return $statusURL;
-	}else{
-  		print STDERR "error";
-#  		print STDOUT $req->headers_as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
+	return; #not implemented
 
 }
+
 sub createFolder(*$$){
 
 	my $self = shift;
@@ -827,189 +755,21 @@ sub addFile(*$$){
 
 sub deleteFile(*$$){
 
-	my $self = shift;
-  	my $folderID = shift;
-  	my $fileID = shift;
-
-	my $req = new HTTP::Request DELETE => 'https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents/file%3A'.$fileID;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
-	$req->header('If-Match' => '*');
-
-
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-
-
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-		    if ($line =~ m%\<gd\:resourceId\>%){
-		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-
-	      		return $resourceID;
-    		}
-
-  		}
-
-	}else{
-		#print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
+	return; #not implemented
 
 }
 
 sub editFile(*$$$$){
 
-  my $self = shift;
-  my $URL = shift;
-  my $fileSize = shift;
-  my $file = shift;
-  my $fileType = shift;
-my $content = '';
-
-#convert=false prevents plain/text from becoming docs
-my $req = new HTTP::Request PUT => $URL.'?new-revision=true';
-$req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-$req->header('GData-Version' => '3.0');
-#$req->header('X-Upload-Content-Type' => 'application/pdf');
-$req->header('If-Match' => '*');
-$req->content_type($fileType);
-$req->content_length(length $content);
-$req->header('X-Upload-Content-Type' => $fileType);
-$req->header('X-Upload-Content-Length' => $fileSize);
-$req->content('');
-my $res = $self->{_ua}->request($req);
-
-
-if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  print LOG $req->as_string;
-  print LOG $res->as_string;
-  close(LOG);
-}
-
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n" if (pDrive::Config->DEBUG);
-
-  my $block = $res->as_string;
-
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    $block =~ s%[^\n]*\n%%;
-
-    if ($line =~ m%^Location:%){
-      ($URL) = $line =~ m%^Location:\s+(\S+)%;
-      return $URL;
-    }
-
-  }
-
-}else{
-  #print STDOUT $req->as_string;
-  print STDOUT $res->as_string;
-  return 0;
-}
-
+	return; #not implemented
 
 }
 
 
 sub readDriveListings(***){
 
-my $self = shift;
-my $driveListings = shift;
-my $folders = shift;
-my %newDocuments;
+	return; #not implemented
 
-my $count=0;
-
-  $$driveListings =~ s%\</entry\>%\n\</entry\>%g;
-
-  while ($$driveListings =~ m%\<entry[^\>]+[^\n]+\n\</entry\>%){
-
-    my ($entry) = $$driveListings =~ m%\<entry[^\>]+([^\n]+)\n\</entry\>%;
-    $$driveListings =~ s%\<entry[^\>]+[^\n]+\n\</entry\>%\.%;
-
-
-    my ($title) = $entry =~ m%\<title\>([^\<]+)\</title\>%;
-    my ($updated) = $entry =~ m%\<updated\>([^\<]+)\</updated\>%;
-    my ($published) = $entry =~ m%\<published\>([^\<]+)\</published\>%;
-    my ($resourceType,$resourceID) = $entry =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-    my ($downloadURL) = $entry =~ m%\<content type\=\'[^\']+\' src\=\'([^\']+)\'/\>%;
-    my ($parentID,$folder) = $entry =~ m@\#parent\' type\=\'application/atom\+xml\' href\=\'[^\%]+\%3A([^\']+)\' title\=\'([^\']+)\'/\>@;
-    my ($editURL) = $entry =~ m%\<link\s+rel\=\'http\:\/\/schemas.google.com\/g\/2005\#resumable-edit-media\'\s+type\=\'application\/atom\+xml\'\s+href\=\'([^\']+)\'\/\>%;
-    my ($md5) = $entry =~ m%\<docs\:md5Checksum\>([^\<]+)\<\/docs\:md5Checksum\>%;
-
-    # is a folder
-    if ($resourceType eq 'folder'){
-
-      # save the title
-      $$folders{$resourceID}[FOLDER_TITLE] = $title;
-
-      # is not a root folder
-      if (defined $folder and $folder ne ''){
-
-        $$folders{$resourceID}[FOLDER_ROOT] = NOT_ROOT;
-        $$folders{$resourceID}[FOLDER_PARENT] = $parentID;
-
-        # add the resourceID to the parent directory
-        if ($#{${$folders}{$parentID}} >= FOLDER_SUBFOLDER){
-
-          $$folders{$parentID}[$#{${$folders}{$parentID}}+1] = $resourceID;
-
-        }else{
-
-          $$folders{$parentID}[FOLDER_SUBFOLDER] = $resourceID;
-
-        }
-
-      # is a root folder
-      }else{
-
-        $$folders{$resourceID}[FOLDER_ROOT] = IS_ROOT;
-
-      }
-      print STDOUT 'folder = '.(defined $title? $title:'').' '. (defined $resourceID? $resourceID:'').' *'.(defined $parentID? $parentID: '')."  \n";
-
-    }else{
-
-      $updated =~ s%\D+%%g;
-      ($updated) = $updated =~ m%^(\d{14})%;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
-#      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
-
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_edit'}] = $editURL;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'type'}] = $resourceType;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] = $parentID;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
-      $newDocuments{$resourceID}[pDrive::DBM->D->{'published'}] = $published;
-    }
-    $count++;
-
-  }
-
-
-print STDOUT "entries = $count\n";
-return %newDocuments;
 }
 
 
@@ -1018,37 +778,7 @@ return %newDocuments;
 ##
 sub readChangeListings(**){
 
-	my $self = shift;
-	my $driveListings = shift;
-	my %newDocuments;
-
-	my $count=0;
-
-
-  	$$driveListings =~ s%\n%%g;
-	#print $$driveListings;
-#  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
-#  	while ($$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"md5Checksum\"\:\s+\"[^\"]+\"\s+% ){
-while ($$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"% ){
-    	my ($fileName, $resourceID, $fileSize,$sha1) = $$driveListings =~ m%\{\s?\"\@content\.downloadUrl\"\:.*?\"name\"\:\s?\"([^\"]+)\".*?resid\=([^\"]+)\".*?\"size\"\:\s?([^\,]+)\,.*?\"sha1Hash\"\:\s?\"([^\"]+)\"%;
-		$$driveListings =~ s%\{\s?\"\@content\.downloadUrl\"\:.*?\"sha1Hash\"\:\s?\"[^\"]+\"%%;
-
-		#fix unicode
-		$fileName =~ s{ \\u([0-9A-F]{4}) }{ chr hex $1 }egix;
-		$fileName =~ s/\+//g; #remove +s in title for fisi
-		utf8::encode($fileName);
-
-
-  		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}] = $sha1;
-  		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;
-  		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
-  		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
-
-    	$count++;
-  	}
-
-	print STDOUT "entries = $count\n";
-	return \%newDocuments;
+	return; #not implemented
 }
 
 1;

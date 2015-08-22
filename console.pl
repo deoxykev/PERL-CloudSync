@@ -70,6 +70,8 @@ require './lib/googledriveapi2.pm';
 require './lib/onedriveapi1.pm';
 require './lib/cloudservice.pm';
 require './lib/googlephotosapi2.pm';
+require 'lib/hive.pm';
+require 'lib/hiveapi.pm';
 
 
 
@@ -217,6 +219,24 @@ while (my $input = <$userInput>){
     	my ($account,$login) = $input =~ m%^load gd\s(\d+)\s([^\s]+)%i;
 		#my ($dbase,$folders) = $dbm->readHash();
 		$services[$account] = pDrive::gDrive->new($login);
+		$currentService = $account;
+
+		$loggedInUser = $bindIP;
+		for (my $i=0;$i <= $#services;$i++){
+			if (defined $services[$i]){
+				$loggedInUser .= ', ' if $i > 1;
+				if ($currentService == $i){
+					$loggedInUser .= '*'.$i. '*. ' . $services[$i]->{_username};
+				}else{
+					$loggedInUser .= $i. '. ' . $services[$i]->{_username};
+				}
+
+			}
+		}
+  	}elsif($input =~ m%^load h\s\d+\s([^\s]+)%i){
+    	my ($account,$login) = $input =~ m%^load h\s(\d+)\s([^\s]+)%i;
+		#my ($dbase,$folders) = $dbm->readHash();
+		$services[$account] = pDrive::hive->new($login);
 		$currentService = $account;
 
 		$loggedInUser = $bindIP;

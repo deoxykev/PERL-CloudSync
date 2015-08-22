@@ -83,18 +83,15 @@ sub authenticate(*$){
   	my $self = shift;
   	my $password = shift;
 
-	my  $URL = 'https://www.google.com/accounts/ClientLogin';
+	my  $URL = 'https://api.hive.im/api/user/sign-in/';
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
-	$req->content('Email='.$self->{_username}.'&Passwd='.$password);
+	$req->content('email='.$self->{_username}.'&password='.$password.'&ip=MTkyLjE3MS40MC4xNg==');
 	my $res = $self->{_ua}->request($req);
 
 
-	my $SID;
-	my $LSID;
-
-
+	my $token;
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n";
 
@@ -104,18 +101,19 @@ sub authenticate(*$){
 
     		$block =~ s%[^\n]*\n%%;
 
-    		if ($line =~ m%^SID%){
-      			($SID) = $line =~ m%SID\=(.*)%;
+    		if ($line =~ m%\"token\"\:\"[^\"]+\"%){
+      			($token) = $line =~ m%\"token\"\:\"([^\"]+)\"%;
 		    }
 
   		}
- 		 print STDOUT "SID = $SID\n" if pDrive::Config->DEBUG;
-  		print STDOUT "LSID = $LSID\n" if pDrive::Config->DEBUG;
-  		print STDOUT "AUTH = $self->{_authwritely}\n" if pDrive::Config->DEBUG;
+  		print STDOUT "token = $token\n" if pDrive::Config->DEBUG;
 
 	}else{
 		#print STDOUT $res->as_string;
 		die ($res->as_string."error in loading page");}
+
+	return $token;
+
 }
 
 #

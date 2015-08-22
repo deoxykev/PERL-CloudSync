@@ -19,7 +19,7 @@ use constant FOLDER_SUBFOLDER => 3;
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 #my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 
-sub new(*) {
+sub new(*$) {
 
 	my $self = {_serviceapi => undef,
                _login_dbm => undef,
@@ -34,16 +34,22 @@ sub new(*) {
 	$self->{_db_fisi} = 'h.'.$self->{_username} . '.fisi.db';
 
   	# initialize web connections
-  	$self->{_serviceapi} = pDrive::hiveAPI->new($username);
+  	$self->{_serviceapi} = pDrive::hiveAPI->new($self->{_username});
 
-  	my $loginsDBM = pDrive::DBM->new('./od.'.$self->{_username}.'.db');
+  	my $loginsDBM = pDrive::DBM->new('./h.'.$self->{_username}.'.db');
   	$self->{_login_dbm} = $loginsDBM;
+  	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
 
-	my  $URL = 'https://login.live.com/oauth20_authorize.srf?client_id='.pDrive::Config->ODCLIENT_ID . '&scope=onedrive.readwrite+wl.offline_access&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf';
-	print STDOUT "visit $URL\n";
-	print STDOUT 'Input Code:';
-	$password = <>;
-	($token) = $self->{_serviceapi}->authenticate($password);
+	# no token defined
+	if ($token eq '' or  $refreshToken  eq ''){
+		print STDOUT 'Input Password:';
+		$password = <>;
+		$password =~ s%\n%%;
+		($token) = $self->{_serviceapi}->authenticate($password);
+		$self->{_login_dbm}->writeLogin($self->{_username},$token,$password);
+	}else{
+		$self->{_serviceapi}->setToken($token,$refreshToken);
+	}
 
 
 

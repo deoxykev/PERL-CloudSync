@@ -60,6 +60,24 @@ sub new(*$) {
 
 }
 
+sub getList(*$){
+
+	my $self = shift;
+	my $resourceID = shift;
+
+	my $driveListings = $self->{_serviceapi}->getList($resourceID);
+  	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+
+#  	foreach my $resourceID (keys $newDocuments){
+ #   	print STDOUT 'new document -> '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ', '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\n";
+#	}
+
+	#print STDOUT $$driveListings . "\n";
+	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
+	#$self->updateMD5Hash($newDocuments);
+	return $newDocuments;
+}
+
 sub getListAll(*){
 
 	my $self = shift;

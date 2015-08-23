@@ -185,40 +185,49 @@ sub refreshToken(*){
 
 sub getList(*$){
 
-  my $self = shift;
-  my $URL = shift;
+ 	my $self = shift;
+  	my $resourceID = shift;
 
-	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	my $URL;
+	if ($resourceID eq ''){
+		$URL = 'https://api.hive.im/api/hive/get/';
+	}else{
+		$URL = 'https://api.hive.im/api/hive/get-children/';
+
 	}
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
+		my $req;
+		if ($resourceID eq ''){
+			$req = new HTTP::Request GET => $URL;
+			$req->protocol('HTTP/1.1');
+		}else{
+			$req = new HTTP::Request POST => $URL;
+			$req->protocol('HTTP/1.1');
+			$req->header('Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8');
+			$req->content('parentId='.$resourceID);#.'&offset=0&limit=300&order=dateModified&sort=desc');
+		}
+		$req->header('Client-Version' => '0.1');
+		$req->header('Client-Type' => 'Browser');
+		$req->header('Authorization' => $self->{_token});
 
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+		my $res = $self->{_ua}->request($req);
+
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 
 
-	}else{
-		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
-		#print STDOUT $res->as_string;
-		#die($res->as_string."error in loading page");
-	}
+		}else{
+			print STDOUT $res->as_string;
+			$retryCount--;
+			sleep(10);
+			#print STDOUT $res->as_string;
+			#die($res->as_string."error in loading page");
+		}
 
-  	return \$res->as_string;
+  		return \$res->as_string;
 	}
 }
 
@@ -766,7 +775,42 @@ sub editFile(*$$$$){
 
 sub readDriveListings(***){
 
-	return; #not implemented
+	my $self = shift;
+	my $driveListings = shift;
+	my %newDocuments;
+
+	my $count=0;
+
+  	$$driveListings =~ s%\n%%g;
+
+	while ($$driveListings =~ m%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:true%){
+		my ($resourceID, $folderName) = $$driveListings =~ m%\"id\"\:\"([^\"]+)\".*?\"title\"\:\"([^\"]+)\"\,\"folder\"\:true%;
+		$$driveListings =~ s%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:true%%;
+		print "FISI = $folderName $resourceID\n";
+    	$count++;
+
+	}
+
+
+	while ($$driveListings =~ m%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:false.*?\"download\"\:\"[^\"]+\"\,.*?\"size\"\:\"\d+\"%){
+    	my ($resourceID,$fileName,$downloadURL,$fileSize) = $$driveListings =~ m%\"id\"\:\"([^\"]+)\".*?\"title\"\:\"([^\"]+)\"\,\"folder\"\:false.*?\"download\"\:\"([^\"]+)\"\,.*?\"size\"\:\"(\d+)\"%;
+		$$driveListings =~ s%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:false.*?\"download\"\:\"[^\"]+\"\,.*?\"size\"\:\"\d+\"%%;
+
+		#fix unicode
+		$fileName =~ s{ \\u([0-9A-F]{4}) }{ chr hex $1 }egix;
+		$fileName =~ s/\+//g; #remove +s in title for fisi
+		utf8::encode($fileName);
+
+
+  		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;
+  		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
+  		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
+		print "FISI = $fileName $resourceID $fileSize $newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]\n";
+    	$count++;
+  	}
+
+	print STDOUT "entries = $count\n";
+	return \%newDocuments;
 
 }
 

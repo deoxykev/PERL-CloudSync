@@ -122,7 +122,7 @@ sub getSubFolderID(*$$){
 	my $driveListings = $self->{_serviceapi}->getList($URL);
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
-  	foreach my $resourceID (keys $newDocuments){
+  	foreach my $resourceID (keys %{$newDocuments}){
     	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq $folderName){
     		return $resourceID;
     	}
@@ -509,7 +509,7 @@ sub updateMD5Hash(**){
 	my $createdCountFISI=0;
 	my $skippedCountFISI=0;
 	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
-	foreach my $resourceID (keys $newDocuments){
+	foreach my $resourceID (keys %{$newDocuments}){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '';
 		for (my $i=0; 1; $i++){
 			# if MD5 exists,
@@ -531,7 +531,7 @@ sub updateMD5Hash(**){
 	}
 	untie(%dbase);
 	tie( %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDWR|O_CREAT, 0666) or die "can't open fisi: $!";
-	foreach my $resourceID (keys $newDocuments){
+	foreach my $resourceID (keys %{$newDocuments}){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq '';
 		for (my $i=0; 1; $i++){
 			# if MD5 exists,

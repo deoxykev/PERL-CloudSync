@@ -92,7 +92,7 @@ sub findValue(**$){
 	my $dbase = shift;
 	my $findValue = shift;
 
-	foreach my $key (keys $dbase){
+	foreach my $key (keys %{$dbase}){
 			if ($$dbase{$key} eq $findValue){
 				print STDOUT 'value = '. $findValue. ', key = '.$key ."\n";
 				return $key;
@@ -111,7 +111,7 @@ sub findKey(**$){
 	my $dbase = shift;
 	my $findKey = shift;
 
-	foreach my $key (keys $dbase){
+	foreach my $key (keys %{$dbase}){
 			if ($key eq $findKey  or $key eq $findKey.'_0' or $key eq $findKey.'_'){
 				print STDOUT 'found key = '.$key . "\n";
 				print STDOUT $$dbase{$key} . "\n";
@@ -378,12 +378,12 @@ sub dumpHash(*$){
 
   if ($filter ne ''){
 
-    foreach my $key (keys $dbase) {
+    foreach my $key (keys %{$dbase}) {
       next unless ($key =~ m%$filter%);
       print "$key: $$dbase{$key}\n";
     }
   }else{
-    foreach my $key (keys $dbase) {
+    foreach my $key (keys %{$dbase}) {
       print "$key: $$dbase{$key}\n";
     }
   }
@@ -405,7 +405,7 @@ sub compareHash(***){
 	my $in1DuplicateCount=0;
 	my $in2Count=0;
 	my $in2DuplicateCount=0;
-  	foreach my $key (keys $dbase1) {
+  	foreach my $key (keys %{$dbase1}) {
   		if ($key =~ m%_0%){
   			if (defined($$dbase2{$key}) and $$dbase2{$key} ne '' and $$dbase1{$key} ne ''){
   				$matchCount++;
@@ -416,7 +416,7 @@ sub compareHash(***){
   			$in1DuplicateCount++;
   		}
   }
-  foreach my $key (keys $dbase2) {
+  foreach my $key (keys %{$dbase2}) {
   		if ($key =~ m%_0%){
   			if (defined($$dbase1{$key}) and $$dbase2{$key} ne '' and $$dbase1{$key} ne ''){
   			}else{
@@ -438,7 +438,7 @@ sub countHash(*$){
  	my $dbase = shift;
 
 	my $count = 0;
-  	foreach my $key (keys $dbase) {
+  	foreach my $key (keys %{$dbase}) {
 		$count++;
     }
 	return $count;

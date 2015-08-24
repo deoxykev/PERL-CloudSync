@@ -577,7 +577,7 @@ sub updateSHA1Hash(**){
 	my $skippedCountFISI=0;
 	my $count=0;
 	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open sha1: $!";
-	foreach my $resourceID (keys $newDocuments){
+	foreach my $resourceID (keys %{$newDocuments}){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}] eq '';
 		for (my $i=0; 1; $i++){
 			# if MD5 exists,
@@ -599,7 +599,7 @@ sub updateSHA1Hash(**){
 	}
 	untie(%dbase);
 	tie(%dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDWR|O_CREAT, 0666) or die "can't open fisi: $!";
-	foreach my $resourceID (keys $newDocuments){
+	foreach my $resourceID (keys %{$newDocuments}){
 		$count++;
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq '';
 		for (my $i=0; 1; $i++){

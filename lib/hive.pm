@@ -419,6 +419,20 @@ sub containsFolder($$){
 }
 
 
+sub getSubFolderIDList(*$$){
+
+	my $self = shift;
+	my $folderID= shift;
+	my $URL = shift;
+
+	my $driveListings = $self->{_serviceapi}->getList($folderID);
+  	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings, $folderID);
+
+	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
+	#$self->updateMD5Hash($newDocuments);
+	return $newDocuments;
+
+}
 
 
 

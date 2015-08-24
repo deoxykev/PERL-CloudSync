@@ -183,10 +183,54 @@ sub refreshToken(*){
 }
 
 
+#
+# get the folderID for a subfolder
+##
+sub getSubFolderID(*$$){
+
+	my $self = shift;
+	my $parentID = shift;
+	my $folderName = shift;
+
+	my $URL = 'https://api.hive.im/api/hive/get-children/';
+
+	my $retryCount = 2;
+	while ($retryCount){
+	my $req = new HTTP::Request POST => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8');
+	$req->content('parentId='.$parentID.'&limit=300&order=dateModified&sort=desc');
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		return \$res->as_string;
+
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+	}else{
+		print STDOUT $res->as_string;
+		$retryCount--;
+		sleep(10);
+		#die($res->as_string."error in loading page");
+	}
+	}
+
+}
+
 sub getList(*$){
 
  	my $self = shift;
   	my $resourceID = shift;
+
 
 	my $URL;
 	if ($resourceID eq ''){
@@ -207,7 +251,7 @@ sub getList(*$){
 			$req = new HTTP::Request POST => $URL;
 			$req->protocol('HTTP/1.1');
 			$req->header('Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8');
-			$req->content('parentId='.$resourceID);#.'&offset=0&limit=300&order=dateModified&sort=desc');
+			$req->content('parentId='.$resourceID.'&limit=300&order=dateModified&sort=desc');
 		}
 		$req->header('Client-Version' => '0.1');
 		$req->header('Client-Type' => 'Browser');
@@ -777,35 +821,47 @@ sub readDriveListings(***){
 
 	my $self = shift;
 	my $driveListings = shift;
+	my $folderID = shift;
 	my %newDocuments;
 
 	my $count=0;
 
   	$$driveListings =~ s%\n%%g;
 
-	while ($$driveListings =~ m%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:true%){
-		my ($resourceID, $folderName) = $$driveListings =~ m%\"id\"\:\"([^\"]+)\".*?\"title\"\:\"([^\"]+)\"\,\"folder\"\:true%;
-		$$driveListings =~ s%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:true%%;
-		print "FISI = $folderName $resourceID\n";
-    	$count++;
 
-	}
+#	while ($$driveListings =~ m%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:false.*?\"download\"\:\"[^\"]+\"\,.*?\"size\"\:\"\d+\"%){
+#	while ($$driveListings =~ m%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:.*?\"dateModified\"\:\"[^\"]+\"%){
+	while ($$driveListings =~ m%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:.*?\d\"\}%){
 
 
-	while ($$driveListings =~ m%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:false.*?\"download\"\:\"[^\"]+\"\,.*?\"size\"\:\"\d+\"%){
-    	my ($resourceID,$fileName,$downloadURL,$fileSize) = $$driveListings =~ m%\"id\"\:\"([^\"]+)\".*?\"title\"\:\"([^\"]+)\"\,\"folder\"\:false.*?\"download\"\:\"([^\"]+)\"\,.*?\"size\"\:\"(\d+)\"%;
-		$$driveListings =~ s%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:false.*?\"download\"\:\"[^\"]+\"\,.*?\"size\"\:\"\d+\"%%;
+		my ($listing) = $$driveListings =~ m%(\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:.*?\d\"\})%;
+		$$driveListings =~ s%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:.*?\d\"\}%%;
 
-		#fix unicode
-		$fileName =~ s{ \\u([0-9A-F]{4}) }{ chr hex $1 }egix;
-		$fileName =~ s/\+//g; #remove +s in title for fisi
-		utf8::encode($fileName);
+		my ($resourceID,$fileName,$downloadURL,$fileSize, $folderName);
+    	($resourceID,$fileName,$downloadURL,$fileSize) = $listing =~ m%\"id\"\:\"([^\"]+)\".*?\"title\"\:\"([^\"]+)\"\,\"folder\"\:false.*?\"download\"\:\"([^\"]+)\"\,.*?\"size\"\:\"(\d+)\"%;
 
+		if ($resourceID <= 0){
+			($resourceID, $folderName) = $listing =~ m%\"id\"\:\"([^\"]+)\".*?\"title\"\:\"([^\"]+)\"\,\"folder\"\:true%;
+			print "FISI = $folderName $resourceID\n";
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $folderName;
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = '';
+		}else{
+			#fix unicode
+			$fileName =~ s{ \\u([0-9A-F]{4}) }{ chr hex $1 }egix;
+			$fileName =~ s/\+//g; #remove +s in title for fisi
+			utf8::encode($fileName);
 
-  		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;
-  		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
-  		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
-		print "FISI = $fileName $resourceID $fileSize $newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]\n";
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] = $folderID;
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}] = '';
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
+#			print "FISI = $fileName $resourceID $fileSize $newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]\n";
+			print "$fileName $downloadURL\n";
+
+		}
+
     	$count++;
   	}
 

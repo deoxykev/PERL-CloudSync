@@ -398,8 +398,7 @@ while (my $input = <$userInput>){
 	# load MD5 with account data of first page of results
   	}elsif($input =~ m%^get drive list%i){
     	my $listURL;
-    	#my ($driveListings) = $services[$currentService]->getList();
-    	my ($driveListings) = $services[$currentService]->getList(1169588);
+    	my ($driveListings) = $services[$currentService]->getList();
 
 	# return the id to the root folder
   	}elsif($input =~ m%^get root id%i){
@@ -782,24 +781,35 @@ sub syncFolder($){
 		my $newDocuments =  $services[$drives[0]]->getSubFolderIDList($folderID, $nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
 
-  		foreach my $resourceID (keys $newDocuments){
+  		foreach my $resourceID (keys %{$newDocuments}){
 			my $doDownload=0;
   			#folder
-  			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
+  			#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
+  			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
 				push(@subfolders, $resourceID);
   			 }else{
 
 				for(my $j=1; $j <= $#drives; $j++){
+
+				#Google Drive -> Google Drive
+	  			###
 	  			#Google Drive (MD5 comparision) already exists; skip
   				if 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive'  and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+
+				#Google -> Google Photos
+	  			###
 	  			#Google Drive (MD5 comparision) already exists OR > 1GB; skip
 				}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive::Photos'  and  (($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 1073741824)  or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 
 #				#temorary -- bypass OneDrive
 #				}elsif 	(Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::oneDrive' ){
 
+				#Google -> OneDrive
+	  			###
 	  			#OneDrive > 10GB; skip
 				}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::oneDrive'  and  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 10737418240){
+
+				#*anything* -> *anything*
 	  			#	already exists; skip
   				}elsif 	((defined($dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}) and  $dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'} ne '') or (defined($dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne '') ){
   				}else{
@@ -811,28 +821,40 @@ sub syncFolder($){
 				my $path;
   				if ($doDownload){
   					$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
-					print STDOUT "DOWNLOAD $path " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ' ' . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. "\n";
+					print STDOUT "DOWNLOAD $path " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ' ' . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]. "\n";
 					unlink pDrive::Config->LOCAL_PATH.'/'.$$;
 		    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
 			    	#	print STDERR "parent = ". $$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
 
 					for(my $j=1; $j <= $#drives; $j++){
+						#Google Drive -> Google Drive
+	  					###
 			  			#	Google Drive (MD5 comparision) already exists; skip
   						if 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive'  and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 							print STDOUT  "skip  to service $j\n";
+
+						#Google Drive -> Google Photos
+	  					###
 			  			#	Google Drive (MD5 comparision) already exists OR > 1GB; skip
   						}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive::Photos'  and  (($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 1073741824)  or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 							print STDOUT  "skip  to service $j\n";
+
 			  			#		already exists; skip
 #  						}elsif 	(defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
+
+						#Google Drive -> One Drive
+						###
   						#OneDrive > 10GB; skip
 						}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::oneDrive'  and  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 10737418240){
 								print STDOUT  "skip  to service $j\n";
+
+						#*anything* -> *anything*
 						}elsif 	((defined($dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}) and  $dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'} ne '') or (defined($dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne '') ){
 							print STDOUT  "skip  to service $j\n";
+
   						}else{
 							my $mypath = $services[$drives[$j]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
-							print STDOUT  "upload to service $j ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}."\n";
+							print STDOUT  "upload to service $j ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 
 							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
   						}

@@ -501,7 +501,6 @@ sub downloadFile(*$$$$$$*){
               $appendex .= '.local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}];
               $finalPath .= '.local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}];
             }
-#wise
             $returnStatus = $self->{_serviceapi}->downloadFile($link.'&exportFormat='.$types->{$resourceType}[$i],$path,$types->{$resourceType}[$i],$appendex,$updated);
           }
         }else{
@@ -514,7 +513,6 @@ sub downloadFile(*$$$$$$*){
             $appendex .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
             $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
           }
-#wise
           $returnStatus = $self->{_serviceapi}->downloadFile($link.'&exportFormat='.$types->{$resourceType},$path,$types->{$resourceType},$appendex,$updated);
         }
 
@@ -530,7 +528,6 @@ sub downloadFile(*$$$$$$*){
             $appendex .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
             $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
           }
-#wise
           $returnStatus = $self->{_serviceapi}->downloadFile($link,$path,$types->{$resourceType},$appendex,$updated);
         }
       }

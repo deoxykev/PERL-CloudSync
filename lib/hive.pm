@@ -418,6 +418,15 @@ sub containsFolder($$){
 
 }
 
+sub getFolderInfo(*$){
+
+	my $self = shift;
+
+	#not implemented
+
+	return 'inbound';
+
+}
 
 sub getSubFolderIDList(*$$){
 
@@ -441,101 +450,12 @@ sub downloadFile(*$$$$$$*){
       my ($self,$path,$link,$updated,$resourceType,$resourceID,$dbase,$updatedList) = @_;
       print STDOUT "downloading $path...\n";
       my $returnStatus;
-      my $finalPath = $path;
+      my $finalPath = pDrive::Config->LOCAL_PATH."/$path";
 
       pDrive::FileIO::traverseMKDIR(pDrive::Config->LOCAL_PATH."/$path");
-
-      # a simple non-google-doc file
-      if ($types->{$resourceType} eq ''){
-        my $appendex='';
-        print STDOUT 'download using writely - '. $resourceType . $types->{$resourceType} if (pDrive::Config->DEBUG);
-        if (scalar (keys %{${$dbase}{$path}}) > 1){
-          $appendex .= '.'.$resourceID;
-          $finalPath .= '.'.$resourceID;
-        }
-        if (pDrive::Config->REVISIONS and defined $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
-          $appendex .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-          $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-        }
-
-        $returnStatus = $self->{_serviceapi}->downloadFile($link,$path,'',$appendex,$updated);
-      # a google-doc file
-      }else{
-        print STDOUT 'download using '.$types->{$resourceType}.' wise - '. $resourceType  if (pDrive::Config->DEBUG);
-
-
-        # are there multiple filetypes noted for the export?
-        if (ref($types->{$resourceType}) eq 'ARRAY'){
-          for (my $i=0; $i <= $#{$types->{$resourceType}}; $i++){
-            my $appendex='';
-            if (scalar (keys %{${$dbase}{$path}}) > 1){
-              $appendex .= '.'.$resourceID;
-              $finalPath .= '.'.$resourceID;
-            }
-            if (pDrive::Config->REVISIONS and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
-              $appendex .= '.local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}];
-              $finalPath .= '.local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}];
-            }
-#wise
-            $returnStatus = $self->{_serviceapi}->downloadFile($link.'&exportFormat='.$types->{$resourceType}[$i],$path,$types->{$resourceType}[$i],$appendex,$updated);
-          }
-        }else{
-          my $appendex='';
-          if (scalar (keys %{${$dbase}{$path}}) > 1){
-            $appendex .= '.'.$resourceID;
-            $finalPath .= '.'.$resourceID;
-          }
-          if (pDrive::Config->REVISIONS and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
-            $appendex .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-            $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-          }
-#wise
-          $returnStatus = $self->{_serviceapi}->downloadFile($link.'&exportFormat='.$types->{$resourceType},$path,$types->{$resourceType},$appendex,$updated);
-        }
-
-        #ignore export if fails; just try to download
-        # noticed some spreadsheets in XLSX will fail with exportFormat, but download fine (and in XSLX otherwise)
-        if ($returnStatus == 0){
-          my $appendex='';
-          if (scalar (keys %{${$dbase}{$path}}) > 1){
-            $appendex .= '.'.$resourceID;
-            $finalPath .= '.'.$resourceID;
-          }
-          if (pDrive::Config->REVISIONS and $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}] ne ''){
-            $appendex .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-            $finalPath .= '.(local_revision_'.$$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}].')';
-          }
-#wise
-          $returnStatus = $self->{_serviceapi}->downloadFile($link,$path,$types->{$resourceType},$appendex,$updated);
-        }
-      }
-
-      # successful?  update the db
-      if ($returnStatus == 1){
-
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_updated'}] = $updated;
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
-        $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_sha1'}] = pDrive::FileIO::getsha1(pDrive::Config->LOCAL_PATH.'/'.$finalPath);
-
-        if ($$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_sha1'}] ne $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_sha1'}]){
-          print STDOUT "sha1 check failed!!!\n";
-          pDrive::masterLog("$finalPath $resourceID - sha1 check failed -- $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_sha1'}] - $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'server_sha1'}]");
-        }
-
-        if (pDrive::Config->REVISIONS){
-          $$dbase{$path}{$resourceID}[pDrive::DBM->D->{'local_revision'}]++;
-        }
-#        $updatedList[$#updatedList++] = $path;
-        if ($#{$updatedList} >= 0){
-          $$updatedList[$#{$updatedList}++] = $path;
-        }else{
-          $$updatedList[0] = $path;
-        }
-
-        $self->{_dbm}->writeValueContainerHash($path,$resourceID,$dbase);
-      }elsif($returnStatus == 0){
-        #TBD
-      }
+      print STDERR "URL = $link $path\n";
+      `aria2c -x 4 -s 4 --user-agent="Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1" "$link" -o $finalPath`;
+     return;
 }
 
 

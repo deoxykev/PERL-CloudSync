@@ -837,9 +837,9 @@ sub readDriveListings(***){
 		my ($listing) = $$driveListings =~ m%(\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:.*?\d\"\})%;
 		$$driveListings =~ s%\"id\"\:\"[^\"]+\".*?\"title\"\:\"[^\"]+\"\,\"folder\"\:.*?\d\"\}%%;
 
-		my ($resourceID,$fileName,$downloadURL,$fileSize, $folderName);
-    	($resourceID,$fileName,$downloadURL,$fileSize) = $listing =~ m%\"id\"\:\"([^\"]+)\".*?\"title\"\:\"([^\"]+)\"\,\"folder\"\:false.*?\"download\"\:\"([^\"]+)\"\,.*?\"size\"\:\"(\d+)\"%;
-
+		my ($resourceID,$fileName,$downloadURL,$extension,$fileSize, $folderName);
+    	($resourceID,$fileName,$downloadURL,$extension,$fileSize) = $listing =~ m%\"id\"\:\"([^\"]+)\".*?\"title\"\:\"([^\"]+)\"\,\"folder\"\:false.*?\"download\"\:\"([^\"]+)\"\,.*?\"extension\"\:\"([^\"]+)\"\,\"size\"\:\"(\d+)\"%;
+		$fileName .= '.'.$extension;
 		if ($resourceID <= 0){
 			($resourceID, $folderName) = $listing =~ m%\"id\"\:\"([^\"]+)\".*?\"title\"\:\"([^\"]+)\"\,\"folder\"\:true%;
 			print "FISI = $folderName $resourceID\n";
@@ -854,11 +854,12 @@ sub readDriveListings(***){
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] = $folderID;
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
+  			$downloadURL =~ s%\\%%g;
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}] = '';
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
 #			print "FISI = $fileName $resourceID $fileSize $newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]\n";
-			print "$fileName $downloadURL\n";
+			print "$fileName $fileSize $downloadURL\n";
 
 		}
 

@@ -450,7 +450,7 @@ sub downloadFile(*$$$$$$*){
       my ($self,$path,$link,$updated,$resourceType,$resourceID,$dbase,$updatedList) = @_;
       print STDOUT "downloading $path...\n";
       my $returnStatus;
-      my $finalPath = pDrive::Config->LOCAL_PATH."/$path";
+      my $finalPath = '/'.pDrive::Config->LOCAL_PATH."/$path";
 
       pDrive::FileIO::traverseMKDIR(pDrive::Config->LOCAL_PATH."/$path");
       print STDERR "URL = $link $path\n";

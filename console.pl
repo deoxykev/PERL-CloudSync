@@ -441,6 +441,18 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 		}
     	syncFolder('',$folderID,@drives);
+  	}elsif($input =~ m%^sync download folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^sync download folderid\s+(\S+)%i;
+		$input =~ s%^sync download folderid\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+		}
+    	syncFolder('DOWNLOAD',$folderID,@drives);
+
   	}elsif($input =~ m%^sync folderid\s+\S+\s+\S+%i){
     	my ($folderID,$service1,$service2) = $input =~ m%^sync folderid\s+(\S+)\s+(\S+)\s+(\S+)%i;
 
@@ -819,7 +831,9 @@ sub syncFolder($){
 				}
 
 				my $path;
-  				if ($doDownload){
+				if ($doDownload and $folder eq 'DOWNLOAD'){
+					print STDOUT $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  . ' - ' . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}]  . "\n";
+				}elsif ($doDownload){
   					$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
 					print STDOUT "DOWNLOAD $path " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ' ' . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]. "\n";
 					unlink pDrive::Config->LOCAL_PATH.'/'.$$;

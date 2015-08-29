@@ -452,7 +452,6 @@ sub downloadFile(*$$$$$$*){
       my $returnStatus;
       my $finalPath = '/'.pDrive::Config->LOCAL_PATH."/";
       pDrive::FileIO::traverseMKDIR(pDrive::Config->LOCAL_PATH."/$path");
-      print STDERR "URL = $link $finalPath\n";
       `cd $finalPath; aria2c -x 4 -s 4 --user-agent="Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1" "$link" -o "$path"`;
 #       `wget --user-agent="Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1" "$link" -O "$finalPath"`;
 

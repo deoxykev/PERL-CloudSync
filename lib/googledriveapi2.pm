@@ -922,7 +922,7 @@ sub readDriveListings(**){
 		my ($fileSize) = $entry =~ m%\"fileSize\"\:\s?\"([^\"]+)\"%;
 
 	    # 	is a folder
-	    if ($resourceType eq 'folder'){
+	    if ($resourceType eq 'folder' or $resourceType eq 'application/vnd.google-apps.folder'){
 
 
 		      # is a root folder
@@ -932,6 +932,7 @@ sub readDriveListings(**){
 
  #     		}
 			print STDOUT 'folder = '.(defined $title? $title:'').' '. (defined $resourceID? $resourceID:'').' *'.(defined $parentID? $parentID: '')."  \n";
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = '';
 
     	}else{
 

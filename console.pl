@@ -233,6 +233,24 @@ while (my $input = <$userInput>){
 
 			}
 		}
+
+  	}elsif($input =~ m%^load acd\s\d+\s([^\s]+)%i){
+    	my ($account,$login) = $input =~ m%^load acd\s(\d+)\s([^\s]+)%i;
+		$services[$account] = pDrive::amazon->new($login);
+		$currentService = $account;
+
+		$loggedInUser = $bindIP;
+		for (my $i=0;$i <= $#services;$i++){
+			if (defined $services[$i]){
+				$loggedInUser .= ', ' if $i > 1;
+				if ($currentService == $i){
+					$loggedInUser .= '*'.$i. '*. ' . $services[$i]->{_username};
+				}else{
+					$loggedInUser .= $i. '. ' . $services[$i]->{_username};
+				}
+
+			}
+		}
   	}elsif($input =~ m%^load h\s\d+\s([^\s]+)%i){
     	my ($account,$login) = $input =~ m%^load h\s(\d+)\s([^\s]+)%i;
 		#my ($dbase,$folders) = $dbm->readHash();

@@ -124,6 +124,7 @@ sub getSubFolderID(*$$){
 
   	foreach my $resourceID (keys %{$newDocuments}){
     	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq $folderName){
+    		print STDERR "returning $resourceID\n ";
     		return $resourceID;
     	}
 	}

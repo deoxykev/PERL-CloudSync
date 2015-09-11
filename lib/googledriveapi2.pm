@@ -933,6 +933,7 @@ sub readDriveListings(**){
  #     		}
 			print STDOUT 'folder = '.(defined $title? $title:'').' '. (defined $resourceID? $resourceID:'').' *'.(defined $parentID? $parentID: '')."  \n";
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = '';
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
 
     	}else{
 

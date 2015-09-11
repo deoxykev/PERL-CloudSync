@@ -26,11 +26,29 @@ what works:
 - recurisively uploading all files in a folder supplied by user (in list or adhoc)
 - constructing a memory hash of files using md5 and fisi against file id (for purposes of syncing)
 - multiple accounts
-
-being worked on:
 - downloading all files
 - downloading all owner files
+
+being worked on:
 - track local files vs server files (dropbox sync ability)
+
+Google Photos -
+--------------------------
+what works:
+- OAUTH2 auhentication
+- upload of pictures and video files (<1GB in size)
+- recurisively uploading all files in a folder supplied by user (in list or adhoc)
+- constructing a memory hash of files using md5 and fisi against file id (for purposes of syncing)
+- multiple accounts
+
+Hive.IM -
+----------------
+what works:
+- email auhentication
+- recurisively downloading of files files for a specified folder
+- constructing a memory hash of files using fisi against file id (for purposes of syncing)
+- multiple accounts
+
 
 One Drive API 1:
 -------------------------
@@ -39,7 +57,7 @@ what works:
 - upload files
 - create folders
 - recurisively uploading all files in a folder supplied by user (in list or adhoc)
-- constructing a memory hash of files using md5 and fisi against file id (for purposes of syncing)
+- constructing a memory hash of files using sha5 and fisi against file id (for purposes of syncing)
 - multiple accounts
 
 being worked on:

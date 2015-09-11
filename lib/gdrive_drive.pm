@@ -568,7 +568,8 @@ sub createFolderByPath(*$){
 	my $folderID;
 	#$path =~ s%^\/%%;
 
-
+	#remove double // occurrences (make single /)
+	$path =~ s%\/\/%\/%g;
 
 	my $serverPath = '';
 	while(my ($folder) = $path =~ m%^\/?([^\/]+)%){

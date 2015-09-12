@@ -718,7 +718,6 @@ sub createFolder(*$$){
   	my $parentFolder = shift;
 
 
-#  "parents": [{"id":"0ADK06pfg"}]
   	my $content = '{
   "title": "'.$folder. '",
   "mimeType": "application/vnd.google-apps.folder"';

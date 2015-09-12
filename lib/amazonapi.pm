@@ -16,7 +16,7 @@ use constant FOLDER_ROOT => 1;
 use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
-use constant API_URL => 'https://www.googleapis.com/drive/v2/';
+use constant API_URL => 'https://drive.amazonaws.com/drive/v1/account/';
 use constant API_VER => 2;
 
 
@@ -29,6 +29,7 @@ sub new() {
               _clientID => undef,
               _clientSecret => undef,
               _refreshToken  => undef,
+              _contentURL => undef,
               _token => undef};
 
   	my $class = shift;
@@ -146,16 +147,14 @@ sub getToken(*$){
 sub refreshToken(*){
 	my $self = shift;
 
-#	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
-
-	my  $URL = 'http://dmdsoftware.net/api/gdrive.php';
+	my  $URL = 'https://api.amazon.com/auth/o2/token';
 
 	my $retryCount = 2;
 	while ($retryCount){
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
-	$req->content('client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
+	$req->content('grant_type=refresh_token&refresh_token='.$self->{_refreshToken}.'&client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret});
 	my $res = $self->{_ua}->request($req);
 
 
@@ -198,8 +197,7 @@ sub refreshToken(*){
 sub testAccess(*){
 
   	my $self = shift;
-
-	my $URL = API_URL . 'about';
+	my $URL = API_URL . 'endpoint';
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -214,6 +212,8 @@ sub testAccess(*){
 
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n";
+  		my ($contentURL) = $res->as_string =~ m%\"contentUrl\"\:\s?\"([^\"]+)\"%;
+  		$self->{_contentUrl} = $contentURL;
   		return 1;
 
 	}else{

@@ -72,7 +72,8 @@ require './lib/cloudservice.pm';
 require './lib/googlephotosapi2.pm';
 require 'lib/hive.pm';
 require 'lib/hiveapi.pm';
-
+require 'lib/amazon_clouddrive.pm';
+require 'lib/amazonapi.pm';
 
 
 my $filetype = {

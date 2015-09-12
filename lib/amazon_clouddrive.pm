@@ -54,6 +54,7 @@ sub new(*$) {
 		print STDOUT "visit $URL\n";
 		print STDOUT 'Input Code:';
 		$code = <>;
+		$code =~ s%\n%%;
 		print STDOUT "code = $code\n";
  	  	($token,$refreshToken) = $self->{_serviceapi}->getToken($code);
 	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);

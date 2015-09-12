@@ -782,52 +782,7 @@ sub addFile(*$$){
   	my $URL = shift;
   	my $file = shift;
 
-
-  	my $content = '<?xml version="1.0" encoding="UTF-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-  <id>https://docs.google.com/feeds/default/private/full/file:'.$file.'</id>
-</entry>'."\n\n";
-
-	my $req = new HTTP::Request POST => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
-	$req->content_length(length $content);
-	$req->content_type('application/atom+xml');
-	$req->content($content);
-
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-		    if ($line =~ m%\<gd\:resourceId\>%){
-		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-
-	      		return $resourceID;
-    		}
-
-  		}
-
-	}else{
-		#print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
+	return; #not implemented
 
 }
 
@@ -841,46 +796,7 @@ sub deleteFile(*$$){
 	my $self = shift;
   	my $folderID = shift;
   	my $fileID = shift;
-
-	my $req = new HTTP::Request DELETE => 'https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents/file%3A'.$fileID;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
-	$req->header('If-Match' => '*');
-
-
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-
-
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-		    if ($line =~ m%\<gd\:resourceId\>%){
-		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-
-	      		return $resourceID;
-    		}
-
-  		}
-
-	}else{
-		#print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
+	return; #not implemented
 
 }
 

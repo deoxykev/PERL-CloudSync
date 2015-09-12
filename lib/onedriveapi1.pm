@@ -345,87 +345,7 @@ sub downloadFile(*$$$$$$){
   my $appendex = shift;
   my $timestamp = shift;
 
-
-$path .= '.'.$resourceID if ($resourceID ne '');
-$path .= $appendex if ($appendex ne '');
-
-my $req = new HTTP::Request GET => $URL;
-$req->protocol('HTTP/1.1');
-if ($URL =~ m%\&exportFormat%){
-  $req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-}else{
-  $req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-}
-$req->header('GData-Version' => '3.0');
-  #$self->{_cookiejar}->add_cookie_header($req);
-#my $res = $self->{_ua}->request($req);
-my $res;
-  open (FILE, "> ".pDrive::Config->LOCAL_PATH."/$path") or die ("Cannot save image file".pDrive::Config->LOCAL_PATH."/$path: $!\n");
-  binmode(FILE);
-  if ($URL =~ m%\&exportFormat%){
-    $res = $self->{_ua}->get($URL,':content_cb' => \&downloadChunk,':read_size_hint' => 8192,'Authorization' => 'GoogleLogin auth='.$self->{_authwise},'GData-Version' => '3.0');
-  }else{
-    $res = $self->{_ua}->get($URL,':content_cb' => \&downloadChunk,':read_size_hint' => 8192,'Authorization' => 'GoogleLogin auth='.$self->{_authwritely},'GData-Version' => '3.0');
-  }
-  close(FILE);
-  print STDOUT "saved\n";
-
-# reduce memory consumption from slurping the entire download file in memory
-#downloadChunk adapted from: http://www.perlmonks.org/?node_id=953833
-# all rights reserved from original author
-sub downloadChunk {
-  my ($data) = @_;
-
-  # write the $data to a filehandle or whatever should happen
-  # with it here.
-  print FILE $data;
-}
-###
-
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n" if (pDrive::Config->DEBUG);
-
-#removed (slups entire file into memory)
-#  open (FILE, "> ".pDrive::Config->LOCAL_PATH."/$path") or die ("Cannot save image file".pDrive::Config->LOCAL_PATH."/$path: $!\n");
-#  binmode(FILE);
-#  print FILE $res->content;
-#  close(FILE);
-#  print STDOUT "saved\n";
-
-  # set timestamp on file as server last updated timestamp
-  utime $timestamp, $timestamp, pDrive::Config->LOCAL_PATH.'/'.$path;
-
-
-#if (pDrive::Config->DEBUG){
-#  open (LOG, '>'.pDrive::Config->DEBUG_LOG);
-#  print LOG $req->as_string;
-#  print LOG $res->as_string;
-#  close(LOG);
-#}
-
-  return 1;
-}else{
-
-  if (0){
-  my $block = $res->as_string;
-
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    $block =~ s%[^\n]*\n%%;
-
-    if ($line =~ m%^Location:%){
-      ($URL) = $line =~ m%^Location:\s+(\S+)%;
-      print STDERR "following location $URL\n";
-      return $self->downloadFile($URL,$path,'','',$timestamp);
-    }
-
-  }
-}
-
- # print STDOUT $req->as_string;
-  print STDOUT $res->as_string;
-  return 0;
-}
+	return; #not implemented
 
 
 }
@@ -735,53 +655,7 @@ sub addFile(*$$){
 	my $self = shift;
   	my $URL = shift;
   	my $file = shift;
-
-
-  	my $content = '<?xml version="1.0" encoding="UTF-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-  <id>https://docs.google.com/feeds/default/private/full/file:'.$file.'</id>
-</entry>'."\n\n";
-
-	my $req = new HTTP::Request POST => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
-	$req->content_length(length $content);
-	$req->content_type('application/atom+xml');
-	$req->content($content);
-
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-		    if ($line =~ m%\<gd\:resourceId\>%){
-		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-
-	      		return $resourceID;
-    		}
-
-  		}
-
-	}else{
-		#print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
+	return; #not implemented
 
 }
 
@@ -791,102 +665,20 @@ sub deleteFile(*$$){
 	my $self = shift;
   	my $folderID = shift;
   	my $fileID = shift;
+	return; #not implemented
 
-	my $req = new HTTP::Request DELETE => 'https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents/file%3A'.$fileID;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
-	$req->header('If-Match' => '*');
-
-
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-
-
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-		    if ($line =~ m%\<gd\:resourceId\>%){
-		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-
-	      		return $resourceID;
-    		}
-
-  		}
-
-	}else{
-		#print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
 
 }
 
 sub editFile(*$$$$){
 
-  my $self = shift;
-  my $URL = shift;
-  my $fileSize = shift;
-  my $file = shift;
-  my $fileType = shift;
-my $content = '';
-
-#convert=false prevents plain/text from becoming docs
-my $req = new HTTP::Request PUT => $URL.'?new-revision=true';
-$req->protocol('HTTP/1.1');
-$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-$req->header('GData-Version' => '3.0');
-#$req->header('X-Upload-Content-Type' => 'application/pdf');
-$req->header('If-Match' => '*');
-$req->content_type($fileType);
-$req->content_length(length $content);
-$req->header('X-Upload-Content-Type' => $fileType);
-$req->header('X-Upload-Content-Length' => $fileSize);
-$req->content('');
-my $res = $self->{_ua}->request($req);
-
-
-if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  print LOG $req->as_string;
-  print LOG $res->as_string;
-  close(LOG);
-}
-
-if($res->is_success){
-  print STDOUT "success --> $URL\n\n" if (pDrive::Config->DEBUG);
-
-  my $block = $res->as_string;
-
-  while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    $block =~ s%[^\n]*\n%%;
-
-    if ($line =~ m%^Location:%){
-      ($URL) = $line =~ m%^Location:\s+(\S+)%;
-      return $URL;
-    }
-
-  }
-
-}else{
-  #print STDOUT $req->as_string;
-  print STDOUT $res->as_string;
-  return 0;
-}
+	my $self = shift;
+	my $URL = shift;
+	my $fileSize = shift;
+	my $file = shift;
+	my $fileType = shift;
+	my $content = '';
+	return; #not implemented
 
 
 }

@@ -595,6 +595,10 @@ sub uploadFile(*$$){
   	my $filetype = shift;
  	my $resourceID = 0;
 	my ($fileName) = $file=~ m%\/([^\/]+)$%;
+
+	if(1){
+	`curl -X POST --form 'metadata={"name":"$fileName","kind":"FILE"}' --form 'content=@$file' 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId=$fileName' --header "Authorization: Bearer $self->{_token}"`;
+	}else{
 	my $retryCount = 2;
 	while ($retryCount){
 	my $req = new HTTP::Request POST => 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId='.$file; #$self->{_contentURL}.'nodes?localId=testPhoto';
@@ -615,23 +619,21 @@ sub uploadFile(*$$){
 	#$req->add_part(['Content-Disposition' => 'form-data; name="content"'], 'Content => $fileContents');
 	#$req->add_part(['Content-Disposition' => 'form-data; name="metadata"'],'{"name":"test.jpg","kind":"FILE"}');
 	#$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="content";', 'Content-Type'=>'image/jpeg', 'filename'=>'db5df4870e4e4b6cbf42727fd434701a.jpg'], $fileContents));
-my $hash = {
-  'data_file' => [ $file ],
-  'filename'  => $fileName
-};
-	#my $message = new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg']);
+#my $hash = {
+#  'data_file' => [ $file ],
+#  'filename'  => $fileName
+#};
+	my $message = new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg']);
 #	my $message = new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg'], [ file => [$file] ]);
-	my $message = new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg'], $hash);
+#	my $message = new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg'], $hash);
 
 
-if (0){
 	open(INPUT, "<".$file) or die ('cannot read file '.$file);
 	binmode(INPUT);
 	#my $fileContents = do { local $/; <INPUT> };
 	do { local $/; $message->add_content(<INPUT>) };
   	close(INPUT);
 #	$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg'], $fileContents));
-}
 	$req->add_part($message);
 
 #my $reader = &create_content_reader($req->content());
@@ -671,7 +673,7 @@ if (0){
   		return 0;
 	}
 	}
-
+	}
 }
 sub create_content_reader {
     my $gen = shift;

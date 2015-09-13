@@ -594,7 +594,7 @@ sub uploadFile(*$$){
 	my ($fileName) = $file=~ m%\/([^\/]+)$%;
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request POST => 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId=testPhoto'; #$self->{_contentURL}.'nodes?localId=testPhoto';
+	my $req = new HTTP::Request POST => 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId='.$file; #$self->{_contentURL}.'nodes?localId=testPhoto';
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	$req->content_type('multipart/form-data');

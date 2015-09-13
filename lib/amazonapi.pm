@@ -603,25 +603,29 @@ sub uploadFile(*$$){
 	#$req->content ('{"name":"test.jpg","kind":"FILE"}');
 	#$req->add_part(['Content-Disposition' => 'form-data; name="metadata"'],'{"name":"test.jpg","kind":"FILE"}');
 
-	open(INPUT, "<".$file) or die ('cannot read file '.$file);
-	binmode(INPUT);
-	my $fileContents = do { local $/; <INPUT> };
-  	close(INPUT);
+	#open(INPUT, "<".$file) or die ('cannot read file '.$file);
+	#binmode(INPUT);
+	#my $fileContents = do { local $/; <INPUT> };
+  	#close(INPUT);
 
 	#$req->add_part(['Content-Disposition' => 'form-data; name="content"'], 'Content => $fileContents');
 	#$req->add_part(['Content-Disposition' => 'form-data; name="metadata"'],'{"name":"test.jpg","kind":"FILE"}');
 	#$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="content";', 'Content-Type'=>'image/jpeg', 'filename'=>'db5df4870e4e4b6cbf42727fd434701a.jpg'], $fileContents));
-	$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg'], $fileContents));
+
+	my $message = new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg']);
+
+	open(INPUT, "<".$file) or die ('cannot read file '.$file);
+	binmode(INPUT);
+	#my $fileContents = do { local $/; <INPUT> };
+	 do { local $/; $message->add_content(<INPUT>) };
+  	close(INPUT);
+#	$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg'], $fileContents));
+	$req->add_part($message);
+
 	#
 	#
 	my $res = $self->{_ua}->request($req);
 
-	if (0 and pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		#print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
 
 
 	if($res->is_success or $res->code == 308){

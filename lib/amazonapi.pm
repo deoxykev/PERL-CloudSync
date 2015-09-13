@@ -586,6 +586,9 @@ sub downloadChunk {
 
 
 sub uploadFile(*$$){
+	use HTTP::Request::Common;
+
+	$HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
 
 	my $self = shift;
   	my $file = shift;
@@ -598,6 +601,7 @@ sub uploadFile(*$$){
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	$req->content_type('multipart/form-data');
+	#$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="metadata"'], '{"name":'.$fileName.',"kind":"FILE"}'));
 	$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="metadata"'], '{"name":'.$fileName.',"kind":"FILE"}'));
 
 	#$req->content ('{"name":"test.jpg","kind":"FILE"}');
@@ -612,15 +616,22 @@ sub uploadFile(*$$){
 	#$req->add_part(['Content-Disposition' => 'form-data; name="metadata"'],'{"name":"test.jpg","kind":"FILE"}');
 	#$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="content";', 'Content-Type'=>'image/jpeg', 'filename'=>'db5df4870e4e4b6cbf42727fd434701a.jpg'], $fileContents));
 
+	#my $message = new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg']);
+#	my $message = new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg'], [ file => [$file] ]);
 	my $message = new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg']);
 
 	open(INPUT, "<".$file) or die ('cannot read file '.$file);
 	binmode(INPUT);
 	#my $fileContents = do { local $/; <INPUT> };
-	 do { local $/; $message->add_content(<INPUT>) };
+	do { local $/; $message->add_content(<INPUT>) };
   	close(INPUT);
 #	$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg'], $fileContents));
 	$req->add_part($message);
+
+#my $reader = &create_content_reader($req->content());
+#$req->content($reader);
+
+
 
 	#
 	#
@@ -656,7 +667,13 @@ sub uploadFile(*$$){
 	}
 
 }
+sub create_content_reader {
+    my $gen = shift;
 
+            return sub {
+            return &$gen();
+        }
+}
 
 #
 # Create a file

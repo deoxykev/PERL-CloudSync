@@ -68,6 +68,7 @@ sub new(*$) {
  	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
 		$self->{_serviceapi}->setToken($token,$refreshToken);
 	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
+		$self->{_serviceapi}->testAccess();
 	}
 	return $self;
 
@@ -353,11 +354,7 @@ sub uploadFile(*$$){
 	my $self = shift;
 	my $file = shift;
 	my $folder = shift;
-	my $fileName = shift;
 
-	if ($fileName eq ''){
-		($fileName) = $file =~ m%\/([^\/]+)$%;
-	}
 
 	print STDOUT $file . "\n";
 
@@ -366,64 +363,10 @@ sub uploadFile(*$$){
   	my $filetype = 'application/octet-stream';
   	print STDOUT "file size for $file ($fileName)  is $fileSize to folder $folder\n" if (pDrive::Config->DEBUG);
 
-  	my $uploadURL = $self->{_serviceapi}->createFile('https://www.googleapis.com/upload/drive/v2/files?fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
+  	#my $uploadURL = $self->{_serviceapi}->createFile('https://www.googleapis.com/upload/drive/v2/files?fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
+	my $status = $self->{_serviceapi}->uploadFile($file,$filetype);
+	print STDOUT "\r"  . $status;
 
-
-  	my $chunkNumbers = int($fileSize/(pDrive::CloudService->CHUNKSIZE))+1;
-	my $pointerInFile=0;
-  	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
-  	open(INPUT, "<".$file) or die ('cannot read file '.$file);
-
-  	binmode(INPUT);
-
-  	my $fileID=0;
-  	my $retrycount=0;
-
-  	for (my $i=0; $i < $chunkNumbers; $i++){
-		my $chunkSize =pDrive::CloudService->CHUNKSIZE;
-		my $chunk;
-    	if ($i == $chunkNumbers-1){
-	    	$chunkSize = $fileSize - $pointerInFile;
-    	}
-
-    	sysread INPUT, $chunk, pDrive::CloudService->CHUNKSIZE;
-    	print STDERR "\r".$i . '/'.$chunkNumbers;
-    	my $status=0;
-    	$retrycount=0;
-    	while ($status eq '0' and $retrycount < 10){
-			$status = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      		print STDOUT "\r"  . $status;
-	      	if ($status eq '0'){
-	       		print STDERR "...retrying\n";
-	       		#some other instance may have updated the tokens already, refresh with the latest
-	       		if ($retrycount == 0){
-	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($self->{_username});
-	       			$self->{_serviceapi}->setToken($token,$refreshToken);
-	       		#multiple failures, force-fech a new token
-	       		}else{
- 	 				my ($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
-	  				$self->{_login_dbm}->writeLogin( $self->{_username},$token,$refreshToken);
-	       			$self->{_serviceapi}->setToken($token,$refreshToken);
-	       		}
-        		sleep (10);
-        		$retrycount++;
-	      	}
-
-    	}
-		if ($retrycount >= 10){
-			print STDERR "\r" . $file . "'...retry failed - $file\n";
-
-    		pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
-    		last;
-		}
-
-    	$fileID=$status;
-		$pointerInFile += $chunkSize;
-  	}
-  	if ($retrycount < 10){
-		print STDOUT "\r" . $file . "'...success - $file\n";
-  	}
-  	close(INPUT);
 }
 
 sub getList(*){

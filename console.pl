@@ -690,6 +690,12 @@ while (my $input = <$userInput>){
     	}
     	close(LIST);
 
+	}elsif($input =~ m%^upload file%i){
+    	my ($file) = $input =~ m%^upload file\s([^\n]+)\n%;
+
+		$services[$currentService]->uploadFile($file, '');
+
+
 	}elsif($input =~ m%^create list%i){
     	my ($list) = $input =~ m%^create list\s([^\n]+)\n%;
 

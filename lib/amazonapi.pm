@@ -585,26 +585,43 @@ sub downloadChunk {
 }
 
 
-sub uploadFile(*$$$$){
+sub uploadFile(*$$){
 
 	my $self = shift;
-  	my $URL = shift;
-  	my $chunk = shift;
-  	my $chunkSize = shift;
-  	my $chunkRange = shift;
+  	my $file = shift;
   	my $filetype = shift;
  	my $resourceID = 0;
-
+	my ($fileName) = $file=~ m%\/([^\/]+)$%;
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request PUT => $URL;
+	my $req = new HTTP::Request POST => 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId=testPhoto'; #$self->{_contentURL}.'nodes?localId=testPhoto';
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	$req->content_type($filetype);
-	$req->content_length($chunkSize);
-	$req->header('Content-Range' => $chunkRange);
-	$req->content($$chunk);
+	$req->content_type('multipart/form-data');
+	$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="metadata"'], '{"name":'.$fileName.',"kind":"FILE"}'));
+
+	#$req->content ('{"name":"test.jpg","kind":"FILE"}');
+	#$req->add_part(['Content-Disposition' => 'form-data; name="metadata"'],'{"name":"test.jpg","kind":"FILE"}');
+
+	open(INPUT, "<".$file) or die ('cannot read file '.$file);
+	binmode(INPUT);
+	my $fileContents = do { local $/; <INPUT> };
+  	close(INPUT);
+
+	#$req->add_part(['Content-Disposition' => 'form-data; name="content"'], 'Content => $fileContents');
+	#$req->add_part(['Content-Disposition' => 'form-data; name="metadata"'],'{"name":"test.jpg","kind":"FILE"}');
+	#$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="content";', 'Content-Type'=>'image/jpeg', 'filename'=>'db5df4870e4e4b6cbf42727fd434701a.jpg'], $fileContents));
+	$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg'], $fileContents));
+	#
+	#
 	my $res = $self->{_ua}->request($req);
+
+	if (0 and pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		#print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
 
 
 	if($res->is_success or $res->code == 308){

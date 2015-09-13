@@ -649,8 +649,8 @@ sub uploadFile(*$$){
 #		$retryCount--;
 	}else{
   		print STDERR "error";
-  		print STDOUT $req->headers_as_string;
-#  		print STDOUT $res->as_string;
+#  		print STDOUT $req->headers_as_string;
+  		print STDOUT $res->as_string;
   		return 0;
 	}
 	}

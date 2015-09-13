@@ -597,7 +597,7 @@ sub uploadFile(*$$){
 	my ($fileName) = $file=~ m%\/([^\/]+)$%;
 
 	if(1){
-	`curl -X POST --form 'metadata={"name":"$fileName","kind":"FILE"}' --form 'content=@$file' 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId=$fileName' --header "Authorization: Bearer $self->{_token}"`;
+	`curl -X POST --form 'metadata={"name":"$fileName","kind":"FILE"}' --form 'content=\@$file' 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId=$fileName' --header "Authorization: Bearer $self->{_token}"`;
 	}else{
 	my $retryCount = 2;
 	while ($retryCount){

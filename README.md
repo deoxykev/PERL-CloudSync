@@ -49,6 +49,12 @@ what works:
 - constructing a memory hash of files using fisi against file id (for purposes of syncing)
 - multiple accounts
 
+Amazon Cloud Drive -
+--------------------------------
+what works:
+- OAUTH2 auhentication
+- upload a single file (upload file x)
+- multiple accounts
 
 One Drive API 1:
 -------------------------

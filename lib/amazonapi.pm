@@ -370,15 +370,20 @@ sub getChanges(*$){
 	my $URL = shift;
 	my $changeID = shift;
 
-	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/changes?startChangeId='.$changeID;
+	$URL = API_URL . 'changes';
+  	my $content = '';
+  	if ($changeID ne ''){
+  		$content = '{  "checkpoint" : "'.$changeID.'" }'.  "\n\n";
 	}
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
+	my $req = new HTTP::Request POST => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	$req->content_length(length $content);
+	$req->content_type('application/x-www-form-urlencoded');
+	$req->content($content);
 	my $res = $self->{_ua}->request($req);
 
 	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
@@ -407,7 +412,7 @@ sub getChanges(*$){
 		sleep(10);
 		#die($res->as_string."error in loading page");}
 	}
-  	return \$res->as_string;
+  	return \$res->decoded_content;
 	}
 
 }
@@ -517,7 +522,7 @@ sub getChangeID(**){
 
  	my $self = shift;
   	my $listing = shift;
-	my ($largestChangeId) = $$listing =~ m%\"largestChangeId\"\:\s?\"([^\"]+)\"%;
+	my ($largestChangeId) = $$listing =~ m%\"checkpoint\"\:\s?\"([^\"]+)\"%;
 	return $largestChangeId;
 }
 
@@ -1007,16 +1012,22 @@ sub readChangeListings(**){
 	my $count=0;
 
   	$$driveListings =~ s%\n%%g;
-	#print $$driveListings;
-#  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
-#  	while ($$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"md5Checksum\"\:\s+\"[^\"]+\"\s+% ){
-	while ($$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"quotaBytesUsed\"\:\s+\"[^\"]+\"% ){
+  	while ($$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\,\s*\{% or $$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\s*\]\s*\}%){
 
-    	my ($resourceID,$md5) = $$driveListings =~ m%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"([^\"]+)\".*?\"md5Checksum\"\:\s+\"([^\"]+)\"%;
-    	my ($title) = $$driveListings =~ m%\"title\"\:\s?\"([^\"]+)\"%;
-		my ($fileSize) = $$driveListings =~ m%\"fileSize\"\:\s?\"([^\"]+)\"%;
+    	my ($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\,\s*\{%;
 
-		$$driveListings =~ s%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"quotaBytesUsed\"\:\s+\"[^\"]+\"%%;
+		if ($entry eq ''){
+    		($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\s*\}%;
+	    	$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\s*\}%%;
+		}else{
+    		$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\,\s*%%;
+		}
+
+		my ($resourceID) = $entry =~ m%\"id\"\:\s?\"([^\"]+)\"%;
+		my ($md5) = $entry =~ m%\"md5\"\:\s?\"([^\"]+)\"%;
+    	my ($title) = $entry =~ m%\"name\"\:\s?\"([^\"]+)\"%;
+		my ($fileSize) = $entry =~ m%\"size\"\:\s?\"([^\"]+)\"%;
+
 
     	next if $md5 eq '';
 #		$$driveListings =~ s%drive\#file%%;

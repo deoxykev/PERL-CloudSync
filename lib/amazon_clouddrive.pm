@@ -423,10 +423,11 @@ sub getChangesAll(*){
 	my $self = shift;
 
 	my $nextURL = '';
-    tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";
-    my $changeID = $dbase{'LAST_CHANGE'};
-    print STDOUT "changeID = " . $changeID . "\n";
-    untie(%dbase);
+    if (tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666)){
+    	my $changeID = $dbase{'LAST_CHANGE'};
+    	print STDOUT "changeID = " . $changeID . "\n";
+    	untie(%dbase);
+    }
 
 	while (1){
 		my $driveListings = $self->{_serviceapi}->getChanges($nextURL, $changeID);

@@ -844,10 +844,12 @@ sub syncFolder($){
 
 				for(my $j=1; $j <= $#drives; $j++){
 
-				#Google Drive -> Google Drive
+				#Google Drive / Amazon Cloud -> Google Drive / Amazon Cloud
 	  			###
 	  			#Google Drive (MD5 comparision) already exists; skip
-  				if 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive'  and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+  				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' or Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::amazon')
+  				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive' or Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::amazon')
+  				and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 
 				#Google -> Google Photos
 	  			###

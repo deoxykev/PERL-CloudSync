@@ -101,9 +101,7 @@ sub getToken(*$){
 	my $self = shift;
 	my $code = shift;
 
-  #https://accounts.google.com/o/oauth2/auth?scope=https://www.googleapis.com/auth/drive.readonly&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=
-#	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
-	my  $URL = 'https://api.amazon.com/auth/o2/token';
+  	my  $URL = 'https://api.amazon.com/auth/o2/token';
 
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
@@ -224,7 +222,7 @@ sub testAccess(*){
 }
 
 #
-# get list of the content in the Google Drive
+# get list of the content
 ##
 sub getList(*$){
 
@@ -267,7 +265,7 @@ sub getList(*$){
 
 
 #
-# get list of the content in the Google Drive
+#
 ##
 sub getFolderInfo(*$){
 
@@ -315,7 +313,7 @@ sub getFolderInfo(*$){
 }
 
 #
-# get the root ID for the Google Drive
+# get the root ID
 ##
 sub getListRoot(*$){
 
@@ -427,37 +425,7 @@ sub getSubFolderID(*$){
 	my $self = shift;
 	my $parentID = shift;
 	my $folderName = shift;
-
-	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
-
-	my $retryCount = 2;
-	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-  		return \$res->as_string;
-
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
-		#die($res->as_string."error in loading page");
-	}
-	}
+	return; #not implemented
 
 }
 
@@ -468,38 +436,7 @@ sub getSubFolderIDList(*$){
 
 	my $self = shift;
 	my $folderName = shift;
-
-	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
-	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
-
-	my $retryCount = 2;
-	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-  		return \$res->as_string;
-
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
-		#die($res->as_string."error in loading page");
-	}
-	}
+	return; #not implemented
 
 }
 
@@ -877,46 +814,7 @@ sub deleteFile(*$$){
 	my $self = shift;
   	my $folderID = shift;
   	my $fileID = shift;
-
-	my $req = new HTTP::Request DELETE => 'https://docs.google.com/feeds/default/private/full/folder%3A'.$folderID.'/contents/file%3A'.$fileID;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
-	$req->header('If-Match' => '*');
-
-
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-
-
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-		    if ($line =~ m%\<gd\:resourceId\>%){
-		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-
-	      		return $resourceID;
-    		}
-
-  		}
-
-	}else{
-		#print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
+	return; #not implemented
 
 }
 

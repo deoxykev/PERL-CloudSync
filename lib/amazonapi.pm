@@ -928,32 +928,31 @@ sub readDriveListings(**){
 	my $count=0;
 
   	$$driveListings =~ s%\n%%g;
-	#print $$driveListings;
 #  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
-  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{% or $$driveListings =~ m%\{\s+\"kind\"\:.*?\}\s*\]\s*\}%){ # [^\}]+
+  	while ($$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\,\s*\{% or $$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\s*\]\s*\}%){
 
-    	my ($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\,\s+\{%;
+    	my ($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\,\s*\{%;
 
 		if ($entry eq ''){
-    		($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\s*\]\s*\}%;
-	    	$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\s*\]\s*\}%%;
+    		($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\s*\}%;
+	    	$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\s*\}%%;
 		}else{
-    		$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\,\s+%%;
+    		$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\,\s*%%;
 		}
 
 
-    	my ($title) = $entry =~ m%\"title\"\:\s?\"([^\"]+)\"%;
+    	my ($title) = $entry =~ m%\"name\"\:\s?\"([^\"]+)\"%;
 		my ($updated) = $entry =~ m%\"modifiedDate\"\:\s?\"([^\"]+)\"%;
 		my ($published) = $entry =~ m%\"createdDate\"\:\s?\"([^\"]+)\"%;
-		my ($resourceType) = $entry =~ m%\"mimeType\"\:\s?\"([^\"]+)\"%;
+		my ($resourceType) = $entry =~ m%\"extension\"\:\s?\"([^\"]+)\"%;
 		my ($resourceID) = $entry =~ m%\"id\"\:\s?\"([^\"]+)\"%;
-		my ($downloadURL) = $entry =~ m%\"downloadUrl\"\:\s?\"([^\"]+)\"%;
-		my ($parentID) = $entry =~ m%\"parentLink\"\:\s?\"([^\"]+)\"%;
-		my ($md5) = $entry =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;
-		my ($fileSize) = $entry =~ m%\"fileSize\"\:\s?\"([^\"]+)\"%;
+		#my ($downloadURL) = $entry =~ m%\"downloadUrl\"\:\s?\"([^\"]+)\"%;
+		my ($parentID) = $entry =~ m%\"parents\"\:\s?\[\"([^\"]+)\"%;
+		my ($md5) = $entry =~ m%\"md5\"\:\s?\"([^\"]+)\"%;
+		my ($fileSize) = $entry =~ m%\"size\"\:\s?\"([^\"]+)\"%;
 
 	    # 	is a folder
-	    if ($resourceType eq 'folder' or $resourceType eq 'application/vnd.google-apps.folder'){
+	    if ($resourceType eq '' ){
 
 
 		      # is a root folder
@@ -973,8 +972,7 @@ sub readDriveListings(**){
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
 			#      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
 
-      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;
-#      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_edit'}] = $editURL;
+      		#$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}] = $resourceType;
 

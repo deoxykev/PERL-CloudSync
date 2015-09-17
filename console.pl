@@ -438,6 +438,13 @@ while (my $input = <$userInput>){
 		my ($path) =  $services[$currentService]->getFolderInfo($id);
     	print STDOUT "returned path = $path\n";
 
+  	}elsif($input =~ m%^get folderid\s+\S+%i){
+    	my ($id) = $input =~ m%^get folderid\s+(\S+)%i;
+
+		my ($path) =  $services[$currentService]->getFolderInfo($id);
+    	print STDOUT "returned path = $path\n";
+
+
 
 
 	# sync the entire drive in source current source with all other sources
@@ -649,7 +656,7 @@ while (my $input = <$userInput>){
 	}elsif($input =~ m%^create folder%i){
     	my ($folder) = $input =~ m%^create folder\s([^\n]+)\n%;
 
-	  	my $folderID = $services[$currentService]->createFolder($folder);
+	  	my $folderID = $services[$currentService]->createFolder($folder, '');
 	    print "resource ID = " . $folderID . "\n";
 
 	}elsif($input =~ m%^create path%i){

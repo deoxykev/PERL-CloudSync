@@ -107,7 +107,7 @@ sub createFolder(*$$){
 	my $folder = shift;
 	my $parentFolder = shift;
 
-	return $self->{_serviceapi}->createFolder('https://www.googleapis.com/drive/v2/files?fields=id',$folder, $parentFolder);
+	return $self->{_serviceapi}->createFolder($folder, $parentFolder);
 
 }
 
@@ -117,9 +117,9 @@ sub getSubFolderID(*$$){
 	my $folderName = shift;
 	my $parentID = shift;
 
-	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $parentID.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	#my $URL = API_URL . 'nodes/'.$folderID.'/children&filters=kind:FOLDER';
 
-	my $driveListings = $self->{_serviceapi}->getList($URL);
+	my $driveListings = $self->{_serviceapi}->getList('nodes?filters=kind:FOLDER');
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
   	foreach my $resourceID (keys %{$newDocuments}){

@@ -16,7 +16,7 @@ use constant FOLDER_ROOT => 1;
 use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
-use constant API_URL => 'https://drive.amazonaws.com/drive/v1/account/';
+use constant API_URL => 'https://drive.amazonaws.com/drive/v1/';
 use constant API_VER => 2;
 
 
@@ -197,7 +197,7 @@ sub refreshToken(*){
 sub testAccess(*){
 
   	my $self = shift;
-	my $URL = API_URL . 'endpoint';
+	my $URL = API_URL . 'account/endpoint';
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -231,9 +231,7 @@ sub getList(*$){
 	my $self = shift;
 	my $URL = shift;
 
-	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
-	}
+	$URL = API_URL . 'nodes?filters=kind:FOLDER';
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -636,8 +634,6 @@ sub uploadFile(*$$){
 #	$req->add_part(new HTTP::Message(['Content-Disposition' => 'form-data; name="content"; filename="'.$fileName.'"', 'Content-Type'=>'image/jpeg'], $fileContents));
 	$req->add_part($message);
 
-#my $reader = &create_content_reader($req->content());
-#$req->content($reader);
 
 
 
@@ -674,13 +670,6 @@ sub uploadFile(*$$){
 	}
 	}
 	}
-}
-sub create_content_reader {
-    my $gen = shift;
-
-            return sub {
-            return &$gen();
-        }
 }
 
 #
@@ -760,17 +749,12 @@ sub createFile(*$$$$$){
 sub createFolder(*$$){
 
 	my $self = shift;
-  	my $URL = shift;
   	my $folder = shift;
   	my $parentFolder = shift;
 
-
-#  "parents": [{"id":"0ADK06pfg"}]
-  	my $content = '{
-  "title": "'.$folder. '",
-  "mimeType": "application/vnd.google-apps.folder"';
-  	$content .= ' ,"parents": [{"id":"'.$parentFolder.'"}]' if $parentFolder ne '';
-	$content .= '}'."\n\n";
+	my $URL = API_URL . 'nodes';#/nodes?localId='.$folder; #$self->{_contentURL}.'nodes?localId=testPhoto';
+	#"parents" : ["foo1","123"], "properties" : { "my_app_id" : {"key":"value", "key2","value2"} }
+  	my $content = '{  "name" : "'.$folder.'",  '. ($parentFolder ne '' ?  '"parents" : ["'.$parentFolder.'"],':''). ' "kind" : "FOLDER" }'.  "\n\n";
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -778,7 +762,7 @@ sub createFolder(*$$){
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	$req->content_length(length $content);
-	$req->content_type('application/json');
+	$req->content_type('application/x-www-form-urlencoded');
 	$req->content($content);
 
 	my $res = $self->{_ua}->request($req);
@@ -811,7 +795,7 @@ sub createFolder(*$$){
 		$retryCount--;
 
 	}else{
-		#print STDOUT $req->as_string;
+		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;
 	}

@@ -26,9 +26,18 @@ if (!(-e './config.cfg')){
 package pDrive::Config;
 
 # must change these
-use constant LOCAL_PATH => '/u01/pdrive/'; #where to download / upload from
+use constant LOCAL_PATH => '.'; #where to download / upload from
 use constant USERNAME => '';
 use constant PASSWORD => '';
+# google OAUTH2
+use constant CLIENT_ID => '';
+use constant CLIENT_SECRET => '';
+# one drive OAUTH2
+use constant ODCLIENT_ID => '';
+use constant ODCLIENT_SECRET => '';
+# amazon cloud drive OAUTH2
+use constant ACDCLIENT_ID => '';
+use constant ACDCLIENT_SECRET => '';
 
 # configuration
 use constant LOGFILE => '/tmp/pDrive.log';
@@ -39,8 +48,8 @@ use constant REVISIONS => 1;
 
 
 #for debugging
-use constant DEBUG => 1;
-use constant DEBUG_TRN => 1;
+use constant DEBUG => 0;
+use constant DEBUG_TRN => 0;
 use constant DEBUG_LOG => '/tmp/debug.log';
 
 #

@@ -1,8 +1,5 @@
 package pDrive::AmazonAPI;
-
-#use HTTP::Cookies;
-#use HTML::Form;
-#use URI;
+;
 use LWP::UserAgent;
 use LWP;
 use strict;
@@ -229,7 +226,9 @@ sub getList(*$){
 	my $self = shift;
 	my $URL = shift;
 
-	$URL = API_URL . 'nodes?filters=kind:FOLDER';
+	if ($URL eq ''){
+		$URL = API_URL . 'nodes?filters=kind:FOLDER';
+	}
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -315,46 +314,19 @@ sub getFolderInfo(*$){
 #
 # get the root ID
 ##
-sub getListRoot(*$){
+sub getListRoot(*){
 
 	my $self = shift;
-	my $URL = shift;
 
-	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/files/root';
-	}
+	my $URL = API_URL . 'nodes?filters=kind:FOLDER  AND isRoot:true';
+	my $driveListings = $self->{_serviceapi}->getList($URL);
+  	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
-	my $retryCount = 2;
-	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
+  	foreach my $resourceID (keys %{$newDocuments}){
+		print STDERR "returning $resourceID\n " if (pDrive::Config->DEBUG);
+    	return $resourceID;
 	}
-
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-  		my $block = $res->as_string;
-		my ($resourceID) = $block =~ m%\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s?\"([^\"]+)\"%;
-		return $resourceID;
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
-		#die($res->as_string."error in loading page");
-	}
-	}
-  	return '';
+	return '';
 
 }
 
@@ -424,8 +396,17 @@ sub getSubFolderID(*$){
 
 	my $self = shift;
 	my $parentID = shift;
-	my $folderName = shift;
-	return; #not implemented
+
+
+	#my $URL = API_URL . 'nodes/'.$folderID.'/children&filters=kind:FOLDER';
+
+	my $URL =  API_URL . 'nodes?filters=kind:FOLDER';
+	if ($parentID eq 'root'){
+		$URL .= ' AND isRoot:true';
+	}elsif ($parentID eq ''){
+		$URL .= ' AND isRoot:true';
+	}
+	return $self->getList($URL);
 
 }
 
@@ -830,21 +811,35 @@ sub readDriveListings(**){
 
 	my $count=0;
 
+	my $title;
   	$$driveListings =~ s%\n%%g;
-#  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
-  	while ($$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\,\s*\{% or $$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\s*\]\s*\}%){
+#  	while ($$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\,\s*\{% or $$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\s*\]\s*\}%){
+  	while ($$driveListings =~ m%\{\s*\"isRoot\"\:.*?\}\s*\]\,\"count\"% or m%\{\s*\"isRoot\"\:.*?\}\,\s*\{% or m%\{\s*\"eTagResponse\"\:.*?\}\,\s*\{% or $$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\s*\]\,\"count\"%){
 
     	my ($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\,\s*\{%;
 
 		if ($entry eq ''){
-    		($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\s*\}%;
-	    	$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\s*\}%%;
+    		($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\,\"count\"%;
+			if ($entry eq ''){
+    			($entry) = $$driveListings =~ m%\{\s*\"isRoot\"\:(.*?)\}\s*\]\,\"count\"%;
+				if ($entry eq ''){
+    				my ($entry) = $$driveListings =~ m%\{\s*\"isRoot\"\:(.*?)\}\,\s*\{%;
+    				$$driveListings =~ s%\{\s*\"isRoot\"\:(.*?)\}\,\s*%%;
+			    	($title) = $entry =~ m%\"name\"\:\s?\"([^\"]+)\"%;
+				}else{
+	    			$$driveListings =~ s%\{\s*\"isRoot\"\:(.*?)\}\s*\]\,\"count\"%%;
+		    		($title) = 'root';
+    			}
+			}else{
+	    		$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\,\"count\"%%;
+	    		($title) = 'root';
+			}
 		}else{
     		$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\,\s*%%;
+	    	($title) = $entry =~ m%\"name\"\:\s?\"([^\"]+)\"%;
 		}
 
 
-    	my ($title) = $entry =~ m%\"name\"\:\s?\"([^\"]+)\"%;
 		my ($updated) = $entry =~ m%\"modifiedDate\"\:\s?\"([^\"]+)\"%;
 		my ($published) = $entry =~ m%\"createdDate\"\:\s?\"([^\"]+)\"%;
 		my ($resourceType) = $entry =~ m%\"extension\"\:\s?\"([^\"]+)\"%;

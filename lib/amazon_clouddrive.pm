@@ -117,14 +117,16 @@ sub getSubFolderID(*$$){
 	my $folderName = shift;
 	my $parentID = shift;
 
-	#my $URL = API_URL . 'nodes/'.$folderID.'/children&filters=kind:FOLDER';
+	if  ($parendID eq 'root'){
+		$parendID = $self->{_serviceapi}->getListRoot();
+	}
 
-	my $driveListings = $self->{_serviceapi}->getList('nodes?filters=kind:FOLDER');
+	my $driveListings = $self->{_serviceapi}->getSubFolderID($parentID);
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
   	foreach my $resourceID (keys %{$newDocuments}){
     	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq $folderName){
-    		print STDERR "returning $resourceID\n ";
+    		print STDERR "returning $resourceID\n " if (pDrive::Config->DEBUG);
     		return $resourceID;
     	}
 	}
@@ -137,11 +139,6 @@ sub getSubFolderIDList(*$$){
 	my $self = shift;
 	my $folderName = shift;
 	my $URL = shift;
-
-	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
-	}
-
 
 	my $driveListings = $self->{_serviceapi}->getList($URL);
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
@@ -166,7 +163,7 @@ sub uploadFolder(*$$){
   	print STDOUT "path = $localPath\n";
    	my @fileList = pDrive::FileIO::getFilesDir($localPath);
 
-	print STDOUT "folder = $folder\n";
+	print STDOUT "folder = $folder\n" if (pDrive::Config->DEBUG);
 
 	#check server-cache for folder
 	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
@@ -259,7 +256,7 @@ sub createUploadListForFolder(*$$$$){
   	print STDOUT "path = $localPath\n";
    	my @fileList = pDrive::FileIO::getFilesDir($localPath);
 
-	print STDOUT "folder = $folder\n";
+	print STDOUT "folder = $folder\n" if (pDrive::Config->DEBUG);
 
 	#check server-cache for folder
 	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);

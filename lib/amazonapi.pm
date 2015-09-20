@@ -319,8 +319,8 @@ sub getListRoot(*){
 	my $self = shift;
 
 	my $URL = API_URL . 'nodes?filters=kind:FOLDER  AND isRoot:true';
-	my $driveListings = $self->{_serviceapi}->getList($URL);
-  	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+	my $driveListings = $self->getList($URL);
+  	my $newDocuments = $self->readDriveListings($driveListings);
 
   	foreach my $resourceID (keys %{$newDocuments}){
 		print STDERR "returning $resourceID\n " if (pDrive::Config->DEBUG);

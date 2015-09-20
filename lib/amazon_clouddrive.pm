@@ -117,8 +117,8 @@ sub getSubFolderID(*$$){
 	my $folderName = shift;
 	my $parentID = shift;
 
-	if  ($parendID eq 'root'){
-		$parendID = $self->{_serviceapi}->getListRoot();
+	if  ($parentID eq 'root' or $parentID eq ''){
+		$parentID = $self->{_serviceapi}->getListRoot();
 	}
 
 	my $driveListings = $self->{_serviceapi}->getSubFolderID($parentID);

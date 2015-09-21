@@ -27,6 +27,7 @@ sub new() {
               _clientSecret => undef,
               _refreshToken  => undef,
               _contentURL => undef,
+              _metaURL => undef,
               _token => undef};
 
   	my $class = shift;
@@ -208,10 +209,16 @@ sub testAccess(*){
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n";
   		my ($contentURL) = $res->as_string =~ m%\"contentUrl\"\:\s?\"([^\"]+)\"%;
-  		$self->{_contentUrl} = $contentURL;
+  		my ($metaURL) = $res->as_string =~ m%\"metadataUrl\"\:\s?\"([^\"]+)\"%;
+
+  		$self->{_contentURL} = $contentURL;
+  		$self->{_metaURL} = $metaURL;
+
   		return 1;
 
 	}else{
+  		print STDOUT "FAILED --> $URL\n\n";
+
 		#	print STDOUT $res->as_string;
 		return 0;}
 
@@ -227,7 +234,8 @@ sub getList(*$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL = API_URL . 'nodes?filters=kind:FOLDER';
+		#$URL = API_URL . 'nodes?filters=kind:FOLDER';
+		$URL = $self->{_metaURL}. 'nodes?filters=kind:FOLDER';
 	}
 
 	my $retryCount = 2;
@@ -318,7 +326,7 @@ sub getListRoot(*){
 
 	my $self = shift;
 
-	my $URL = API_URL . 'nodes?filters=kind:FOLDER  AND isRoot:true';
+	my $URL =  $self->{_metaURL} . 'nodes?filters=kind:FOLDER  AND isRoot:true';
 	my $driveListings = $self->getList($URL);
   	my $newDocuments = $self->readDriveListings($driveListings);
 
@@ -400,7 +408,7 @@ sub getSubFolderID(*$){
 
 	#my $URL = API_URL . 'nodes/'.$folderID.'/children&filters=kind:FOLDER';
 
-	my $URL =  API_URL . 'nodes?filters=kind:FOLDER';
+	my $URL =   $self->{_contentURL} . 'nodes?filters=kind:FOLDER';
 	if ($parentID eq 'root'){
 		$URL .= ' AND isRoot:true';
 	}elsif ($parentID eq ''){

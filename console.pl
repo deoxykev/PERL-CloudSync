@@ -439,10 +439,10 @@ while (my $input = <$userInput>){
     	print STDOUT "returned path = $path\n";
 
   	}elsif($input =~ m%^get folderid\s+\S+%i){
-    	my ($name) = $input =~ m%^get folderid\s+(\S+)%i;
+    	my ($path) = $input =~ m%^get folderid\s+(.*)%i;
 
-		my ($path) =  $services[$currentService]->getSubFolderID($name, 'root');
-    	print STDOUT "returned id = $path\n";
+		my ($folderID) =  $services[$currentService]->getFolderIDByPath($path);
+    	print STDOUT "returned path = $path, id = $folderID\n";
 
 
 

@@ -410,11 +410,11 @@ sub getSubFolderID(*$){
 
 	#my $URL = API_URL . 'nodes/'.$folderID.'/children&filters=kind:FOLDER';
 
-	my $URL =   $self->{_metaURL} . 'nodes?filters=kind:FOLDER';
-	if ($parentID eq 'root'){
-		$URL .= ' AND isRoot:true';
-	}elsif ($parentID eq ''){
-		$URL .= ' AND isRoot:true';
+	my $URL =   $self->{_metaURL};
+	if ($parentID eq '' or $parentID eq 'root'){
+		$URL .= 'nodes?filters=kind:FOLDER AND isRoot:true';
+	}else{
+		$URL .= 'nodes/'.$parentID . '/children?filters=kind:FOLDER';
 	}
 	return $self->getList($URL);
 
@@ -835,14 +835,15 @@ sub readDriveListings(**){
 				if ($entry eq ''){
     				my ($entry) = $$driveListings =~ m%\{\s*\"isRoot\"\:(.*?)\}\,\s*\{%;
     				$$driveListings =~ s%\{\s*\"isRoot\"\:(.*?)\}\,\s*%%;
-			    	($title) = $entry =~ m%\"name\"\:\s?\"([^\"]+)\"%;
+#			    	($title) = $entry =~ m%\"name\"\:\s?\"([^\"]+)\"%;
+		    		($title) = 'root';
 				}else{
 	    			$$driveListings =~ s%\{\s*\"isRoot\"\:(.*?)\}\s*\]\,\"count\"%%;
 		    		($title) = 'root';
     			}
 			}else{
 	    		$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\,\"count\"%%;
-	    		($title) = 'root';
+		    	($title) = $entry =~ m%\"name\"\:\s?\"([^\"]+)\"%;
 			}
 		}else{
     		$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\,\s*%%;

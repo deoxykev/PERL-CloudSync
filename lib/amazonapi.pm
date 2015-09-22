@@ -238,8 +238,8 @@ sub getList(*$){
 		$URL = $self->{_metaURL}. 'nodes?filters=kind:FOLDER';
 	}
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -258,11 +258,13 @@ sub getList(*$){
 	}elsif ($res->code == 401){
  	 	my ($token,$refreshToken) = $self->refreshToken();
 		$self->setToken($token,$refreshToken);
-		$retryCount--;
+		$retryCount++;
+	}elsif ($res->code >= 500 and $res->code <= 505){
+		$retryCount++;
+		print STDOUT "backoff retry " . $retryCount . "\n";
 	}else{
 		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
+		$retryCount++;
 		#die($res->as_string."error in loading page");
 	}
 
@@ -326,7 +328,7 @@ sub getListRoot(*){
 
 	my $self = shift;
 
-	my $URL =  $self->{_metaURL} . 'nodes?filters=kind:FOLDER  AND isRoot:true';
+	my $URL =  $self->{_metaURL} . 'nodes?filters=kind:FOLDER AND isRoot:true';
 	my $driveListings = $self->getList($URL);
   	my $newDocuments = $self->readDriveListings($driveListings);
 
@@ -408,7 +410,7 @@ sub getSubFolderID(*$){
 
 	#my $URL = API_URL . 'nodes/'.$folderID.'/children&filters=kind:FOLDER';
 
-	my $URL =   $self->{_contentURL} . 'nodes?filters=kind:FOLDER';
+	my $URL =   $self->{_metaURL} . 'nodes?filters=kind:FOLDER';
 	if ($parentID eq 'root'){
 		$URL .= ' AND isRoot:true';
 	}elsif ($parentID eq ''){
@@ -943,6 +945,32 @@ sub readChangeListings(**){
 
 	print STDOUT "entries = $count\n";
 	return \%newDocuments;
+}
+
+
+#
+# Parse the change listings
+##
+sub backoffDelay(*$){
+	my $self = shift;
+	my $retryCount = shift;
+
+	if ($retryCount == 0){
+	}elsif ($retryCount == 1){
+		sleep(0.5);
+	}elsif ($retryCount == 2){
+		sleep(1);
+	}elsif ($retryCount == 3){
+		sleep(2);
+	}elsif ($retryCount == 4){
+		sleep(4);
+	}elsif ($retryCount == 5){
+		sleep(8);
+	}else{
+		return 0;
+	}
+	return 1;
+
 }
 1;
 

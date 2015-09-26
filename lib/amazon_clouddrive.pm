@@ -152,7 +152,6 @@ sub uploadFolder(*$$){
 	my $self = shift;
 	my $localPath = shift;
 	my $serverPath = shift;
-	my $parentFolder = shift;
 
     my ($folder) = $localPath =~ m%\/([^\/]+)$%;
 
@@ -168,25 +167,8 @@ sub uploadFolder(*$$){
 	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 	#folder doesn't exist, create it
 	if ($folderID eq ''){
-		#*** validate it truly doesn't exist on the server before creating
-		#this is the parent?
-		if ($parentFolder eq ''){
-			#look at the root
-			#get root's children, look for folder as child
-			$folderID = $self->getSubFolderID($folder,'root');
-		}else{
-			#look at the parent
-			#get parent's children, look for folder as child
-			$folderID = $self->getSubFolderID($folder,$parentFolder);
-		}
-		if ($folderID eq '' and $parentFolder ne ''){
-			$folderID = $self->createFolder($folder, $parentFolder);
-		}elsif ($folderID eq '' and  $parentFolder eq ''){
-			$folderID = $self->createFolder($folder, 'root');
-		}
-		$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
+		$folderID = $self->getFolderIDByPath($serverPath, 1);
 	}
-
 
 
 	print "resource ID = " . $folderID . "\n";
@@ -198,7 +180,7 @@ sub uploadFolder(*$$){
 			next;
     	#folder
     	}elsif (-d $fileList[$i]){
-	  		my $fileID = $self->uploadFolder($fileList[$i], $serverPath, $folderID);
+	  		my $fileID = $self->uploadFolder($fileList[$i], $serverPath);
     	# file
     	}else{
     		my $process = 1;

@@ -899,7 +899,7 @@ sub syncFolder($){
 							print STDOUT  "skip  to service $j\n";
 
   						}else{
-							my $mypath = $services[$drives[$j]]->createFolderByPath($path) if ($path ne '' and $path ne  '/');
+							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1) if ($path ne '' and $path ne  '/');
 							print STDOUT  "upload to service $j ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 
 							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);

@@ -345,22 +345,21 @@ sub getFolderInfo(*$){
 	return $path;
 }
 
-sub uploadFile(*$$){
+sub uploadFile(*$$$){
 
 	my $self = shift;
 	my $file = shift;
 	my $folder = shift;
+	my $fileName = shift;
 
 
 	print STDOUT $file . "\n";
 
   	my $fileSize =  -s $file;
   	return 0 if $fileSize == 0;
-  	my $filetype = 'application/octet-stream';
   	print STDOUT "file size for $file ($fileName)  is $fileSize to folder $folder\n" if (pDrive::Config->DEBUG);
 
-  	#my $uploadURL = $self->{_serviceapi}->createFile('https://www.googleapis.com/upload/drive/v2/files?fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
-	my $status = $self->{_serviceapi}->uploadFile($file,$filetype);
+	my $status = $self->{_serviceapi}->uploadFile($file,$folder, $fileName);
 	print STDOUT "\r"  . $status;
 
 }

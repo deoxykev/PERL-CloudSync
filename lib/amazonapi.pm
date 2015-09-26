@@ -523,12 +523,20 @@ sub uploadFile(*$$){
 
 	my $self = shift;
   	my $file = shift;
-  	my $filetype = shift;
+  	my $folder = shift;
+  	my $fileName = shift;
  	my $resourceID = 0;
-	my ($fileName) = $file=~ m%\/([^\/]+)$%;
+
+ 	if (!defined $fileName or $fileName eq ''){
+ 		($fileName) = $file=~ m%\/([^\/]+)$%;
+ 	}
+
+	#remove invalid / in filenames
+	$fileName =~ s%\/%%g;
 
 	if(1){
-	`curl -X POST --form 'metadata={"name":"$fileName","kind":"FILE"}' --form 'content=\@$file' 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId=$fileName' --header "Authorization: Bearer $self->{_token}"`;
+#	`curl -X POST --form 'metadata={"name":"$fileName","kind":"FILE", "parents": ["$folder"]}' --form 'content=\@$file' 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId=$fileName' --header "Authorization: Bearer $self->{_token}"`;
+	`curl -X POST --form 'metadata={"name":"$fileName","kind":"FILE", "parents": ["$folder"]}' --form 'content=\@$file' 'https://content-na.drive.amazonaws.com/cdproxy/nodes' --header "Authorization: Bearer $self->{_token}"`;
 	}else{
 	my $retryCount = 2;
 	while ($retryCount){
@@ -617,61 +625,7 @@ sub createFile(*$$$$$){
   	my $fileType = shift;
 	my $folder = shift;
 
-
-  	my $content = '{
-  "title": "'.$file. '",
-  "parents": [{
-    "kind": "drive#fileLink",
-    "id": "'.$folder.'"
-  }]
-}'."\n\n";
-
-	my $retryCount = 2;
-	while ($retryCount){
-#  convert=false prevents plain/text from becoming docs
-	my $req = new HTTP::Request POST => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	$req->header('X-Upload-Content-Type' => $fileType);
-	$req->header('X-Upload-Content-Length' => $fileSize);
-	$req->content_length(length $content);
-	$req->content_type('application/json');
-	$req->content($content);
-
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-		    if ($line =~ m%^Location:%){
-      			($URL) = $line =~ m%^Location:\s+(\S+)%;
-	      		return $URL;
-    		}
-
-  		}
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-	#	print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
-	}
+	return; #not implemented
 
 }
 

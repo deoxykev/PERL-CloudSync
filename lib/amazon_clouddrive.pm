@@ -167,7 +167,7 @@ sub uploadFolder(*$$){
 	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 	#folder doesn't exist, create it
 	if ($folderID eq ''){
-		$folderID = $self->getFolderIDByPath($serverPath, 1);
+		$folderID = $self->getFolderIDByPath($localPath, 1);
 	}
 
 

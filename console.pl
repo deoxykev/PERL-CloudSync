@@ -646,23 +646,10 @@ while (my $input = <$userInput>){
   		}
 
 
-	}elsif($input =~ m%^create dir\s[^\n]+\n%i){
-   	my ($dir) = $input =~ m%^create dir\s([^\n]+)\n%;
-
-  		my $folderID = $services[$currentService]->createFolder('https://docs.google.com/feeds/default/private/full/folder%3Aroot/contents',$dir);
-    	print "resource ID = " . $folderID . "\n";
-
-
 	}elsif($input =~ m%^create folder%i){
-    	my ($folder) = $input =~ m%^create folder\s([^\n]+)\n%;
+    	my ($path) = $input =~ m%^create folder\s([^\n]+)\n%;
 
-	  	my $folderID = $services[$currentService]->createFolder($folder, '');
-	    print "resource ID = " . $folderID . "\n";
-
-	}elsif($input =~ m%^create path%i){
-    	my ($path) = $input =~ m%^create path\s([^\n]+)\n%;
-
-	  	my $folderID = $services[$currentService]->createFolderByPath($path);
+	  	my $folderID = $services[$currentService]->createFolder($path);
 	    print "resource ID = " . $folderID . "\n";
 
 

@@ -104,10 +104,9 @@ sub downloadFile(*$$$){
 sub createFolder(*$$){
 
 	my $self = shift;
-	my $folder = shift;
-	my $parentFolder = shift;
+	my $path = shift;
 
-	return $self->{_serviceapi}->createFolder($folder, $parentFolder);
+	return $self->getFolderIDByPath($path, 1);
 
 }
 
@@ -500,10 +499,13 @@ sub updateMD5Hash(**){
 }
 
 
-sub createFolderByPath(*$){
+
+
+sub getFolderIDByPath(*$$){
 
 	my $self = shift;
 	my $path = shift;
+	my $doCreate = shift;
 
 	my $parentFolder= '';
 	my $folderID;
@@ -536,61 +538,10 @@ sub createFolderByPath(*$){
 			}
 
 			if ($folderID eq '' and $parentFolder ne ''){
-				$folderID = $self->createFolder($folder, $parentFolder);
+				$folderID =$self->{_serviceapi}->createFolder($folder, $parentFolder) if $doCreate;
 				$parentFolder =$folderID if ($folderID ne '');
 			}elsif ($folderID eq '' and  $parentFolder eq ''){
-				$folderID = $self->createFolder($folder, 'root');
-				$parentFolder =$folderID if ($folderID ne '');
-			}
-			#	$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
-		}
-
-	}
-	return $folderID;
-
-}
-
-
-sub getFolderIDByPath(*$){
-
-	my $self = shift;
-	my $path = shift;
-
-	my $parentFolder= '';
-	my $folderID;
-
-	#remove double // occurrences (make single /)
-	$path =~ s%\/\/%\/%g;
-
-	my $serverPath = '';
-	while(my ($folder) = $path =~ m%^\/?([^\/]+)%){
-
-    	$path =~ s%^\/?[^\/]+%%;
-		$serverPath .= $folder;
-
-		#check server-cache for folder
-		$folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
-		#	folder doesn't exist, create it
-		if ($folderID eq ''){
-			#*** validate it truly doesn't exist on the server before creating
-			#this is the parent?
-			if ($parentFolder eq ''){
-				#look at the root
-				#	get root's children, look for folder as child
-				$folderID = $self->getSubFolderID($folder,'root');
-				$parentFolder =$folderID if ($folderID ne '');
-			}else{
-				#look at the parent
-				#get parent's children, look for folder as child
-				$folderID = $self->getSubFolderID($folder,$parentFolder);
-				$parentFolder =$folderID if ($folderID ne '');
-			}
-
-			if ($folderID eq '' and $parentFolder ne ''){
-				#$folderID = $self->createFolder($folder, $parentFolder);
-				$parentFolder =$folderID if ($folderID ne '');
-			}elsif ($folderID eq '' and  $parentFolder eq ''){
-				#$folderID = $self->createFolder($folder, 'root');
+				$folderID = $self->{_serviceapi}->createFolder($folder, '') if $doCreate;
 				$parentFolder =$folderID if ($folderID ne '');
 			}
 			#	$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');

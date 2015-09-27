@@ -560,10 +560,11 @@ sub updateMD5Hash(**){
 }
 
 
-sub createFolderByPath(*$){
+sub getFolderIDByPath(*$$){
 
 	my $self = shift;
 	my $path = shift;
+	my $doCreate = shift;
 
 	my $parentFolder= '';
 	my $folderID;
@@ -597,10 +598,10 @@ sub createFolderByPath(*$){
 			}
 
 			if ($folderID eq '' and $parentFolder ne ''){
-				$folderID = $self->createFolder($folder, $parentFolder);
+				$folderID = $self->createFolder($folder, $parentFolder)  if $doCreate;
 				$parentFolder =$folderID if ($folderID ne '');
 			}elsif ($folderID eq '' and  $parentFolder eq ''){
-				$folderID = $self->createFolder($folder, 'root');
+				$folderID = $self->createFolder($folder, 'root')  if $doCreate;
 				$parentFolder =$folderID if ($folderID ne '');
 			}
 			#	$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');

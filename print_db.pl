@@ -52,7 +52,7 @@ my $dbm;
 my %dbase;
 sub init(){
 
- $dbm = '/u01/pdrive/.pdrive.catalog.db';
+ $dbm = './od.durdle.db';
 
 }
 

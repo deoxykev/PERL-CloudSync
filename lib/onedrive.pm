@@ -50,7 +50,7 @@ sub new(*) {
 		$code = <>;
 		print STDOUT "code = $code\n";
  	  	($token,$refreshToken) = $self->{_serviceapi}->getToken($code);
-	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
+	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
 	}else{
 		$self->{_serviceapi}->setToken($token,$refreshToken);
 	}
@@ -60,7 +60,7 @@ sub new(*) {
 		# refresh token
  	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
 		$self->{_serviceapi}->setToken($token,$refreshToken);
-	  	$self->{_login_dbm}->writeLogin($username,$token,$refreshToken);
+	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
 	}
 
 

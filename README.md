@@ -4,6 +4,10 @@ PERL-CloudSync
 
 A PERL implementation of Google Drive for cross-platform
 
+
+Required for Amazon:
+libio-compress-perl
+
 Google Docs API 3 -
 -------------------------------
 *obsolete, no longer being developed

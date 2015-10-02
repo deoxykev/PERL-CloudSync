@@ -135,6 +135,20 @@ sub createFolder(*$$){
 
 }
 
+
+sub getFolderIDByPath(*$$){
+
+	my $self = shift;
+	my $path = shift;
+	my $doCreate = shift;
+
+	if ($doCreate){
+		$self->createFolderByPath($path);
+	}else{
+		$self->createFolderByPath($path);
+	}
+}
+
 sub createFolderByPath(*$){
 
 	my $self = shift;

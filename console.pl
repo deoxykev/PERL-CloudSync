@@ -547,104 +547,52 @@ while (my $input = <$userInput>){
 		print STDOUT "complete\n";
 
 
- 	}elsif($input =~ m%^get download list%i){
+
+ 	}elsif($input =~ m%^download all%i){
   		my %sortedDocuments;
-    	my $listURL;
-    	$listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
 
    		while(1){
 
-   			($driveListings) = $services[$currentService]->getList($listURL);
-
-  			my $nextlistURL = $services[$currentService]->getNextURL($driveListings);
-  			$nextlistURL =~ s%\&amp\;%\&%g;
-  			$nextlistURL =~ s%\%3A%\:%g;
-
-	    	$listURL = $nextlistURL;
-
-
-
-  			($createFileURL) = $services[$currentService]->getCreateURL($driveListings) if ($createFileURL eq '');
-  			my %newDocuments = $services[$currentService]->readDriveListings($driveListings);
+   			my %newDocuments = $services[$currentService]->getList();
 
   			foreach my $resourceID (keys %newDocuments){
 		    	$sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
 	  		}
-	  		last if ($listURL eq '');
+	  		last if ($services[$currentService]->{_nextURL} eq '');
 
   		}
 
-  		open(OUTPUT, '>' . pDrive::Config->TMP_PATH . '/download.list') or die ('Cannot save to ' . pDrive::Config->TMP_PATH . '/download.list');
+  		foreach my $resourceID (sort keys %sortedDocuments){
+	    	print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
+	    	$services[$currentService]->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
+  		}
+
+ 	}elsif($input =~ m%^get download list%i){
+  		my %sortedDocuments;
+
+   		while(1){
+
+   			my %newDocuments = $services[$currentService]->getList();
+
+  			foreach my $resourceID (keys %newDocuments){
+		    	$sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
+	  		}
+	  		last if ($services[$currentService]->{_nextURL} eq '');
+
+  		}
+
+  		foreach my $resourceID (sort keys %sortedDocuments){
+	    	print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
+	    	$services[$currentService]->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
+  		}
+
+  		open(OUTPUT, '>' . pDrive::Config->LOCAL_PATH . '/download.list') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/download.list');
   		foreach my $resourceID (sort keys %sortedDocuments){
 	    	print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
 	#    	print OUTPUT $resourceID. "\n" . $sortedDocuments{$resourceID} . "\n";
     		print OUTPUT $resourceID. "\n" ;
   		}
   		close(OUTPUT);
-
-	#	download only all mine documents
- 	#
- 	}elsif($input =~ m%^download mine%i){
-  		my %sortedDocuments;
-    	my $listURL;
-    	$listURL = 'https://docs.google.com/feeds/default/private/full/-/mine';
-
-   		while(1){
-
-   			($driveListings) = $services[$currentService]->getList($listURL);
-
-  			my $nextlistURL = $services[$currentService]->getNextURL($driveListings);
-  			$nextlistURL =~ s%\&amp\;%\&%g;
-  			$nextlistURL =~ s%\%3A%\:%g;
-
-	    	$listURL = $nextlistURL;
-
-
-  			($createFileURL) = $services[$currentService]->getCreateURL($driveListings) if ($createFileURL eq '');
-	  		my %newDocuments = $services[$currentService]->readDriveListings($driveListings);
-
-	  		foreach my $resourceID (keys %newDocuments){
-			    $sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
-		  	}
-		  	last if ($listURL eq '');
-
-  		}
-
-  		foreach my $resourceID (sort keys %sortedDocuments){
-	    	print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
-	    	$services[$currentService]->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
-  		}
-
- 	}elsif($input =~ m%^download all%i){
-  		my %sortedDocuments;
-    	my $listURL;
-    	$listURL = 'https://docs.google.com/feeds/default/private/full?showfolders=true';
-
-   		while(1){
-
-   			($driveListings) = $services[$currentService]->getList($listURL);
-
-  			my $nextlistURL = $services[$currentService]->getNextURL($driveListings);
-  			$nextlistURL =~ s%\&amp\;%\&%g;
-  			$nextlistURL =~ s%\%3A%\:%g;
-
-	    	$listURL = $nextlistURL;
-
-	  		($createFileURL) = $services[$currentService]->getCreateURL($driveListings) if ($createFileURL eq '');
-  			my %newDocuments = $services[$currentService]->readDriveListings($driveListings);
-
-  			foreach my $resourceID (keys %newDocuments){
-		    	$sortedDocuments{$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]} = $newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}];
-	  		}
-	  		last if ($listURL eq '');
-
-  		}
-
-  		foreach my $resourceID (sort keys %sortedDocuments){
-	    	print STDOUT $sortedDocuments{$resourceID}. "\t".$resourceID. "\n";
-	    	$services[$currentService]->downloadFile($sortedDocuments{$resourceID},'./'.$resourceID,'','','');
-  		}
-
 
 	}elsif($input =~ m%^create folder%i){
     	my ($path) = $input =~ m%^create folder\s([^\n]+)\n%;
@@ -783,7 +731,7 @@ sub syncDrive($){
 				$services[$drives[1]]->uploadFile( pDrive::Config->LOCAL_PATH.'/toupload', $path, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
   			}
 	  	}
-	  	#		$services[$service1]->{_nextURL} =  $services[$service1]->{_serviceapi}->getNextURL($driveListings);
+	  	#
 
 		print STDOUT "next url " . $services[0]->{_nextURL} . "\n";
   		last if  $services[0]->{_nextURL} eq '';

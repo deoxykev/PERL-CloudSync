@@ -430,6 +430,7 @@ sub uploadFile(*$$){
 sub getList(*){
 
 	my $self = shift;
+
 	my $driveListings = $self->{_serviceapi}->getList($self->{_nextURL});
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 

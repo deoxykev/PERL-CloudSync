@@ -752,6 +752,7 @@ sub syncFolder($){
 	for(my $i=1; $i <= $#drives; $i++){
 			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
 			$dbase[$drives[$i]][1] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
+			print STDOUT "operation for service #".$i . "\n";
 	}
 	my $nextURL = '';
 	my @subfolders;

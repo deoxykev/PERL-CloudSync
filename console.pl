@@ -815,6 +815,7 @@ sub syncFolder($){
 			    	#	print STDERR "parent = ". $$newDocsyncFoluments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
 
 					for(my $j=1; $j <= $#drives; $j++){
+						print STDERR "service = $j\n";
 						#Google Drive / amazon -> Google Drive / amazon
 	  					###
 			  			#	Google Drive (MD5 comparision) already exists; skip

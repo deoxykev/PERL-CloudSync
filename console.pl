@@ -458,12 +458,16 @@ while (my $input = <$userInput>){
     	syncDrive(@drives);
 
 	# sync the entire drive in source current source with all other sources
-  	}elsif($input =~ m%^sync folder\s+\S+\s+\S+\s+\S+%i){
-    	my ($folder,$service1,$service2) = $input =~ m%^sync folder\s+(\S+)\s+(\S+)\s+(\S+)%i;
+  	}elsif($input =~ m%^sync folder\s+(\S+)%i){
+    	my ($folder) = $input =~ m%^sync folder\s+(\S+)%i;
+		$input =~ s%^sync folder\s+\S+%%;
 		my @drives;
-		$drives[0] = $service1;
-		$drives[1] = $service2;
-    	#my ($rootID) = $services[$currentService]->getListRoot();
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+		}
     	syncFolder($folder,'',@drives);
   	}elsif($input =~ m%^sync folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync folderid\s+(\S+)%i;

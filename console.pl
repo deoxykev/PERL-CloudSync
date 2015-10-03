@@ -474,7 +474,6 @@ while (my $input = <$userInput>){
 			my ($service) = $input =~ m%^\s+(\S+)%;
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
-			print STDOUT "service $service\n";
 		}
     	syncFolder('',$folderID,@drives);
   	}elsif($input =~ m%^sync download folderid\s\S+%i){
@@ -489,15 +488,7 @@ while (my $input = <$userInput>){
 		}
     	syncFolder('DOWNLOAD',$folderID,@drives);
 
-  	}elsif($input =~ m%^sync folderid\s+\S+\s+\S+%i){
-    	my ($folderID,$service1,$service2) = $input =~ m%^sync folderid\s+(\S+)\s+(\S+)\s+(\S+)%i;
-
-		my @drives;
-		$drives[0] = $service1;
-		$drives[1] = $service2;
-    	#my ($rootID) = $services[$currentService]->getListRoot();
-    	syncFolder('',$folderID,@drives);
-	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
+  	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
     	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;
 		my $dbase1 = $dbm->openDBM($services[$service1]->{_db_fisi});
 		my $dbase2 = $dbm->openDBM($services[$service2]->{_db_fisi});

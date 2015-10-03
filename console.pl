@@ -474,6 +474,7 @@ while (my $input = <$userInput>){
 			my ($service) = $input =~ m%^\s+(\S+)%;
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
+			print STDOUT "service $service\n";
 		}
     	syncFolder('',$folderID,@drives);
   	}elsif($input =~ m%^sync download folderid\s\S+%i){

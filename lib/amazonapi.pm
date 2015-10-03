@@ -535,8 +535,8 @@ sub uploadFile(*$$){
 	$fileName =~ s%\/%%g;
 
 	if(1){
-		$fileName =~ s%\'%\\\'%g;
-		$fileName =~ s%\"%\\\"%g;
+		$fileName =~ s%\'%%g;
+		$fileName =~ s%\"%%g;
 #	`curl -X POST --form 'metadata={"name":"$fileName","kind":"FILE", "parents": ["$folder"]}' --form 'content=\@$file' 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId=$fileName' --header "Authorization: Bearer $self->{_token}"`;
 	`curl -X POST --form 'metadata={"name":"$fileName","kind":"FILE", "parents": ["$folder"]}' --form 'content=\@$file' 'https://content-na.drive.amazonaws.com/cdproxy/nodes' --header "Authorization: Bearer $self->{_token}"`;
 	}else{

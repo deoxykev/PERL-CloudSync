@@ -353,7 +353,7 @@ sub getChanges(*$){
 	$URL = API_URL . 'changes';
   	my $content = '';
   	if ($changeID ne ''){
-  		$content = '{  "checkpoint" : "'.$changeID.'" }'.  "\n\n";
+  		$content = 'checkpoint='.$changeID.  "\n\n";
 	}
 
 	my $retryCount = 2;

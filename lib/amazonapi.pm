@@ -369,25 +369,19 @@ sub getChanges(*$){
 	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
   		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
   		print LOG $req->as_string;
-  		print LOG $res->as_string;
+  		print LOG $res->decoded_content;
   		close(LOG);
 	}
 
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-  		my $block = $res->as_string;
 
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-  		}
 	}elsif ($res->code == 401){
  	 	my ($token,$refreshToken) = $self->refreshToken();
 		$self->setToken($token,$refreshToken);
 		$retryCount--;
 	}else{
-		print STDOUT $res->as_string;
+		print STDOUT $res->decoded_content;
 		$retryCount--;
 		sleep(10);
 		#die($res->as_string."error in loading page");}

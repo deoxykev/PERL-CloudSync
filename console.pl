@@ -468,7 +468,7 @@ while (my $input = <$userInput>){
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
 		}
-    	syncFolder($folder,'',@drives);
+    	syncFolder($folder,'',0, @drives);
   	}elsif($input =~ m%^sync folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync folderid\s+(\S+)%i;
 		$input =~ s%^sync folderid\s+\S+%%;
@@ -480,7 +480,18 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 			print STDOUT "service = $service\n";
 		}
-    	syncFolder('',$folderID,@drives);
+    	syncFolder('',$folderID,0,@drives);
+  	}elsif($input =~ m%^mock sync folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^mock sync folderid\s+(\S+)%i;
+		$input =~ s%^mock sync folderid\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+		}
+    	syncFolder('',$folderID,1,@drives);
   	}elsif($input =~ m%^sync download folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync download folderid\s+(\S+)%i;
 		$input =~ s%^sync download folderid\s+\S+%%;
@@ -491,7 +502,7 @@ while (my $input = <$userInput>){
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
 		}
-    	syncFolder('DOWNLOAD',$folderID,@drives);
+    	syncFolder('DOWNLOAD',$folderID,0,@drives);
 
   	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
     	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;
@@ -742,8 +753,12 @@ sub syncDrive($){
 
 }
 
+##
+# Sync a folder (and all subfolders) from one service to one or more other services
+# params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
+##
 sub syncFolder($){
-	my ($folder, $folderID, @drives) = @_;
+	my ($folder, $folderID, $isMock, @drives) = @_;
 	my @dbase;
 	 print STDERR "folder = $folder\n";
 	for(my $i=1; $i <= $#drives; $i++){
@@ -811,7 +826,7 @@ sub syncFolder($){
   					$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
 					print STDOUT "DOWNLOAD $path " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ' ' . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]. "\n";
 					unlink pDrive::Config->LOCAL_PATH.'/'.$$;
-		    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+		    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
 			    	#	print STDERR "parent = ". $$newDocsyncFoluments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
 
 					for(my $j=1; $j <= $#drives; $j++){
@@ -845,10 +860,10 @@ sub syncFolder($){
 
   						}else{
 
-							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1) if ($path ne '' and $path ne  '/');
+							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1) if ($path ne '' and $path ne  '/')  if !($isMock);
 							print STDOUT  "upload to service ".($j+1)." ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
-					    	pDrive::masterLog('upload to service '.($j+1).' ('.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ', fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].', md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]."\n");
-							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+					    	pDrive::masterLog('upload to service '.($j+1).' ('.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ', fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].', md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].")\n");
+							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
   						}
 					}
 

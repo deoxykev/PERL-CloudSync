@@ -872,7 +872,7 @@ sub syncFolder($){
 
 							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1) if ($path ne '' and $path ne  '/' and !($isMock));
 							print STDOUT  "upload to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
-					    	pDrive::masterLog('upload to service '.$drives[$j].' ('.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ', fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].', md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].")\n");
+					    	pDrive::masterLog('upload to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' ('.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ', fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].', md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].")\n");
 							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
   						}
 					}

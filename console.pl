@@ -469,6 +469,17 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 		}
     	syncFolder($folder,'',0, @drives);
+  	}elsif($input =~ m%^mock sync folder\s+(\S+)%i){
+    	my ($folder) = $input =~ m%^mock sync folder\s+(\S+)%i;
+		$input =~ s%^mock sync folder\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+		}
+    	syncFolder($folder,'',1, @drives);
   	}elsif($input =~ m%^sync folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync folderid\s+(\S+)%i;
 		$input =~ s%^sync folderid\s+\S+%%;

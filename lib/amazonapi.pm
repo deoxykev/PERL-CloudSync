@@ -347,13 +347,13 @@ sub getListRoot(*){
 sub getChanges(*$){
 
 	my $self = shift;
-	my $URL = shift;
 	my $changeID = shift;
 
-	$URL = API_URL . 'changes';
+	my $URL = $self->{_metaURL} . 'changes';
   	my $content = '';
   	if ($changeID ne ''){
-  		$content = 'checkpoint='.$changeID.  "\n\n";
+		$changeID =~ s%\\u003d%\=%g;
+  		$content = '{"checkpoint":"'.$changeID.'"}';
 	}
 
 	my $retryCount = 2;
@@ -362,7 +362,7 @@ sub getChanges(*$){
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	$req->content_length(length $content);
-	$req->content_type('application/x-www-form-urlencoded');
+	$req->content_type('application/json');
 	$req->content($content);
 	my $res = $self->{_ua}->request($req);
 
@@ -696,52 +696,7 @@ sub addFile(*$$){
   	my $URL = shift;
   	my $file = shift;
 
-
-  	my $content = '<?xml version="1.0" encoding="UTF-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-  <id>https://docs.google.com/feeds/default/private/full/file:'.$file.'</id>
-</entry>'."\n\n";
-
-	my $req = new HTTP::Request POST => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwritely});
-#	$req->header('Authorization' => 'GoogleLogin auth='.$self->{_authwise});
-	$req->header('GData-Version' => '3.0');
-	$req->content_length(length $content);
-	$req->content_type('application/atom+xml');
-	$req->content($content);
-
-	my $res = $self->{_ua}->request($req);
-
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-		    if ($line =~ m%\<gd\:resourceId\>%){
-		    	my ($resourceType,$resourceID) = $line =~ m%\<gd\:resourceId\>([^\:]*)\:?([^\<]*)\</gd:resourceId\>%;
-
-	      		return $resourceID;
-    		}
-
-  		}
-
-	}else{
-		#print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
+	return; #not implemented
 
 }
 
@@ -865,15 +820,20 @@ sub readChangeListings(**){
 	my $count=0;
 
   	$$driveListings =~ s%\n%%g;
-  	while ($$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\,\s*\{% or $$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\s*\]\s*\}%){
+  	while ($$driveListings =~ m%\[\{.*?\}\,\{% or $$driveListings =~ m%\,\{.*?\}\,\{%  or $$driveListings =~ m%\,\{.*?\}\]\,\"status%){
 
-    	my ($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\,\s*\{%;
+    	my ($entry) = $$driveListings =~ m%\[\{(.*?)\}\,\{%;
 
 		if ($entry eq ''){
-    		($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\s*\}%;
-	    	$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\s*\}%%;
+    		($entry) = $$driveListings =~  m%\,\{(.*?)\}\,\{%;
+    		if ($entry eq ''){
+    			($entry) = $$driveListings =~   m%\,\{(.*?)\}\]\,\"status%;
+	    		$$driveListings =~s%\,\{.*?\}\]\,\"status%%;
+    		}else{
+	    		$$driveListings =~s%\,\{.*?\}\,\{%%;
+    		}
 		}else{
-    		$$driveListings =~ s%\{\s*\"eTagResponse\"\:(.*?)\}\,\s*%%;
+	    	$$driveListings =~s%\[\{.*?\}\,\{%%;
 		}
 
 		my ($resourceID) = $entry =~ m%\"id\"\:\s?\"([^\"]+)\"%;
@@ -883,7 +843,6 @@ sub readChangeListings(**){
 
 
     	next if $md5 eq '';
-#		$$driveListings =~ s%drive\#file%%;
 
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
    		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;

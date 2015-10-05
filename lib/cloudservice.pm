@@ -1,7 +1,8 @@
 package pDrive::CloudService;
 	use Fcntl;
 
-use constant CHUNKSIZE => (8*256*1024);
+#use constant CHUNKSIZE => (8*256*1024);
+use constant CHUNKSIZE => (128*256*1024);
 
 
 

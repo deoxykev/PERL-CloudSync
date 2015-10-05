@@ -444,7 +444,15 @@ sub getChangeID(**){
 
  	my $self = shift;
   	my $listing = shift;
-	my ($largestChangeId) = $$listing =~ m%\"checkpoint\"\:\s?\"([^\"]+)\"%;
+
+	my $largestChangeId;
+  	while ($$listing =~ m%\"checkpoint\"\:\s?\"[^\"]+"%){
+
+    	($largestChangeId) = $$listing =~ m%\"checkpoint\"\:\s?\"([^\"]+)"%;
+   		$$listing =~s%\"checkpoint\"\:\s?\"[^\"]+"%%;
+
+	}
+	#my ($largestChangeId) = $$listing =~ m%\"checkpoint\"\:\s?\"([^\"]+)"%;
 	return $largestChangeId;
 }
 

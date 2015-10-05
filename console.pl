@@ -844,9 +844,10 @@ sub syncFolder($){
 							print STDOUT  "skip  to service ".($j+1)." (duplicate fisi)\n";
 
   						}else{
+
 							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1) if ($path ne '' and $path ne  '/');
 							print STDOUT  "upload to service ".($j+1)." ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
-
+					    	pDrive::masterLog('upload to service '.($j+1).' ('.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ', fisi '.$dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}.', md5 '.$dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}."\n");
 							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
   						}
 					}

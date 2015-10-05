@@ -841,20 +841,19 @@ sub syncFolder($){
 			    	#	print STDERR "parent = ". $$newDocsyncFoluments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
 
 					for(my $j=1; $j <= $#drives; $j++){
-						print STDERR "service = $j\n";
 						#Google Drive / amazon -> Google Drive / amazon
 	  					###
 			  			#	Google Drive (MD5 comparision) already exists; skip
   						if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' or Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::amazon' )
   						and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive'  or Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::amazon' )
   						and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
-							print STDOUT  "skip to service $j (duplicate MD5)\n";
+							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
 
 						#Google Drive -> Google Photos
 	  					###
 			  			#	Google Drive (MD5 comparision) already exists OR > 1GB; skip
   						}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive::Photos'  and  (($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 1073741824)  or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
-							print STDOUT  "skip  to service $j (duplicate MD5 or >1GB)\n";
+							print STDOUT  "skip  to service $drives[$j] (duplicate MD5 or >1GB)\n";
 
 			  			#		already exists; skip
 #  						}elsif 	(defined($dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$j]]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne ''){
@@ -863,17 +862,17 @@ sub syncFolder($){
 						###
   						#OneDrive > 10GB; skip
 						}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::oneDrive'  and  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 10737418240){
-								print STDOUT  "skip  to service $j (duplicate fisi or >10GB)\n";
+								print STDOUT  "skip  to service $drives[$j] (duplicate fisi or >10GB)\n";
 
 						#*anything* -> *anything*
 						}elsif 	((defined($dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}) and  $dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'} ne '') or (defined($dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'}) and  $dbase[$drives[$j]][1]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_0'} ne '') ){
-							print STDOUT  "skip  to service $j (duplicate fisi)\n";
+							print STDOUT  "skip  to service $drives[$j] (duplicate fisi)\n";
 
   						}else{
 
 							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1) if ($path ne '' and $path ne  '/' and !($isMock));
-							print STDOUT  "upload to service $j ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
-					    	pDrive::masterLog('upload to service '.$j.' ('.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ', fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].', md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].")\n");
+							print STDOUT  "upload to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
+					    	pDrive::masterLog('upload to service '.$drives[$j].' ('.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ', fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].', md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].")\n");
 							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
   						}
 					}

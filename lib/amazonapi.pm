@@ -771,7 +771,7 @@ sub readDriveListings(**){
 		#my ($downloadURL) = $entry =~ m%\"downloadUrl\"\:\s?\"([^\"]+)\"%;
 		my ($parentID) = $entry =~ m%\"parents\"\:\s?\[\"([^\"]+)\"%;
 		my ($md5) = $entry =~ m%\"md5\"\:\s?\"([^\"]+)\"%;
-		my ($fileSize) = $entry =~ m%\"size\"\:\s?\"([^\"]+)\"%;
+		my ($fileSize) = $entry =~ m%\"size\"\:\s?(\d+)%;
 
 	    # 	is a folder
 	    if ($resourceType eq '' ){
@@ -847,7 +847,7 @@ sub readChangeListings(**){
 		my ($resourceID) = $entry =~ m%\"id\"\:\s?\"([^\"]+)\"%;
 		my ($md5) = $entry =~ m%\"md5\"\:\s?\"([^\"]+)\"%;
     	my ($title) = $entry =~ m%\"name\"\:\s?\"([^\"]+)\"%;
-		my ($fileSize) = $entry =~ m%\"size\"\:\s?\"([^\"]+)\"%;
+		my ($fileSize) = $entry =~ m%\"size\"\:\s?(\d+)%;
 
 
     	next if $md5 eq '';
@@ -856,6 +856,7 @@ sub readChangeListings(**){
    		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
 		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
+		pDrive::masterLog('saving metadata ' .$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n") if (pDrive::Config->DEBUG);
 
     	$count++;
   	}

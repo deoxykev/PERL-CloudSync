@@ -423,6 +423,11 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^get changes%i){
     	my ($driveListings) = $services[$currentService]->getChangesAll();
 
+	# load MD5 with all changes
+  	}elsif($input =~ m%^get md5\s+\"[^\"]+\"\s+\d+%i){
+    	my ($fileName,$fileSize) = $input =~ m%^get md5\s+\"([^\"]+)\"\s+(\d+)%i;
+		print STDOUT "fisi is ". pDrive::FileIO::getMD5String($fileName .$fileSize) . "\n";
+
 	# load MD5 with account data of first page of results
   	}elsif($input =~ m%^get drive list%i){
     	my $listURL;
@@ -846,8 +851,12 @@ sub syncFolder($){
 			  			#	Google Drive (MD5 comparision) already exists; skip
   						if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' or Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::amazon' )
   						and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive'  or Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::amazon' )
-  						and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+  						and  ( (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'})
+  								and $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
+  								or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
+  								and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
+
 
 						#Google Drive -> Google Photos
 	  					###
@@ -872,7 +881,7 @@ sub syncFolder($){
 
 							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1) if ($path ne '' and $path ne  '/' and !($isMock));
 							print STDOUT  "upload to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
-					    	pDrive::masterLog('upload to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' ('.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ', fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].', md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].")\n");
+					    	pDrive::masterLog('upload to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
 							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
   						}
 					}

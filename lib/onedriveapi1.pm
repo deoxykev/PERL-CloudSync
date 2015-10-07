@@ -721,7 +721,7 @@ while ($$driveListings =~ m%\{\"\@content.downloadUrl\"\:\"[^\"]+\"\,\"name\"\:\
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
-		#print "FISI = $fileName $resourceID $fileSize $newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]\n";
+		pDrive::masterLog('saving metadata ' .$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n") if (pDrive::Config->DEBUG);
     	$count++;
   	}
 

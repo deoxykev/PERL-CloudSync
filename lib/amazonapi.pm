@@ -838,10 +838,10 @@ sub readChangeListings(**){
     			($entry) = $$driveListings =~   m%\,\{(.*?)\}\]\,\"status%;
 	    		$$driveListings =~s%\,\{.*?\}\]\,\"status%%;
     		}else{
-	    		$$driveListings =~s%\,\{.*?\}\,\{%%;
+	    		$$driveListings =~s%\,\{.*?\}\,\{%\,\{%;
     		}
 		}else{
-	    	$$driveListings =~s%\[\{.*?\}\,\{%%;
+	    	$$driveListings =~s%\[\{.*?\}\,\{%\,\{%;
 		}
 
 		my ($resourceID) = $entry =~ m%\"id\"\:\s?\"([^\"]+)\"%;

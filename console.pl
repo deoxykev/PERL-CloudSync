@@ -423,6 +423,11 @@ while (my $input = <$userInput>){
     	$services[$currentService]->resetChange();
 		print STDOUT "reset changeID\n";
 
+	# get meta data for a file
+  	}elsif($input =~ m%^get meta\s+\"[^\"]+\"\s+\"[^\"]+\"%i){
+    	my ($path,$fileName) = $input =~ m%^get meta\s+\"([^\"]+)\"\s+\"([^\"]+)\"%i;
+    	$services[$currentService]->getMetaData($path,$fileName);
+
 	# load MD5 with all changes
   	}elsif($input =~ m%^get changes%i){
     	my ($driveListings) = $services[$currentService]->getChangesAll();

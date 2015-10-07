@@ -78,6 +78,18 @@ sub new(*) {
 
 }
 
+
+sub getMetaData(*$$){
+
+	my $self = shift;
+ 	my $path = shift;
+  	my $fileName = shift;
+
+	my $driveListings = $self->{_serviceapi}->getMetaData($path,$fileName);
+	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+
+}
+
 sub getListAll(*){
 
 	my $self = shift;

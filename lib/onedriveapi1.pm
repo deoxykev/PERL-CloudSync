@@ -189,6 +189,7 @@ sub getList(*$){
 
 	if ($URL eq ''){
 		$URL = 'https://www.googleapis.com/drive/v2/files?fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+		$URL = 'https://api.onedrive.com/v1.0/drive/root:/:/view.changes?select=%40content.downloadUrl%2Cname%2Cid%2Csize%2Cfile&token=';
 	}
 
 	my $retryCount = 2;
@@ -221,6 +222,45 @@ sub getList(*$){
 	}
 }
 
+
+
+sub getMetaData(*$){
+
+	my $self = shift;
+ 	my $path = shift;
+  	my $fileName = shift;
+
+	my $URL = 'https://api.onedrive.com/v1.0/drive/root:/'.$path.'/'.$fileName;
+
+	my $retryCount = 2;
+	while ($retryCount){
+	my $req = new HTTP::Request GET => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+
+
+	}else{
+		print STDOUT $res->as_string;
+		$retryCount--;
+		sleep(10);
+		#print STDOUT $res->as_string;
+		#die($res->as_string."error in loading page");
+	}
+
+  	return \$res->as_string;
+	}
+}
 
 
 #

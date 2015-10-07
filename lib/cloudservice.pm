@@ -33,6 +33,16 @@ sub updateChange(**){
 
 }
 
+
+sub resetChange(**){
+
+	my $self = shift;
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open checksum: $!";
+	$dbase{'LAST_CHANGE'} = '';
+	untie(%dbase);
+
+}
+
 ##
 # multiple NIC cards:
 # bind to a specific IP

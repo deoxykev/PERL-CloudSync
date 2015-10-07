@@ -419,6 +419,10 @@ while (my $input = <$userInput>){
     	$services[$currentService]->updateChange($changeID);
 		print STDOUT "changeID set to " . $changeID . "\n";
 
+  	}elsif($input =~ m%^reset changeid%i){
+    	$services[$currentService]->resetChange();
+		print STDOUT "reset changeID\n";
+
 	# load MD5 with all changes
   	}elsif($input =~ m%^get changes%i){
     	my ($driveListings) = $services[$currentService]->getChangesAll();

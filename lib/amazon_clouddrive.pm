@@ -406,9 +406,11 @@ sub getChangesAll(*){
     }
 
 	my $driveListings = $self->{_serviceapi}->getChanges($changeID);
+
+	$changeID = $self->{_serviceapi}->getChangeID($driveListings);
+
   	my $newDocuments = $self->{_serviceapi}->readChangeListings($driveListings);
 	$self->updateMD5Hash($newDocuments);
-	$changeID = $self->{_serviceapi}->getChangeID($driveListings);
 	$self->updateChange($changeID);
 
 }

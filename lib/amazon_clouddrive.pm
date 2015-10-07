@@ -408,7 +408,7 @@ sub getChangesAll(*){
 	my $driveListings = $self->{_serviceapi}->getChanges($changeID);
 
 	$changeID = $self->{_serviceapi}->getChangeID($driveListings);
-
+	print STDOUT "new changeID = " . $changeID . "\n";
   	my $newDocuments = $self->{_serviceapi}->readChangeListings($driveListings);
 	$self->updateMD5Hash($newDocuments);
 	$self->updateChange($changeID);

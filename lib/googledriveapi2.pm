@@ -828,6 +828,11 @@ sub readDriveListings(**){
 
 
     	my ($title) = $entry =~ m%\"title\"\:\s?\"([^\"]+)\"%;
+    	#remove leading spaces from filename (causes issues with fisi)
+    	$title =~ s%^\s+%%g;
+    	#remove trailing spaces from filename (causes issues with fisi)
+    	$title =~ s%\s+$%%g;
+
 		my ($updated) = $entry =~ m%\"modifiedDate\"\:\s?\"([^\"]+)\"%;
 		my ($published) = $entry =~ m%\"createdDate\"\:\s?\"([^\"]+)\"%;
 		my ($resourceType) = $entry =~ m%\"mimeType\"\:\s?\"([^\"]+)\"%;
@@ -910,6 +915,11 @@ sub readChangeListings(**){
 
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
    		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
+    	#remove leading spaces from filename (causes issues with fisi)
+    	$title =~ s%^\s+%%g;
+    	#remove trailing spaces from filename (causes issues with fisi)
+    	$title =~ s%\s+$%%g;
+
   		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
 		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
 

@@ -230,7 +230,7 @@ sub getMetaData(*$){
  	my $path = shift;
   	my $fileName = shift;
 
-	my $URL = 'https://api.onedrive.com/v1.0/drive/root:/'.$path.'/'.$fileName;
+	my $URL = 'https://api.onedrive.com/v1.0/drive/root:/'.$path.'/'.$fileName . '?fields=%40content.downloadUrl%2Cname%2Cid%2Csize%2Cfile';
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -764,7 +764,24 @@ while ($$driveListings =~ m%\{\"\@content.downloadUrl\"\:\"[^\"]+\"\,\"name\"\:\
 		pDrive::masterLog('saving metadata ' .$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n") if (pDrive::Config->DEBUG);
     	$count++;
   	}
+my ($fileName, $resourceID, $fileSize,$sha1) = $$driveListings =~ m%"\@content.downloadUrl\"\:\"[^\"]+\"\,.*?\"name\"\:\"([^\"]+)\"\,.*?\"id\"\:\"([^\"]+)\"\,.*?\"size\"\:(\d+)\,.*?\"file\"\:\{\"hashes\"\:\{\"crc32Hash\"\:\"[^\"]+\"\,\"sha1Hash\"\:\"([^\"]+)\"\}% ;
 
+	if ($fileName ne ''){
+
+		#fix unicode
+		$fileName =~ s{ \\u([0-9A-F]{4}) }{ chr hex $1 }egix;
+		$fileName =~ s/\+//g; #remove +s in title for fisi
+		utf8::encode($fileName);
+
+
+  		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_sha1'}] = $sha1;
+  		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $fileName;
+  		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
+  		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($fileName .$fileSize);
+		pDrive::masterLog('saving metadata ' .$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n") if (pDrive::Config->DEBUG);
+    	$count++;
+
+	}
 	print STDOUT "entries = $count\n";
 	return \%newDocuments;
 }

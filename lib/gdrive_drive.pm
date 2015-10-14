@@ -452,6 +452,16 @@ sub getListRoot(*){
 
 }
 
+sub deleteFile(*$){
+
+	my $self = shift;
+	my $resourceID = shift;
+
+	return $self->{_serviceapi}->deleteFile($resourceID);
+
+}
+
+
 sub getListAll(*){
 
 	my $self = shift;

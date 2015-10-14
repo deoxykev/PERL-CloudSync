@@ -909,6 +909,7 @@ sub syncFolder($){
 
   				}else{
  					 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
+ 					 $services[$drives[0]]->deleteFile($resourceID) if ($isInbound);
   				}
 
 

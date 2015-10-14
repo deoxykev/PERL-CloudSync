@@ -814,7 +814,7 @@ sub deleteFile(*$){
   		return;
 
 	}else{
-		#	print STDOUT $res->as_string;
+		print STDOUT $res->as_string;
 		return;}
 
 }

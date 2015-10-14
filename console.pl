@@ -508,7 +508,7 @@ while (my $input = <$userInput>){
     	syncFolder('',$folderID,0,0, @drives);
   	}elsif($input =~ m%^sync inboundid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync inboundid\s+(\S+)%i;
-		$input =~ s%^sync folderid\s+\S+%%;
+		$input =~ s%^sync inboundid\s+\S+%%;
 		my @drives;
 		my $count=0;
 		while ($input =~ m%^\s+\S+%){

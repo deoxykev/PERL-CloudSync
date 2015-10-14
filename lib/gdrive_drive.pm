@@ -561,11 +561,12 @@ sub updateMD5Hash(**){
 }
 
 
-sub getFolderIDByPath(*$$){
+sub getFolderIDByPath(*$$$){
 
 	my $self = shift;
 	my $path = shift;
 	my $doCreate = shift;
+	my $skipLastFolder = shift;
 
 	my $parentFolder= '';
 	my $folderID;
@@ -575,11 +576,13 @@ sub getFolderIDByPath(*$$){
 	$path =~ s%\/\/%\/%g;
 
 	my $serverPath = '';
+	my $count=0;
 	while(my ($folder) = $path =~ m%^\/?([^\/]+)%){
 
     	$path =~ s%^\/?[^\/]+%%;
 		$serverPath .= $folder;
-
+		$count++;
+		next if ($skipLastFolder and  $count ==1);
 		#check server-cache for folder
 		$folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 		#	folder doesn't exist, create it

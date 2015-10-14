@@ -482,7 +482,7 @@ while (my $input = <$userInput>){
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
 		}
-    	syncFolder($folder,'',0, @drives);
+    	syncFolder($folder,'',0, 0, @drives);
   	}elsif($input =~ m%^mock sync folder\s+(\S+)%i){
     	my ($folder) = $input =~ m%^mock sync folder\s+(\S+)%i;
 		$input =~ s%^mock sync folder\s+\S+%%;
@@ -493,7 +493,7 @@ while (my $input = <$userInput>){
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
 		}
-    	syncFolder($folder,'',1, @drives);
+    	syncFolder($folder,'',1, 0, @drives);
   	}elsif($input =~ m%^sync folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync folderid\s+(\S+)%i;
 		$input =~ s%^sync folderid\s+\S+%%;
@@ -505,7 +505,19 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 			print STDOUT "service = $service\n";
 		}
-    	syncFolder('',$folderID,0,@drives);
+    	syncFolder('',$folderID,0,0, @drives);
+  	}elsif($input =~ m%^sync inboundid\s\S+%i){
+    	my ($folderID) = $input =~ m%^sync inboundid\s+(\S+)%i;
+		$input =~ s%^sync folderid\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+			print STDOUT "service = $service\n";
+		}
+    	syncFolder('',$folderID,0,1, @drives);
   	}elsif($input =~ m%^mock sync folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^mock sync folderid\s+(\S+)%i;
 		$input =~ s%^mock sync folderid\s+\S+%%;
@@ -516,7 +528,7 @@ while (my $input = <$userInput>){
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
 		}
-    	syncFolder('',$folderID,1,@drives);
+    	syncFolder('',$folderID,1,0, @drives);
   	}elsif($input =~ m%^sync download folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync download folderid\s+(\S+)%i;
 		$input =~ s%^sync download folderid\s+\S+%%;
@@ -527,7 +539,7 @@ while (my $input = <$userInput>){
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
 		}
-    	syncFolder('DOWNLOAD',$folderID,0,@drives);
+    	syncFolder('DOWNLOAD',$folderID,0,0,@drives);
 
   	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
     	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;
@@ -783,7 +795,7 @@ sub syncDrive($){
 # params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
 ##
 sub syncFolder($){
-	my ($folder, $folderID, $isMock, @drives) = @_;
+	my ($folder, $folderID, $isMock, $isInbound, @drives) = @_;
 	my @dbase;
 	 print STDERR "folder = $folder\n";
 	for(my $i=1; $i <= $#drives; $i++){
@@ -888,7 +900,7 @@ sub syncFolder($){
 
   						}else{
 
-							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1) if ($path ne '' and $path ne  '/' and !($isMock));
+							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1, $isInbound) if ($path ne '' and $path ne  '/' and !($isMock));
 							print STDOUT  "upload to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('upload to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
 							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);

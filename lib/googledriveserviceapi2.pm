@@ -240,8 +240,6 @@ sub getServiceToken(*$){
 sub refreshToken(*){
 	my $self = shift;
 
-	return $self->getServiceToken($self->{_username}) if (defined($self->{_iss}));
-
 	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
 
 #	my  $URL = 'http://dmdsoftware.net/api/gdrive.php';

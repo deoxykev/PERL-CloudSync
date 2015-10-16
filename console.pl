@@ -247,7 +247,7 @@ while (my $input = <$userInput>){
 		require './lib/googledriveserviceapi2.pm';
 
     	my ($account,$login) = $input =~ m%^load gds\s(\d+)\s([^\s]+)%i;
-		$services[$account] = pDrive::gDrive->new($login);
+		$services[$account] = pDrive::gDrive->newService($login);
 		$currentService = $account;
 
 		$loggedInUser = $bindIP;

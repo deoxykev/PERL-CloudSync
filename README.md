@@ -28,6 +28,7 @@ Google Drive API 2 -
 -------------------------------
 requires: JSON
 apt-get install libjson-pp-perl
+using cpan, install JSON::WebToken
 
 what works:
 - OAUTH2 auhentication

@@ -184,7 +184,7 @@ sub getServiceToken(*$){
         # will generate a 403
         prn => $username,
     },
-    $private_key_string,
+    $self->{_key},
     'RS256',
     { typ => 'JWT' }
 );

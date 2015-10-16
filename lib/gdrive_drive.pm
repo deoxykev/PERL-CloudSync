@@ -69,6 +69,7 @@ sub new(*$) {
  	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
 		$self->{_serviceapi}->setToken($token,$refreshToken);
 	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
+	  	$self->{_serviceapi}->testAccess();
 	}
 	return $self;
 

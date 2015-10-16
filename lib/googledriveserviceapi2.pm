@@ -222,7 +222,7 @@ sub getServiceToken(*$){
 
 	  	my $block = $res->as_string;
 
-		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
+		($token) = $block =~ m%\"access_token\"\s?\:\s?\"([^\"]+)\"%;
 		if ($token ne ''){
 			$self->{_serviceToken} = $token;
 			return $self->{_serviceToken};

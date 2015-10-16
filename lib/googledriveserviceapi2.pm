@@ -152,8 +152,8 @@ sub getToken(*$){
 
 	  	my $block = $res->as_string;
 
-		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
-		($refreshToken) = $block =~ m%\"refresh_token\"\:\s?\"([^\"]+)\"%;
+		($token) = $block =~ m%\"access_token\"\s?\:\s?\"([^\"]+)\"%;
+		($refreshToken) = $block =~ m%\"refresh_token\"\s?\:\s?\"([^\"]+)\"%;
 
 	}else{
 		#print STDOUT $res->as_string;
@@ -270,7 +270,7 @@ sub refreshToken(*){
 
 	  	my $block = $res->as_string;
 
-		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
+		($token) = $block =~ m%\"access_token\"\s?\:\s?\"([^\"]+)\"%;
 		$retryCount=0;
 
 	}else{

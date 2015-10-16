@@ -5,24 +5,30 @@ PERL-CloudSync
 A PERL implementation of Google Drive for cross-platform
 
 
-Required for Amazon:
-libio-compress-perl
 
-Google Docs API 3 -
+Amazon Cloud Drive -
 -------------------------------
-*obsolete, no longer being developed
+requires:
+apt-get install libio-compress-perl
+apt-get install aria2
+
 what works:
-- client login with username & password or username & application password
-- downloading all files
-- downloading all owner files
+- OAUTH2 auhentication
 - upload files
-- create folders, add files to folders, delete files from folders
-- uploading all files in a folder supplied by user (in list or adhoc)
+- create folders
+- recurisively uploading all files in a folder supplied by user (in list or adhoc)
+- constructing a memory hash of files using md5 and fisi against file id (for purposes of syncing)
+- multiple accounts
+
+being worked on:
 - track local files vs server files (dropbox sync ability)
-- constructing a memory hash of files in local vs server copy
+
 
 Google Drive API 2 -
 -------------------------------
+requires: JSON
+apt-get install libjson-pp-perl
+
 what works:
 - OAUTH2 auhentication
 - upload files
@@ -76,4 +82,16 @@ being worked on:
 - track local files vs server files (dropbox sync ability)
 
 
+Google Docs API 3 -
+-------------------------------
+*obsolete, no longer being developed
+what works:
+- client login with username & password or username & application password
+- downloading all files
+- downloading all owner files
+- upload files
+- create folders, add files to folders, delete files from folders
+- uploading all files in a folder supplied by user (in list or adhoc)
+- track local files vs server files (dropbox sync ability)
+- constructing a memory hash of files in local vs server copy
 

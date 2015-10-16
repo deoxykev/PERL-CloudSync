@@ -899,6 +899,7 @@ sub deleteFile(*$){
   		return;
 
 	}else{
+		print STDOUT $req->as_string;
 		print STDOUT $res->as_string;
 		return;}
 

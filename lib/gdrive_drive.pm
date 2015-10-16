@@ -136,15 +136,13 @@ sub setService(*$){
 	my $username = shift;
 	$self->{_serviceapi}->setService(pDrive::Config->ISS, pDrive::Config->KEY, $username);
 
-	my $loginsDBM = pDrive::DBM->new('./gd.'.$self->{_username}.'.db');
-#  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
-  	$self->{_login_dbm} = $loginsDBM;
-  	my ($token,$refreshToken) = $loginsDBM->readLogin($username);
+
+  	my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($username);
 
 	# no token defined
 	if ($token eq ''){
- 	  	$token = $self->{_serviceapi}->getServiceToken($username);
-	  	$self->{_login_dbm}->writeLogin($username,$token,'');
+ 	  	($token) = $self->{_serviceapi}->getServiceToken($username);
+	  	$self->{_login_dbm}->writeServiceLogin($username,$token);
 	}else{
 		$self->{_serviceapi}->setServiceToken($token);
 	}
@@ -152,10 +150,10 @@ sub setService(*$){
 	# token expired?
 	if (!($self->{_serviceapi}->testServiceAccess())){
 		# refresh token
- 	 	($token,$refreshToken) = $self->{_serviceapi}->getServiceToken($username);
+ 	 	($token) = $self->{_serviceapi}->getServiceToken($username);
 		$self->{_serviceapi}->setServiceToken($token);
-	  	$self->{_login_dbm}->writeLogin($username,$token,'');
-	  	$self->{_serviceapi}->testAccess();
+	  	$self->{_login_dbm}->writeServiceLogin($username,$token);
+	  	$self->{_serviceapi}->testServiceAccess();
 	}
 }
 

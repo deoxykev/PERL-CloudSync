@@ -347,7 +347,18 @@ sub writeLogin(*$$$){
 	 untie(%dbase);
 
 }
+sub writeServiceLogin(*$$$){
+	my $self = shift;
+	my $username = shift;
+	my $token = shift;
 
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_container},O_RDWR|O_CREAT, 0666) or die "can't open ".$self->{_container}.": $!";
+
+	$dbase{$username . '|servicetoken'} = $token if $token ne $dbase{$username . '|servicetoken'};
+
+	 untie(%dbase);
+
+}
 sub writeValueContainerHash(****){
 
   my ($self,$path,$resourceID, $memoryHash) = @_;

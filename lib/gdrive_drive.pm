@@ -137,11 +137,12 @@ sub setService(*$){
 	$self->{_serviceapi}->setService(pDrive::Config->ISS, pDrive::Config->KEY, $username);
 
 
-  	my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($username);
+  	my ($token) = $self->{_login_dbm}->readServiceLogin($username);
 
 	# no token defined
 	if ($token eq ''){
  	  	($token) = $self->{_serviceapi}->getServiceToken($username);
+ 	  	print STDERR "TOKEN = $token\n";
 	  	$self->{_login_dbm}->writeServiceLogin($username,$token);
 	}else{
 		$self->{_serviceapi}->setServiceToken($token);

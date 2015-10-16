@@ -172,6 +172,16 @@ sub readLogin(*$){
     return ($token,$refreshToken);
 
 }
+sub readServiceLogin(*$){
+
+	my $self = shift;
+  	my $username = shift;
+	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_container},O_RDWR|O_CREAT, 0666) or die "can't open ".$self->{_container}.": $!";
+	my $token = $dbase{$username . '|servicetoken'};
+	untie(%dbase);
+    return ($token);
+
+}
 
 #
 # Create the memory has from the DBM

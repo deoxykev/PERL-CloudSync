@@ -244,8 +244,28 @@ while (my $input = <$userInput>){
 			}
 		}
 	}elsif($input =~ m%^load gds\s\d+\s([^\s]+)%i){
+		require './lib/googledriveserviceapi2.pm';
+
     	my ($account,$login) = $input =~ m%^load gds\s(\d+)\s([^\s]+)%i;
 		$services[$account] = pDrive::gDrive->newService($login);
+		$currentService = $account;
+
+		$loggedInUser = $bindIP;
+		for (my $i=0;$i <= $#services;$i++){
+			if (defined $services[$i]){
+				$loggedInUser .= ', ' if $i > 1;
+				if ($currentService == $i){
+					$loggedInUser .= '*'.$i. '*. ' . $services[$i]->{_username};
+				}else{
+					$loggedInUser .= $i. '. ' . $services[$i]->{_username};
+				}
+
+			}
+		}
+	}elsif($input =~ m%^set service username\s([^\s]+)%i){
+
+    	my ($account,$login) = $input =~ m%^set service username\s([^\s]+)%i;
+		$services[$currentService] = pDrive::gDrive->newService($login);
 		$currentService = $account;
 
 		$loggedInUser = $bindIP;

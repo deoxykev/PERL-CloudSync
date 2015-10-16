@@ -141,7 +141,7 @@ sub setService(*$){
 
 	# no token defined
 	if ($token eq ''){
- 	  	($token) = $self->{_serviceapi}->getServiceToken($username);
+ 	  	$token = $self->{_serviceapi}->getServiceToken($username);
  	  	print STDERR "TOKEN = $token\n";
 	  	$self->{_login_dbm}->writeServiceLogin($username,$token);
 	}else{

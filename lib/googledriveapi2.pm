@@ -197,6 +197,8 @@ sub getServiceToken(*$){
 
 	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
  	 open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+	 print LOG 'iss = '. $self->{_iss}."\n";
+	 print LOG 'username = '. $self->{_username}."\n";
  	 print LOG $req->as_string;
  	 print LOG $res->as_string;
  	 close(LOG);

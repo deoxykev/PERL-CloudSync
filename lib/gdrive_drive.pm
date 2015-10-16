@@ -120,6 +120,7 @@ sub newService(*$) {
 		$self->{_serviceapi}->setToken($token,'');
 	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,'');
 	}
+
 	return $self;
 
 }

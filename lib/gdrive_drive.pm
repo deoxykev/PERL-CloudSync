@@ -125,6 +125,7 @@ sub newService(*$) {
  	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
 		$self->{_serviceapi}->setToken($token,$refreshToken);
 	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
+	  	$self->{_serviceapi}->testAccess();
 	}
 	return $self;
 
@@ -154,6 +155,7 @@ sub setService(*$){
  	 	($token,$refreshToken) = $self->{_serviceapi}->getServiceToken($username);
 		$self->{_serviceapi}->setServiceToken($token);
 	  	$self->{_login_dbm}->writeLogin($username,$token,'');
+	  	$self->{_serviceapi}->testAccess();
 	}
 }
 

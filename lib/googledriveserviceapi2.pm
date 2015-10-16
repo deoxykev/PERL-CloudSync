@@ -223,13 +223,17 @@ sub getServiceToken(*$){
 	  	my $block = $res->as_string;
 
 		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
+		if ($token ne ''){
+			$self->{_serviceToken} = $token;
+			return $self->{_serviceToken};
+		}
 
 	}else{
 		#print STDOUT $res->as_string;
 		die ($res->as_string."error in loading page");}
 
-	$self->{_serviceToken} = $token;
-	return $self->{_serviceToken};
+	die ("can't find token");
+
 
 }
 

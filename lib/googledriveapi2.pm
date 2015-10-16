@@ -161,7 +161,7 @@ sub getServiceToken(*$){
 	my $username = shift;
 
 
-	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
+	my  $URL = 'https://accounts.google.com/o/oauth2/token';
 
 	use JSON;
 	use JSON::WebToken;
@@ -173,7 +173,7 @@ sub getServiceToken(*$){
     {
         # your service account id here
         iss   => $self->{_iss},
-        scope => "https://www.googleapis.com/auth/drive",
+        scope => 'https://www.googleapis.com/auth/drive',
         aud   => 'https://accounts.google.com/o/oauth2/token',
         exp   => $time + 3600,
         iat   => $time,

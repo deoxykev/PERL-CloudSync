@@ -29,7 +29,10 @@ sub new() {
               _clientID => undef,
               _clientSecret => undef,
               _refreshToken  => undef,
-              _token => undef};
+              _token => undef,
+			  _iss => undef,
+	          _key => undef,
+			  _username => undef};
 
   	my $class = shift;
   	bless $self, $class;
@@ -65,6 +68,17 @@ sub new() {
 
   	return $self;
 
+}
+
+
+sub setService(*$$){
+	my $self = shift;
+	my $ISS = shift;
+	my $KEY = shift;
+	my $username = shift;
+	$self->{_iss} = $ISS;
+	$self->{_key} = $KEY;
+	$self->{_username} = $username;
 }
 
 ##
@@ -139,12 +153,81 @@ sub getToken(*$){
 
 }
 
+#
+# getTokens
+##
+sub getServiceToken(*$){
+	my $self = shift;
+	my $username = shift;
+
+
+	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
+
+	use JSON;
+	use JSON::WebToken;
+
+
+	my $time = time;
+
+	my $jwt = JSON::WebToken->encode(
+    {
+        # your service account id here
+        iss   => $self->{_iss},
+        scope => "https://www.googleapis.com/auth/drive",
+        aud   => 'https://accounts.google.com/o/oauth2/token',
+        exp   => $time + 3600,
+        iat   => $time,
+        # To access the google admin sdk with a service account
+        # the service account must act on behalf of an account
+        # that has admin privileges on the domain
+        # Otherwise the token will be returned but API calls
+        # will generate a 403
+        prn => $username,
+    },
+    $private_key_string,
+    'RS256',
+    { typ => 'JWT' }
+);
+	my $req = new HTTP::Request POST => $URL;
+	$req->content_type("application/x-www-form-urlencoded");
+	$req->protocol('HTTP/1.1');
+	$req->content('grant_type='.encode_entities('urn:ietf:params:oauth:grant-type:jwt-bearer').'&assertion='.$jwt);
+	my $res = $self->{_ua}->request($req);
+
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+ 	 open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+ 	 print LOG $req->as_string;
+ 	 print LOG $res->as_string;
+ 	 close(LOG);
+	}
+
+	my $token;
+	my $refreshToken;
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+
+	  	my $block = $res->as_string;
+
+		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
+
+	}else{
+		#print STDOUT $res->as_string;
+		die ($res->as_string."error in loading page");}
+
+	$self->{_token} = $token;
+	return $self->{_token};
+
+}
+
 
 #
 # refreshToken
 ##
 sub refreshToken(*){
 	my $self = shift;
+
+	return $self->getSecurityToken($self->{_username}) if (defined($self->{_iss}));
 
 	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
 

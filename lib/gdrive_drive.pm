@@ -74,6 +74,61 @@ sub new(*$) {
 
 }
 
+sub newService(*$) {
+
+  	my $self = {_serviceapi => undef,
+               _login_dbm => undef,
+              _dbm => undef,
+  			  _nextURL => '',
+  			  _username => undef,
+  			  _folders_dbm => undef,
+  			  _db_checksum => undef,
+  			  _db_fisi => undef};
+
+  	my $class = shift;
+  	bless $self, $class;
+	$self->{_username} = shift;
+	$self->{_db_checksum} = 'gd.'.$self->{_username} . '.md5.db';
+	$self->{_db_fisi} = 'gd.'.$self->{_username} . '.fisi.db';
+
+
+
+  	# initialize web connections
+  	$self->{_serviceapi} = pDrive::GoogleDriveAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
+	$self->{_serviceapi}->setService(pDrive::Config->ISS, pDrive::Config->KEY, $self->{_username});
+
+  	my $loginsDBM = pDrive::DBM->new('./gd.'.$self->{_username}.'.db');
+#  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
+  	$self->{_login_dbm} = $loginsDBM;
+  	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
+
+	$self->{_folders_dbm} = $loginsDBM->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
+
+
+	# no token defined
+	if ($token eq ''){
+ 	  	$token = $self->{_serviceapi}->getServiceToken($self->{_username});
+	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,'');
+	}else{
+		$self->{_serviceapi}->setToken($token,'');
+	}
+
+	# token expired?
+	if (!($self->{_serviceapi}->testAccess())){
+		# refresh token
+ 	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
+		$self->{_serviceapi}->setToken($token,'');
+	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,'');
+	}
+	return $self;
+
+}
+
+sub setService(*){
+	my $self = shift;
+	$self->{_serviceapi}->setService(pDrive::Config->ISS, pDrive::Config->KEY);
+}
+
 sub loadFolders(*){
 	my $self = shift;
 	$self->{_folders_dbm} = $self->{_login_dbm}->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');

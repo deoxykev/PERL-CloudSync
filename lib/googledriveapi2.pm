@@ -229,7 +229,7 @@ sub getServiceToken(*$){
 sub refreshToken(*){
 	my $self = shift;
 
-	return $self->getSecurityToken($self->{_username}) if (defined($self->{_iss}));
+	return $self->getServiceToken($self->{_username}) if (defined($self->{_iss}));
 
 	my  $URL = 'https://www.googleapis.com/oauth2/v3/token';
 

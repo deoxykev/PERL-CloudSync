@@ -95,7 +95,6 @@ sub newService(*$) {
 
   	# initialize web connections
   	$self->{_serviceapi} = pDrive::GoogleDriveServiceAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
-	$self->{_serviceapi}->setService(pDrive::Config->ISS, pDrive::Config->KEY, $self->{_username});
 
   	my $loginsDBM = pDrive::DBM->new('./gd.'.$self->{_username}.'.db');
 #  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);
@@ -106,21 +105,26 @@ sub newService(*$) {
 
 
 	# no token defined
-	if ($token eq ''){
- 	  	$token = $self->{_serviceapi}->getServiceToken($self->{_username});
-	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,'');
+	if ($token eq '' or  $refreshToken  eq ''){
+		my $code;
+		my  $URL = 'https://accounts.google.com/o/oauth2/auth?scope=https://www.googleapis.com/auth/drive&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id='.pDrive::Config->CLIENT_ID;
+		print STDOUT "visit $URL\n";
+		print STDOUT 'Input Code:';
+		$code = <>;
+		print STDOUT "code = $code\n";
+ 	  	($token,$refreshToken) = $self->{_serviceapi}->getToken($code);
+	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
 	}else{
-		$self->{_serviceapi}->setToken($token,'');
+		$self->{_serviceapi}->setToken($token,$refreshToken);
 	}
 
 	# token expired?
 	if (!($self->{_serviceapi}->testAccess())){
 		# refresh token
  	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
-		$self->{_serviceapi}->setToken($token,'');
-	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,'');
+		$self->{_serviceapi}->setToken($token,$refreshToken);
+	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
 	}
-
 	return $self;
 
 }

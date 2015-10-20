@@ -266,6 +266,9 @@ while (my $input = <$userInput>){
 
     	my ($login) = $input =~ m%^set service username\s([^\s]+)%i;
 		$services[$currentService]->setService($login);
+	}elsif($input =~ m%^set account\s(\d+)%i){
+    	 ($currentService) = $input =~ m%^set account\s(\d+)%i;
+
   	}elsif($input =~ m%^load acd\s\d+\s([^\s]+)%i){
     	my ($account,$login) = $input =~ m%^load acd\s(\d+)\s([^\s]+)%i;
 		$services[$account] = pDrive::amazon->new($login);

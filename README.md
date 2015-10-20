@@ -26,10 +26,15 @@ being worked on:
 
 Google Drive API 2 -
 -------------------------------
+
+for service account support:
 requires: JSON
 apt-get install libjson-pp-perl
 apt-get install libcrypt-openssl-rsa-perl
 using cpan, install JSON::WebToken
+
+for non-service account:
+- no requirements
 
 what works:
 - OAUTH2 auhentication

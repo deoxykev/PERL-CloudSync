@@ -655,12 +655,11 @@ sub updateMD5Hash(**){
 }
 
 
-sub getFolderIDByPath(*$$$){
+sub getFolderIDByPath(*$$){
 
 	my $self = shift;
 	my $path = shift;
 	my $doCreate = shift;
-	my $skipLastFolder = shift;
 
 	my $parentFolder= '';
 	my $folderID;

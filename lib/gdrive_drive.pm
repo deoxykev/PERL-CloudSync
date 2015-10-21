@@ -675,9 +675,6 @@ sub getFolderIDByPath(*$$){
     	$path =~ s%^\/?[^\/]+%%;
 		$serverPath .= $folder;
 
-		#skip the last folder
-		next if ($skipLastFolder and !( $path =~ m%^\/?([^\/]+)%));
-
 		#check server-cache for folder
 		$folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 		#	folder doesn't exist, create it

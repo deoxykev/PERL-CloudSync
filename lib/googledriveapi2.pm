@@ -546,8 +546,8 @@ sub downloadFile(*$$$){
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	my $res = $self->{_ua}->request($req, $path);
 	 if ($res->is_success) {
-     print "ok\n";
-     return;
+     print STDOUT "ok\n";
+     return 1;
 	}elsif ($res->code == 401 or $res->code == 403){
 
  	 	my ($token,$refreshToken) = $self->refreshToken();
@@ -555,8 +555,8 @@ sub downloadFile(*$$$){
 		$retryCount--;
   }  else {
 
-     print $res->status_line, "\n";
-     return;
+     print STDOUT $res->status_line, "\n";
+     return 0;
   }
 	}
 #  	open (FILE, "> ".$path) or die ("Cannot save image file".$path.": $!\n");

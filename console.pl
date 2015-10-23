@@ -932,6 +932,7 @@ sub syncFolder($){
 							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
   						}
 					}
+					unlink pDrive::Config->LOCAL_PATH.'/'.$$;
 
   				}else{
  					 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";

@@ -179,7 +179,11 @@ sub downloadFile(*$$$){
       print STDOUT "downloading $finalPath...";
 
       # a simple non-google-doc file
-      $returnStatus = $self->{_serviceapi}->downloadFile($finalPath,$link,$updated);
+      if ($self->{_serviceapi}->downloadFile($finalPath,$link,$updated)){
+      	return $finalPath;
+      }else{
+      	return 0;
+      }
 
 }
 

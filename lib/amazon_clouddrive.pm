@@ -122,9 +122,8 @@ sub getSubFolderID(*$$){
 
 	my $driveListings = $self->{_serviceapi}->getSubFolderID($parentID);
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
-
-  	foreach my $resourceID (keys %{$newDocuments}){
-    	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq $folderName){
+  	foreach my $resourceID (sort keys %{$newDocuments}){
+    	if (lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq lc $folderName){
     		print STDERR "returning $resourceID\n " if (pDrive::Config->DEBUG);
     		return $resourceID;
     	}

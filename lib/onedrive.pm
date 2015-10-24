@@ -269,7 +269,7 @@ sub uploadFile(*$$$){
 	# get filesize
 	my $fileSize = -s $file;
 
-	if ($fileSize < 100000000){
+	if ($fileSize < 10000000){
 #	if ($fileSize < 100000){
 		$self->uploadSimpleFile($file, $folderID, $filename);
 	}else{

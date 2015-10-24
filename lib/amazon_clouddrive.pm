@@ -129,6 +129,19 @@ sub getSubFolderID(*$$){
     		return $resourceID;
     	}
 	}
+	my $URL =  $self->{_serviceapi}->getNextURL($driveListings);
+	while ($URL ne ''){
+	$driveListings = $self->{_serviceapi}->getSubFolderID($parentID, $URL);
+  	$newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+	$URL =  $self->{_serviceapi}->getNextURL($driveListings);
+
+  	foreach my $resourceID (keys %{$newDocuments}){
+    	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq $folderName){
+    		print STDERR "returning $resourceID\n " if (pDrive::Config->DEBUG);
+    		return $resourceID;
+    	}
+	}
+	}
 	return '';
 
 }

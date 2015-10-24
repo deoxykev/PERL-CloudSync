@@ -6,6 +6,7 @@ package pDrive::OneDriveAPI1;
 use LWP::UserAgent;
 use LWP;
 use strict;
+use URI::Escape;
 
 use constant IS_ROOT => 1;
 use constant NOT_ROOT => 0;
@@ -230,7 +231,7 @@ sub getMetaData(*$){
  	my $path = shift;
   	my $fileName = shift;
 
-	my $URL = 'https://api.onedrive.com/v1.0/drive/root:/'.$path.'/'.$fileName . '?fields=%40content.downloadUrl%2Cname%2Cid%2Csize%2Cfile';
+	my $URL = 'https://api.onedrive.com/v1.0/drive/root:/'.uri_escape($path).'/'.uri_escape($fileName). '?fields=%40content.downloadUrl%2Cname%2Cid%2Csize%2Cfile';
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -536,7 +537,7 @@ sub createFile(*$$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request POST  => API_URL . '/drive/root:/'.$path.'/'.$filename.':/upload.createSession';
+	my $req = new HTTP::Request POST  => API_URL . '/drive/root:/'.uri_escape($path).'/'.uri_escape($filename).':/upload.createSession';
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'bearer '.$self->{_token});
 	$req->content_length(0);
@@ -568,7 +569,7 @@ sub createFile(*$$){
 
 	}else{
   		print STDERR "error";
-  		print STDOUT "URL = " . API_URL . '/drive/root:/'.$path.'/'.$filename.':/upload.createSession';
+  		print STDOUT "URL = " . API_URL . '/drive/root:/'.uri_escape($path).'/'.uri_escape($filename).':/upload.createSession';
   		print STDOUT $req->as_string;
   		print STDOUT $res->as_string;
   		return 0;

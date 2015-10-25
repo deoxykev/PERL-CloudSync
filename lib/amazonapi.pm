@@ -802,7 +802,6 @@ sub readDriveListings(**){
     	$count++;
   	}
 
-	print STDOUT "entries = $count\n";
 	return \%newDocuments;
 }
 
@@ -819,20 +818,22 @@ sub readChangeListings(**){
 	my $count=0;
 
   	$$driveListings =~ s%\n%%g;
-  	while ($$driveListings =~ m%\[\{.*?\}\,\{% or $$driveListings =~ m%\,\{.*?\}\,\{%  or $$driveListings =~ m%\,\{.*?\}\]\,\"status%){
+  	while ($$driveListings =~ m%\[\{\"eTagResponse\".*?\}\,\{% or
+  				$$driveListings =~ m%\,\{\"eTagResponse\".*?\}\,\{%  or
+  				$$driveListings =~ m%\,\{\"eTagResponse\".*?\}\]\,\"status%){
 
-    	my ($entry) = $$driveListings =~ m%\[\{(.*?)\}\,\{%;
+    	my ($entry) = $$driveListings =~ m%\[\{\"eTagResponse\"(.*?)\}\,\{%;
 
 		if ($entry eq ''){
-    		($entry) = $$driveListings =~  m%\,\{(.*?)\}\,\{%;
+    		($entry) = $$driveListings =~  m%\,\{\"eTagResponse\"(.*?)\}\,\{%;
     		if ($entry eq ''){
-    			($entry) = $$driveListings =~   m%\,\{(.*?)\}\]\,\"status%;
-	    		$$driveListings =~s%\,\{.*?\}\]\,\"status%%;
+    			($entry) = $$driveListings =~   m%\,\{\"eTagResponse\"(.*?)\}\]\,\"status%;
+	    		$$driveListings =~s%\,\{\"eTagResponse\".*?\}\]\,\"status%%;
     		}else{
-	    		$$driveListings =~s%\,\{.*?\}\,\{%\,\{%;
+	    		$$driveListings =~s%\,\{\"eTagResponse\".*?\}\,\{%\,\{%;
     		}
 		}else{
-	    	$$driveListings =~s%\[\{.*?\}\,\{%\,\{%;
+	    	$$driveListings =~s%\[\{\"eTagResponse\".*?\}\,\{%\,\{%;
 		}
 
 		my ($resourceID) = $entry =~ m%\"id\"\:\s?\"([^\"]+)\"%;
@@ -852,7 +853,6 @@ sub readChangeListings(**){
     	$count++;
   	}
 
-	print STDOUT "entries = $count\n";
 	return \%newDocuments;
 }
 

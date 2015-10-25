@@ -1030,7 +1030,6 @@ sub readDriveListings(**){
     	$count++;
   	}
 
-	print STDOUT "entries = $count\n";
 	return \%newDocuments;
 }
 
@@ -1074,7 +1073,6 @@ sub readChangeListings(**){
     	$count++;
   	}
 
-	print STDOUT "entries = $count\n";
 	return \%newDocuments;
 }
 1;

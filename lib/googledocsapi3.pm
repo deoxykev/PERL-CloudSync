@@ -755,8 +755,6 @@ my $count=0;
 
   }
 
-
-print STDOUT "entries = $count\n";
 return %newDocuments;
 }
 

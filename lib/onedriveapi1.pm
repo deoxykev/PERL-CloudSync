@@ -783,7 +783,6 @@ my ($fileName, $resourceID, $fileSize,$sha1) = $$driveListings =~ m%"\@content.d
     	$count++;
 
 	}
-	print STDOUT "entries = $count\n";
 	return \%newDocuments;
 }
 

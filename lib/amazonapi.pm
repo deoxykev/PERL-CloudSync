@@ -265,7 +265,7 @@ sub getList(*$){
 		$retryCount++;
 		print STDOUT "backoff retry " . $retryCount . "\n";
 	}else{
-		print STDERR $req->headers_as_string;
+		print STDERR $req->as_string;
 		print STDERR $res->as_string;
 		$retryCount++;
 		#die($res->as_string."error in loading page");

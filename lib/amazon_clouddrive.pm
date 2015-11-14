@@ -384,14 +384,14 @@ sub getListAll(*){
 
 	my $self = shift;
 
-	my $nextURL = '';
+	my $nextToken = '';
 	while (1){
-		my $driveListings = $self->{_serviceapi}->getList($nextURL);
+		my $driveListings = $self->{_serviceapi}->getList('', $nextToken);
   		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
-  		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
+  		$nextToken = $self->{_serviceapi}->getNextURL($driveListings);
 		$self->updateMD5Hash($newDocuments);
-		print STDOUT "next url " . $nextURL . "\n";
-  		last if $nextURL eq '';
+		print STDOUT "next url " . $nextToken . "\n";
+  		last if $nextToken eq '';
 	}
 
 }

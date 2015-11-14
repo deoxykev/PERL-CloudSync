@@ -441,8 +441,8 @@ sub getNextURL(**){
 
  	my $self = shift;
   	my $listing = shift;
-	my ($URL) = $$listing =~ m%\"nextToken\"\:\s?\"([^\"]+)\"%;
-	return $URL;
+	my ($nextToken) = $$listing =~ m%\"nextToken\"\:\s?\"([^\"]+)\"%;
+	return $nextToken;
 }
 
 

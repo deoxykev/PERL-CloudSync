@@ -367,7 +367,7 @@ sub getList(*){
 #	}
 
 	#print STDOUT $$driveListings . "\n";
-	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
+	#$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
 	#$self->updateMD5Hash($newDocuments);
 	return $newDocuments;
 }

@@ -236,6 +236,8 @@ sub getList(*$){
 	if ($URL eq ''){
 		#$URL = API_URL . 'nodes?filters=kind:FOLDER';
 		$URL = $self->{_metaURL}. 'nodes?filters=kind:FOLDER';
+	}else{
+		$URL = $self->{_metaURL}. 'nodes?filters=kind:FOLDER&startToken='.$URL;
 	}
 
 	my $retryCount = 0;

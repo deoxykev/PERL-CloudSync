@@ -126,11 +126,11 @@ sub getSubFolderID(*$$){
     		return $resourceID;
     	}
 	}
-	my $URL =  $self->{_serviceapi}->getNextURL($driveListings);
-	while ($URL ne ''){
-	$driveListings = $self->{_serviceapi}->getSubFolderID($parentID, $URL);
+	my $nextToken =  $self->{_serviceapi}->getNextURL($driveListings);
+	while ($nextToken ne ''){
+	$driveListings = $self->{_serviceapi}->getSubFolderID($parentID, '', $nextToken);
   	$newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
-	$URL =  $self->{_serviceapi}->getNextURL($driveListings);
+	$nextToken =  $self->{_serviceapi}->getNextURL($driveListings);
 
   	foreach my $resourceID (keys %{$newDocuments}){
     	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq $folderName){
@@ -152,7 +152,7 @@ sub getSubFolderIDList(*$$){
 	my $driveListings = $self->{_serviceapi}->getList($URL);
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
-	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
+	###$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
 	#$self->updateMD5Hash($newDocuments);
 	return $newDocuments;
 

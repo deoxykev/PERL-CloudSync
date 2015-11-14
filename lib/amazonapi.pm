@@ -402,11 +402,12 @@ sub getChanges(*$){
 #
 # get the folderID for a subfolder
 ##
-sub getSubFolderID(*$$){
+sub getSubFolderID(*$$$){
 
 	my $self = shift;
 	my $parentID = shift;
 	my $URL = shift;
+	my $nextToken = shift;
 
 	#my $URL = API_URL . 'nodes/'.$folderID.'/children&filters=kind:FOLDER';
 
@@ -418,7 +419,7 @@ sub getSubFolderID(*$$){
 			$URL .= 'nodes/'.$parentID . '/children?filters=kind:FOLDER';
 		}
 	}
-	return $self->getList($URL);
+	return $self->getList($URL, $nextToken);
 
 }
 

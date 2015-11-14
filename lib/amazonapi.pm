@@ -263,7 +263,8 @@ sub getList(*$){
 		$retryCount++;
 		print STDOUT "backoff retry " . $retryCount . "\n";
 	}else{
-		print STDOUT $res->as_string;
+		print STDERR $req->headers_as_string;
+		print STDERR $res->as_string;
 		$retryCount++;
 		#die($res->as_string."error in loading page");
 	}
@@ -381,7 +382,8 @@ sub getChanges(*$){
 		$self->setToken($token,$refreshToken);
 		$retryCount--;
 	}else{
-		print STDOUT $res->decoded_content;
+		print STDERR $req->headers_as_string;
+		print STDERR $res->decoded_content;
 		$retryCount--;
 		sleep(10);
 		#die($res->as_string."error in loading page");}
@@ -611,8 +613,8 @@ sub uploadFile(*$$){
 #		$retryCount--;
 	}else{
   		print STDERR "error";
-#  		print STDOUT $req->headers_as_string;
-  		print STDOUT $res->as_string;
+  		print STDERR $req->headers_as_string;
+  		print STDERR $res->as_string;
   		return 0;
 	}
 	}
@@ -688,8 +690,8 @@ sub createFolder(*$$){
 		$retryCount--;
 
 	}else{
-		print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
+		print STDERR $req->as_string;
+  		print STDERR $res->as_string;
   		return 0;
 	}
 	}

@@ -133,7 +133,7 @@ sub getSubFolderID(*$$){
 	$nextToken =  $self->{_serviceapi}->getNextURL($driveListings);
 
   	foreach my $resourceID (keys %{$newDocuments}){
-    	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq $folderName){
+    	if (lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq lc $folderName){
     		print STDERR "returning $resourceID\n " if (pDrive::Config->DEBUG);
     		return $resourceID;
     	}

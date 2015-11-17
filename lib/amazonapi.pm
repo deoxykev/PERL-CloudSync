@@ -418,8 +418,11 @@ sub getSubFolderID(*$$$){
 		}else{
 			$URL .= 'nodes/'.$parentID . '/children?filters=kind:FOLDER';
 		}
+		if ($nextToken ne ''){
+			$URL .= '&startToken='.$nextToken;
+		}
 	}
-	return $self->getList($URL, $nextToken);
+	return $self->getList($URL);
 
 }
 

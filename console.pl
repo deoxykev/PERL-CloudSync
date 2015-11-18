@@ -891,6 +891,7 @@ sub syncFolder($){
 		    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
 			    	#	print STDERR "parent = ". $$newDocsyncFoluments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
 
+
 					for(my $j=1; $j <= $#drives; $j++){
 						#Google Drive / amazon -> Google Drive / amazon
 	  					###

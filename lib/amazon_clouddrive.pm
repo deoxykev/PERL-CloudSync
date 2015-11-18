@@ -128,8 +128,8 @@ sub getSubFolderID(*$$){
 	}
 	my $nextToken =  $self->{_serviceapi}->getNextURL($driveListings);
 	while ($nextToken ne ''){
-	$driveListings = $self->{_serviceapi}->getSubFolderID($parentID, '', $nextToken);
-  	$newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+	my $driveListings = $self->{_serviceapi}->getSubFolderID($parentID, '', $nextToken);
+  	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 	$nextToken =  $self->{_serviceapi}->getNextURL($driveListings);
 
   	foreach my $resourceID (keys %{$newDocuments}){

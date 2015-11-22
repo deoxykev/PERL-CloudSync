@@ -126,7 +126,9 @@ sub getSubFolderID(*$$){
     		return $resourceID;
     	}
 	}
+
 	my $nextToken =  $self->{_serviceapi}->getNextURL($driveListings);
+	print STDERR "more results $nextToken\n " if ($nextToken ne '' and pDrive::Config->DEBUG);
 	while ($nextToken ne ''){
 	my $driveListings = $self->{_serviceapi}->getSubFolderID($parentID, '', $nextToken);
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);

@@ -836,22 +836,27 @@ sub readChangeListings(**){
 	my $count=0;
 
   	$$driveListings =~ s%\n%%g;
-  	while ($$driveListings =~ m%\[\{\"eTagResponse\".*?\}\,\{% or
-  				$$driveListings =~ m%\,\{\"eTagResponse\".*?\}\,\{%  or
-  				$$driveListings =~ m%\,\{\"eTagResponse\".*?\}\]\,\"status%){
 
-    	my ($entry) = $$driveListings =~ m%\[\{\"eTagResponse\"(.*?)\}\,\{%;
+  	#remove contentProperties and properties that mess up reading records
+  	#$$driveListings =~ s%"contentProperties"[^\}]+\}[^\}]*\}%%g;
+  	$$driveListings =~ s%"properties"[^\}]+\}[^\}]*\}%%g;
+
+  	while ($$driveListings =~ m%\[\{[^\}]+"contentProperties"[^\}]+\}[^\}]*\}?[^\}]+\}\,\{% or
+  				$$driveListings =~ m%\,\{[^\}]+"contentProperties"[^\}]+\}[^\}]*\}?[^\}]+\}\,\{%  or
+  				$$driveListings =~ m%\,\{[^\}]+"contentProperties"[^\}]+\}[^\}]*\}?[^\}]+\}\]\,\"status%){
+
+    	my ($entry) = $$driveListings =~ m%\[\{([^\}]+"contentProperties"[^\}]+\}[^\}]*\}?[^\}]+)\}\,\{%;
 
 		if ($entry eq ''){
-    		($entry) = $$driveListings =~  m%\,\{\"eTagResponse\"(.*?)\}\,\{%;
+    		($entry) = $$driveListings =~  m%\,\{([^\}]+"contentProperties"[^\}]+\}[^\}]*\}?[^\}]+)\}\,\{%;
     		if ($entry eq ''){
-    			($entry) = $$driveListings =~   m%\,\{\"eTagResponse\"(.*?)\}\]\,\"status%;
-	    		$$driveListings =~s%\,\{\"eTagResponse\".*?\}\]\,\"status%%;
+    			($entry) = $$driveListings =~   m%\,\{([^\}]+"contentProperties"[^\}]+\}[^\}]*\}?[^\}]+)\}\]\,\"status%;
+	    		$$driveListings =~s%\,\{[^\}]+"contentProperties"[^\}]+\}[^\}]*\}?[^\}]+\}\]\,\"status%%;
     		}else{
-	    		$$driveListings =~s%\,\{\"eTagResponse\".*?\}\,\{%\,\{%;
+	    		$$driveListings =~s%\,\{[^\}]+"contentProperties"[^\}]+\}[^\}]*\}?[^\}]+\}\,\{%\,\{%;
     		}
 		}else{
-	    	$$driveListings =~s%\[\{\"eTagResponse\".*?\}\,\{%\,\{%;
+	    	$$driveListings =~s%\[\{[^\}]+"contentProperties"[^\}]+\}[^\}]*\}?[^\}]+\}\,\{%\,\{%;
 		}
 
 		my ($resourceID) = $entry =~ m%\"id\"\:\s?\"([^\"]+)\"%;

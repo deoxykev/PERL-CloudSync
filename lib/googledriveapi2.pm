@@ -757,10 +757,7 @@ sub copyFile(*$$$){
 
     		$block =~ s%[^\n]*\n%%;
 
-		    if ($line =~ m%^Location:%){
-      			($URL) = $line =~ m%^Location:\s+(\S+)%;
-	      		return $URL;
-    		}
+			return 1;
 
   		}
 	}elsif ($res->code == 401){

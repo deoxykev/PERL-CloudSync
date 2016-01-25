@@ -531,6 +531,19 @@ while (my $input = <$userInput>){
 			print STDOUT "service = $service\n";
 		}
     	syncFolder('',$folderID,0,0, @drives);
+  	}elsif($input =~ m%^copy folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^copy folderid\s+(\S+)%i;
+		$input =~ s%^copy folderid\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+			print STDOUT "service = $service\n";
+		}
+    	syncGoogleFolder('',$folderID,0,0, @drives);
+
   	}elsif($input =~ m%^sync inboundid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync inboundid\s+(\S+)%i;
 		$input =~ s%^sync inboundid\s+\S+%%;

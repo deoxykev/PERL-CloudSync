@@ -102,7 +102,7 @@ sub newService(*$) {
   	$self->{_login_dbm} = $loginsDBM;
   	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
 
-	$self->{_folders_dbm} = $loginsDBM->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
+	 # -- skip checking for folder locally $self->{_folders_dbm} = $loginsDBM->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
 
 
 	# no token defined
@@ -350,7 +350,7 @@ sub createUploadListForFolder(*$$$$){
 	print STDOUT "folder = $folder\n";
 
 	#check server-cache for folder
-	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	my $folderID =  '';# -- skip checking for folder locally $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 	#folder doesn't exist, create it
 	if ($folderID eq ''){
 		#*** validate it truly doesn't exist on the server before creating
@@ -369,7 +369,7 @@ sub createUploadListForFolder(*$$$$){
 		}elsif ($folderID eq '' and  $parentFolder eq ''){
 			$folderID = $self->createFolder($folder, 'root');
 		}
-		$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
+		#--skip $self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
 	}
 
 
@@ -732,7 +732,7 @@ sub getFolderIDByPath(*$$){
 		$serverPath .= $folder;
 
 		#check server-cache for folder
-		$folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+		$folderID =  '';# -- skip checking for folder locally $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 		#	folder doesn't exist, create it
 		if ($folderID eq ''){
 			#*** validate it truly doesn't exist on the server before creating

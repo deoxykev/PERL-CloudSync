@@ -865,7 +865,11 @@ sub syncFolder($){
 	  			#Google Drive (MD5 comparision) already exists OR > 1GB; skip
 				}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive::Photos'  and  (($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 1073741824)  or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 
-#				#temorary -- bypass OneDrive
+
+				# TODO: check for filesystem has enough storage; skip otherwise
+
+
+#				#temporary -- bypass OneDrive
 #				}elsif 	(Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::oneDrive' ){
 
 				#Google -> OneDrive
@@ -938,6 +942,107 @@ sub syncFolder($){
   				}else{
  					 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
  					 $services[$drives[0]]->deleteFile($resourceID) if ($isInbound);
+  				}
+
+
+
+			}
+
+	  	}
+		$nextURL = $services[$drives[0]]->{_nextURL};
+		print STDOUT "next url " . $nextURL. "\n";
+  		last if  $nextURL eq '';
+
+	}
+	}
+	for(my $i=0; $i < $#drives; $i++){
+		$dbm->closeDBM($dbase[$drives[$i]][0]);
+		$dbm->closeDBM($dbase[$drives[$i]][1]);
+
+	}
+
+
+}
+
+
+##
+# Sync a folder (and all subfolders) from one Google service to one or more other Google services (using API copy command)
+# params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
+##
+sub syncGoogleFolder($){
+	my ($folder, $folderID, $isMock, $isInbound, @drives) = @_;
+	my @dbase;
+	 print STDERR "folder = $folder\n";
+	for(my $i=1; $i <= $#drives; $i++){
+			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
+			$dbase[$drives[$i]][1] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
+	}
+	my $nextURL = '';
+	my @subfolders;
+
+	#no folder ID provided, look it up from looking at the root folder
+	if ($folderID eq ''){
+		$folderID =  $services[$drives[0]]->getSubFolderID($folder,'root');
+	}
+	push(@subfolders, $folderID);
+
+	for (my $i=0; $i <= $#subfolders;$i++){
+		$folderID = $subfolders[$i];
+	while (1){
+
+		my $newDocuments =  $services[$drives[0]]->getSubFolderIDList($folderID, $nextURL);
+  		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
+
+  		foreach my $resourceID (keys %{$newDocuments}){
+			my $doDownload=0;
+  			#folder
+  			#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
+  			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+				push(@subfolders, $resourceID);
+  			 }else{
+
+				for(my $j=1; $j <= $#drives; $j++){
+
+				#Google Drive -> Google Drive
+	  			###
+	  			#Google Drive (MD5 comparision) already exists; skip
+  				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive')
+  				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
+  				and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+
+  				}else{
+  					$doDownload=1;
+  				}
+				}
+
+				my $path;
+				if ($doDownload){
+  					$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
+
+					for(my $j=1; $j <= $#drives; $j++){
+						#Google Drive -> Google Drive
+	  					###
+			  			#	Google Drive (MD5 comparision) already exists; skip
+  						if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' )
+  						and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
+  						and  ( (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'})
+  								and $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
+  								or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
+  								and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
+
+  						}else{
+  							#for inbound, remove Inbound from path when creating on target
+							$path =~ s%\/inbound%%ig if ($isInbound);
+							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
+					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
+							$services[$drives[$j]]->copyFile( $resourceID, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+  						}
+					}
+
+  				}else{
+ 					 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
   				}
 
 

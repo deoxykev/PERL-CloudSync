@@ -712,6 +712,71 @@ sub createFile(*$$$$$){
 
 
 #
+# Copy a file
+##
+sub copyFile(*$$$){
+
+	my $self = shift;
+  	my $URL = shift;
+  	my $file = shift;
+	my $folder = shift;
+
+
+  	my $content = '{
+  "title": "'.$file. '",
+  "parents": [{
+    "kind": "drive#fileLink",
+    "id": "'.$folder.'"
+  }]
+}'."\n\n";
+
+	my $retryCount = 2;
+	while ($retryCount){
+	my $req = new HTTP::Request POST => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	$req->content_length(length $content);
+	$req->content_type('application/json');
+	$req->content($content);
+
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+
+  		my $block = $res->as_string;
+
+  		while (my ($line) = $block =~ m%([^\n]*)\n%){
+
+    		$block =~ s%[^\n]*\n%%;
+
+		    if ($line =~ m%^Location:%){
+      			($URL) = $line =~ m%^Location:\s+(\S+)%;
+	      		return $URL;
+    		}
+
+  		}
+	}elsif ($res->code == 401){
+ 	 	my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount--;
+	}else{
+	#	print STDOUT $req->as_string;
+  		print STDOUT $res->as_string;
+  		return 0;
+	}
+	}
+
+}
+
+#
 # Create a folder
 ##
 sub createFolder(*$$){

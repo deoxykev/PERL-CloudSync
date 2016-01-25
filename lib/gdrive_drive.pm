@@ -515,6 +515,58 @@ sub uploadFile(*$$){
   	close(INPUT);
 }
 
+
+
+sub copyFile(*$$){
+
+	my $self = shift;
+	my $file = shift;
+	my $folder = shift;
+	my $fileName = shift;
+
+	if ($fileName eq ''){
+		($fileName) = $file =~ m%\/([^\/]+)$%;
+	}
+
+	print STDOUT $file . "\n";
+
+  	my $uploadURL =
+
+  	my $retrycount=0;
+
+  	my $status=0;
+   	$retrycount=0;
+   	while ($status eq '0' and $retrycount < 10){
+			$status =  $self->{_serviceapi}->copyFile('https://www.googleapis.com/upload/drive/v2/files/'.$file.'/copy',$fileName, $folder);
+      		print STDOUT "\r"  . $status;
+	      	if ($status eq '0'){
+	       		print STDERR "...retrying\n";
+	       		#some other instance may have updated the tokens already, refresh with the latest
+	       		if ($retrycount == 0){
+	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($self->{_username});
+	       			$self->{_serviceapi}->setToken($token,$refreshToken);
+	       		#multiple failures, force-fech a new token
+	       		}else{
+ 	 				my ($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
+	  				$self->{_login_dbm}->writeLogin( $self->{_username},$token,$refreshToken);
+	       			$self->{_serviceapi}->setToken($token,$refreshToken);
+	       		}
+        		sleep (10);
+        		$retrycount++;
+	      	}
+
+			if ($retrycount >= 10){
+				print STDERR "\r" . $file . "'...retry failed - $file\n";
+
+    			pDrive::masterLog("failed copy (all attempts failed) - $file\n");
+    			last;
+			}
+  	}
+  	if ($retrycount < 10){
+		print STDOUT "\r" . $file . "'...success - $file\n";
+  	}
+}
+
 sub getList(*){
 
 	my $self = shift;

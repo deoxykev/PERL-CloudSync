@@ -537,7 +537,7 @@ sub copyFile(*$$){
   	my $status=0;
    	$retrycount=0;
    	while ($status eq '0' and $retrycount < 10){
-			$status =  $self->{_serviceapi}->copyFile('https://www.googleapis.com/upload/drive/v2/files/'.$file.'/copy',$fileName, $folder);
+			$status =  $self->{_serviceapi}->copyFile('https://www.googleapis.com/drive/v2/files/'.$file.'/copy',$fileName, $folder);
       		print STDOUT "\r"  . $status;
 	      	if ($status eq '0'){
 	       		print STDERR "...retrying\n";

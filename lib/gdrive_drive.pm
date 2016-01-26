@@ -302,7 +302,7 @@ sub uploadFolder(*$$){
     			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
 
     			if ($file eq $currentFile and $md5 ne ''){
-    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY|O_CREAT, 0666) or die "can't open md5: $!";
     				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
     					$process = 0;
 				    	#pDrive::masterLog("skipped file (checksum $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
@@ -315,7 +315,7 @@ sub uploadFolder(*$$){
 			my ($fileName) = $fileList[$i] =~ m%\/([^\/]+)$%;
 			my $fileSize = -s $fileList[$i];
  			my $fisi = pDrive::FileIO::getMD5String($fileName .$fileSize);
-    		tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDONLY, 0666) or die "can't open fisi: $!";
+    		tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDONLY|O_CREAT, 0666) or die "can't open fisi: $!";
     		if (  (defined $dbase{$fisi.'_'} and $dbase{$fisi.'_'} ne '') or (defined $dbase{$fisi.'_0'} and $dbase{$fisi.'_0'} ne '')){
     					$process = 0;
 				    	#pDrive::masterLog("skipped file (fisi $fisi exists ".$dbase{$fisi.'_0'}.") - $fileList[$i]\n");
@@ -395,7 +395,7 @@ sub createUploadListForFolder(*$$$$){
     			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
 
     			if ($file eq $currentFile and $md5 ne ''){
-    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY|O_CREAT, 0666) or die "can't open md5: $!";
     				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
     					$process = 0;
     					last;
@@ -633,7 +633,7 @@ sub getChangesAll(*){
 	my $self = shift;
 
 	my $nextURL = '';
-    tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";
+    tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY|O_CREAT, 0666) or die "can't open md5: $!";
     my $changeID = $dbase{'LAST_CHANGE'};
     print STDOUT "changeID = " . $changeID . "\n";
     untie(%dbase);

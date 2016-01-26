@@ -375,8 +375,11 @@ sub getChanges(*$){
 	my $URL = shift;
 	my $changeID = shift;
 
-	if ($URL eq ''){
+	if ($URL eq '' and $changeID ne ''){
 		$URL = 'https://www.googleapis.com/drive/v2/changes?includeSubscribed=false&includeDeleted=false&maxResults=1000&startChangeId='.$changeID;
+
+	}elsif ($URL eq '' and $changeID ne ''){
+		$URL = 'https://www.googleapis.com/drive/v2/changes?includeSubscribed=false&includeDeleted=false&maxResults=1000';
 	}
 
 	my $retryCount = 2;

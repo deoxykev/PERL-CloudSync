@@ -644,11 +644,13 @@ sub getChangesAll(*){
   		my $newDocuments = $self->{_serviceapi}->readChangeListings($driveListings);
 		$self->updateMD5Hash($newDocuments);
 		$changeID = $self->{_serviceapi}->getChangeID($driveListings);
+		$self->updateChange($changeID);
+
 		print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
 	}
 	#print STDOUT $$driveListings . "\n";
-	$self->updateChange($changeID);
+#	$self->updateChange($changeID);
 
 }
 

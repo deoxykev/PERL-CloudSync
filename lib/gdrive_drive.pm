@@ -603,7 +603,7 @@ sub deleteFile(*$){
 }
 
 
-sub getListAll(*){
+sub getListAllOLD(*){
 
 	my $self = shift;
 
@@ -660,6 +660,31 @@ sub getChangesAll(*){
 	#print STDOUT $$driveListings . "\n";
 	$changeID = $self->{_serviceapi}->getChangeID($driveListings);
 	$self->updateChange($changeID, $lastURL);
+
+}
+
+
+sub getListAll(*){
+
+	my $self = shift;
+
+	my $nextURL='';
+
+	#last run failed to finish, attempt to continue where left
+	my $driveListings;
+	my $lastURL;
+	while (1){
+		$driveListings = $self->{_serviceapi}->getList($nextURL);
+  		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
+  		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+		$self->updateMD5Hash($newDocuments);
+
+		print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+  		$lastURL = $nextURL if $nextURL ne '';
+	}
+	print STDOUT "last url " . $lastURL . "\n";
+
 
 }
 

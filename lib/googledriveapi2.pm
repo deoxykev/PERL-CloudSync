@@ -398,13 +398,7 @@ sub getChanges(*$){
 
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-  		my $block = $res->as_string;
 
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-  		}
 	}elsif ($res->code == 401){
  	 	my ($token,$refreshToken) = $self->refreshToken();
 		$self->setToken($token,$refreshToken);

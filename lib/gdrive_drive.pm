@@ -632,25 +632,34 @@ sub getChangesAll(*){
 
 	my $self = shift;
 
-	my $nextURL = '';
+	my $nextURL;
     tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY|O_CREAT, 0666) or die "can't open md5: $!";
     my $changeID = $dbase{'LAST_CHANGE'};
+    $nextURL = $dbase{'URL'} if $changeID eq '';
+
     print STDOUT "changeID = " . $changeID . "\n";
+    print STDOUT "URL = " . $nextURL . "\n";
     untie(%dbase);
 
+	#last run failed to finish, attempt to continue where left
+	my $driveListings;
+	my $lastURL;
 	while (1){
-		my $driveListings = $self->{_serviceapi}->getChanges($nextURL, $changeID);
+		$driveListings = $self->{_serviceapi}->getChanges($nextURL, $changeID);
   		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
   		my $newDocuments = $self->{_serviceapi}->readChangeListings($driveListings);
 		$self->updateMD5Hash($newDocuments);
-		$changeID = $self->{_serviceapi}->getChangeID($driveListings);
-		$self->updateChange($changeID);
+
+		#$changeID = $self->{_serviceapi}->getChangeID($driveListings);
+		#$self->updateChange($changeID);
 
 		print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
+  		$lastURL = $nextURL if $nextURL ne '';
 	}
 	#print STDOUT $$driveListings . "\n";
-#	$self->updateChange($changeID);
+	$changeID = $self->{_serviceapi}->getChangeID($driveListings);
+	$self->updateChange($changeID, $lastURL);
 
 }
 

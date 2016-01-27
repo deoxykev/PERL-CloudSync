@@ -25,10 +25,11 @@ sub updateChange(**){
 
 	my $self = shift;
 	my $changeID = shift;
+	my $URL = shift;
 
-	return if ($changeID eq '' or not defined ($changeID));
 	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open checksum: $!";
-	$dbase{'LAST_CHANGE'} = $changeID;
+	$dbase{'LAST_CHANGE'} = $changeID unless  (not defined ($changeID) or $changeID eq '');
+	$dbase{'URL'} = $URL;
 	untie(%dbase);
 
 }
@@ -39,6 +40,7 @@ sub resetChange(**){
 	my $self = shift;
 	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open checksum: $!";
 	$dbase{'LAST_CHANGE'} = '';
+	$dbase{'URL'} = '';
 	untie(%dbase);
 
 }

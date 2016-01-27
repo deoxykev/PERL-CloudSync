@@ -794,6 +794,8 @@ sub getFolderIDByPath(*$$){
 				$parentFolder =$folderID if ($folderID ne '');
 			}
 			$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
+		}else{
+			return $folderID;
 		}
 
 	}

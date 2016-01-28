@@ -769,7 +769,7 @@ sub getFolderIDByPath(*$$){
 		$serverPath .= $folder;
 
 		#check server-cache for folder
-		$folderID =  $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+		$folderID = '';# $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 		#	folder doesn't exist, create it
 		if ($folderID eq ''){
 			#*** validate it truly doesn't exist on the server before creating
@@ -793,9 +793,7 @@ sub getFolderIDByPath(*$$){
 				$folderID = $self->createFolder($folder, 'root')  if $doCreate;
 				$parentFolder =$folderID if ($folderID ne '');
 			}
-			$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
-		}else{
-			return $folderID;
+#			$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
 		}
 
 	}

@@ -540,7 +540,7 @@ while (my $input = <$userInput>){
 			my ($service) = $input =~ m%^\s+(\S+)%;
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
-			print STDOUT "service = $service\n";
+			print STDOUT "service path = $service\n";
 		}
     	syncGoogleFolder('',$folderID,$pathTarget,0,0, @drives);
   	}elsif($input =~ m%^copy folderid\s\S+%i){

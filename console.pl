@@ -531,6 +531,18 @@ while (my $input = <$userInput>){
 			print STDOUT "service = $service\n";
 		}
     	syncFolder('',$folderID,0,0, @drives);
+  	}elsif($input =~ m%^copy folderid\s+\S+\spath\s+\S+%i){
+    	my ($folderID, $pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+path\s+(\S+)%i;
+		$input =~ s%^copy folderid\s+\S+\s+path\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+			print STDOUT "service = $service\n";
+		}
+    	syncGoogleFolder('',$folderID,$pathTarget,0,0, @drives);
   	}elsif($input =~ m%^copy folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^copy folderid\s+(\S+)%i;
 		$input =~ s%^copy folderid\s+\S+%%;
@@ -542,7 +554,7 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 			print STDOUT "service = $service\n";
 		}
-    	syncGoogleFolder('',$folderID,0,0, @drives);
+    	syncGoogleFolder('',$folderID, '',0,0, @drives);
 
   	}elsif($input =~ m%^sync inboundid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync inboundid\s+(\S+)%i;
@@ -983,7 +995,7 @@ sub syncFolder($){
 # params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
 ##
 sub syncGoogleFolder($){
-	my ($folder, $folderID, $isMock, $isInbound, @drives) = @_;
+	my ($folder, $folderID, $pathTarget, $isMock, $isInbound, @drives) = @_;
 	my @dbase;
 	 print STDERR "folder = $folder\n";
 	for(my $i=1; $i <= $#drives; $i++){
@@ -1047,6 +1059,7 @@ sub syncGoogleFolder($){
   						}else{
   							#for inbound, remove Inbound from path when creating on target
 							$path =~ s%\/inbound%%ig if ($isInbound);
+							$path = $pathTarget . '/' . $path if ($pathTarget ne '');
 							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
 							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");

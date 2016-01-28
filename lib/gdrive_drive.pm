@@ -278,7 +278,7 @@ sub uploadFolder(*$$){
 		}elsif ($folderID eq '' and  $parentFolder eq ''){
 			$folderID = $self->createFolder($folder, 'root');
 		}
-		$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
+		#$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
 	}
 
 
@@ -371,7 +371,7 @@ sub createUploadListForFolder(*$$$$){
 		}elsif ($folderID eq '' and  $parentFolder eq ''){
 			$folderID = $self->createFolder($folder, 'root');
 		}
-		$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
+		#$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
 	}
 
 

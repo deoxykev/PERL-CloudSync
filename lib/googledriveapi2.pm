@@ -238,6 +238,7 @@ sub getList(*$){
 		$URL = 'https://www.googleapis.com/drive/v2/files?maxResults=400&q=\'me\'+in+owners+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 
+
 	my $retryCount = 2;
 	while ($retryCount){
 	my $req = new HTTP::Request GET => $URL;

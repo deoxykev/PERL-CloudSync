@@ -540,7 +540,7 @@ while (my $input = <$userInput>){
 			my ($service) = $input =~ m%^\s+(\S+)%;
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
-			print STDOUT "service path = $service\n";
+			print STDOUT "service path = $service $pathTarget \n";
 		}
     	syncGoogleFolder('',$folderID,$pathTarget,0,0, @drives);
   	}elsif($input =~ m%^copy folderid\s\S+%i){
@@ -1058,7 +1058,7 @@ sub syncGoogleFolder($){
 
   						}else{
   							#for inbound, remove Inbound from path when creating on target
-							$path =~ s%\/inbound%%ig if ($isInbound);
+							$path =~ s%\/[^\/]+%% if ($pathTarget ne '');
 							$path = $pathTarget . '/' . $path if ($pathTarget ne '');
 							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
 							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";

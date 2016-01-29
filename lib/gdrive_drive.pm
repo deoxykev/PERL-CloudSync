@@ -526,9 +526,9 @@ sub copyFile(*$$){
 	my $folder = shift;
 	my $fileName = shift;
 
-	if ($fileName eq ''){
-		($fileName) = $file =~ m%\/([^\/]+)$%;
-	}
+#	if ($fileName eq ''){
+#		($fileName) = $file =~ m%\/([^\/]+)$%;
+#	}
 
 	print STDOUT $file . "\n";
 

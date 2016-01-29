@@ -719,15 +719,16 @@ sub copyFile(*$$$){
   	my $file = shift;
 	my $folder = shift;
 
-
-  	my $content = '{
+	my $content = '';
+	if ($folder ne '' and $file ne ''){
+  	$content = '{
   "title": "'.$file. '",
   "parents": [{
     "kind": "drive#fileLink",
     "id": "'.$folder.'"
   }]
 }'."\n\n";
-
+	}
 	my $retryCount = 2;
 	while ($retryCount){
 	my $req = new HTTP::Request POST => $URL;

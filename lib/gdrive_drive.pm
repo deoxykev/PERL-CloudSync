@@ -522,24 +522,18 @@ sub uploadFile(*$$){
 sub copyFile(*$$){
 
 	my $self = shift;
-	my $file = shift;
+	my $fileID = shift;
 	my $folder = shift;
 	my $fileName = shift;
 
-#	if ($fileName eq ''){
-#		($fileName) = $file =~ m%\/([^\/]+)$%;
-#	}
-
-	print STDOUT $file . "\n";
-
-  	my $uploadURL =
+	print STDOUT $fileID . "\n";
 
   	my $retrycount=0;
 
   	my $status=0;
    	$retrycount=0;
    	while ($status eq '0' and $retrycount < 10){
-			$status =  $self->{_serviceapi}->copyFile('https://www.googleapis.com/drive/v2/files/'.$file.'/copy',$fileName, $folder);
+			$status =  $self->{_serviceapi}->copyFile($fileID,$fileName, $folder);
       		print STDOUT "\r"  . $status;
 	      	if ($status eq '0'){
 	       		print STDERR "...retrying\n";
@@ -558,16 +552,59 @@ sub copyFile(*$$){
 	      	}
 
 			if ($retrycount >= 10){
-				print STDERR "\r" . $file . "'...retry failed - $file\n";
+				print STDERR "\r" . $fileID . "'...retry failed - $fileID\n";
 
-    			pDrive::masterLog("failed copy (all attempts failed) - $file\n");
+    			pDrive::masterLog("failed copy (all attempts failed) - $fileID\n");
     			last;
 			}
   	}
   	if ($retrycount < 10){
-		print STDOUT "\r" . $file . "'...success - $file\n";
+		print STDOUT "\r" . $file . "'...success - $fileID\n";
   	}
 }
+
+
+
+sub renameFile(*$$){
+
+	my $self = shift;
+	my $fileID = shift;
+	my $fileName = shift;
+
+  	my $retrycount=0;
+
+  	my $status=0;
+   	$retrycount=0;
+   	while ($status eq '0' and $retrycount < 10){
+			$status =  $self->{_serviceapi}->renameFile($fileID,$fileName);
+	      	if ($status eq '0'){
+	       		print STDERR "...retrying\n";
+	       		#some other instance may have updated the tokens already, refresh with the latest
+	       		if ($retrycount == 0){
+	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($self->{_username});
+	       			$self->{_serviceapi}->setToken($token,$refreshToken);
+	       		#multiple failures, force-fech a new token
+	       		}else{
+ 	 				my ($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
+	  				$self->{_login_dbm}->writeLogin( $self->{_username},$token,$refreshToken);
+	       			$self->{_serviceapi}->setToken($token,$refreshToken);
+	       		}
+        		sleep (10);
+        		$retrycount++;
+	      	}
+
+			if ($retrycount >= 10){
+				print STDERR "\r" . $fileID . "'...retry failed - $fileID\n";
+
+    			pDrive::masterLog("failed copy (all attempts failed) - $fileID\n");
+    			last;
+			}
+  	}
+  	if ($retrycount < 10){
+		print STDOUT "\r" . $file . "'...success - $fileID\n";
+  	}
+}
+
 
 sub getList(*){
 

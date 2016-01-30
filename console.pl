@@ -736,6 +736,10 @@ while (my $input = <$userInput>){
 
 		$services[$currentService]->copyFile($fileID);
 
+	}elsif($input =~ m%^rename fileid%i){
+		my ($fileID,$fileName) = $input =~ m%^rename fileid\s+(\S+)\s+([^\n]+)\n%;
+
+		$services[$currentService]->renameFile($fileID, $fileName);
 
 	}elsif($input =~ m%^upload list%i){
     	my ($list) = $input =~ m%^upload list\s([^\n]+)\n%;

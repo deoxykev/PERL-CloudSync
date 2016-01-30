@@ -45,6 +45,8 @@ what works:
 - multiple accounts
 - downloading all files
 - downloading all owner files
+- copy file from public or shared access to own account (using Google copy service)
+- rename files
 
 being worked on:
 - track local files vs server files (dropbox sync ability)

@@ -705,18 +705,20 @@ sub createFile(*$$$$$){
 sub copyFile(*$$$){
 
 	my $self = shift;
-  	my $URL = shift;
+  	my $fileID = shift;
+
+	my $URL = API_URL  . 'files/' . $fileID . '/copy';
 
   	#optional
-  	my $file = shift;
+  	my $fileName = shift;
 	my $folder = shift;
 
 	my $content = '';
 
 	#copying a file without directory or filename
-	if ($folder ne '' and $file ne ''){
+	if ($folder ne '' and $fileName ne ''){
   		$content = '{
-  			"title": "'.$file. '",
+  			"title": "'.$fileName. '",
   			"parents": [{
     		"kind": "drive#fileLink",
     		"id": "'.$folder.'"
@@ -759,6 +761,58 @@ sub copyFile(*$$$){
 	}
 }
 
+
+
+#
+# Rename a file
+##
+sub renameFile(*$$){
+
+	my $self = shift;
+  	my $fileID = shift;
+
+	my $URL = API_URL  . 'files/' . $fileID;
+
+  	my $fileName = shift;
+
+	my $content ='{
+  			"title": "'.$fileName. '"
+			}'."\n\n";
+
+	my $retryCount = 2;
+	while ($retryCount){
+		my $req = new HTTP::Request PUT => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		$req->content_length(length $content);
+		$req->content_type('application/json');
+		$req->content($content);
+
+		my $res = $self->{_ua}->request($req);
+
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+	  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
+
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+			return 1;
+
+		}elsif ($res->code == 401){
+	 	 	my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+
+		}else{
+		#	print STDOUT $req->as_string;
+  			print STDOUT $res->as_string;
+  			return 0;
+		}
+	}
+}
 
 
 #

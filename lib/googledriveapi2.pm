@@ -1,8 +1,5 @@
 package pDrive::GoogleDriveAPI2;
 
-#use HTTP::Cookies;
-#use HTML::Form;
-#use URI;
 use LWP::UserAgent;
 use LWP;
 use strict;
@@ -51,11 +48,6 @@ sub new() {
   	$self->{_ua}->agent($self->{_ident});		# set the identity
   	$self->{_ua}->timeout(30);		# set the timeout
 
-
-  	#$self->{_cookiejar} = HTTP::Cookies->new();
-  	#$self->{_ua}->cookie_jar($self->{_cookiejar});
-	#  $self->{_ua}->max_redirect(0);
-	#  $self->{_ua}->requests_redirectable([]);
 
   	$self->{_ua}->default_headers->push_header('Accept' => "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword, application/xaml+xml, application/vnd.ms-xpsdocument, application/x-ms-xbap, application/x-ms-application, */*");
   	$self->{_ua}->default_headers->push_header('Accept-Language' => "en-us");
@@ -235,7 +227,7 @@ sub getList(*$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/files?maxResults=400&q=\'me\'+in+owners+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+		$URL =  API_URL . 'files?maxResults=400&q=\'me\'+in+owners+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 
 
@@ -264,7 +256,6 @@ sub getList(*$){
 		print STDOUT $res->as_string;
 		$retryCount--;
 		sleep(10);
-		#die($res->as_string."error in loading page");
 	}
 
 	}
@@ -280,7 +271,7 @@ sub getFolderInfo(*$){
 	my $self = shift;
 	my $fileID = shift;
 
-	my $URL = 'https://www.googleapis.com/drive/v2/files/'.$fileID.'?fields=title%2Cparents';
+	my $URL =  API_URL . 'files/'.$fileID.'?fields=title%2Cparents';
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -329,7 +320,7 @@ sub getListRoot(*$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/files/root';
+		$URL =  API_URL . 'files/root';
 	}
 
 	my $retryCount = 2;
@@ -377,10 +368,10 @@ sub getChanges(*$){
 	my $changeID = shift;
 
 	if ($URL eq '' and $changeID ne ''){
-		$URL = 'https://www.googleapis.com/drive/v2/changes?includeSubscribed=false&includeDeleted=false&maxResults=400&startChangeId='.$changeID;
+		$URL =  API_URL . 'changes?includeSubscribed=false&includeDeleted=false&maxResults=400&startChangeId='.$changeID;
 
 	}elsif ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/changes?includeSubscribed=false&includeDeleted=false&maxResults=400';
+		$URL =  API_URL . 'changes?includeSubscribed=false&includeDeleted=false&maxResults=400';
 	}
 
 	my $retryCount = 2;
@@ -426,7 +417,7 @@ sub getSubFolderID(*$){
 	my $parentID = shift;
 	my $folderName = shift;
 
-	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
+	my $URL =  API_URL . 'files?q=\''. $folderName.'\'+in+parents';
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -468,7 +459,7 @@ sub getSubFolderIDList(*$){
 	my $folderName = shift;
 
 	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
-	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	my $URL =  API_URL .'files?q=\''. $folderName.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -710,72 +701,73 @@ sub createFile(*$$$$$){
 
 
 #
-# Copy a file
+# Copy a file using Google server's copy method
+# - can copy a file from one account (optional - including directory) and can rename in process
+# - can be used to copy a file ID without directory or filename information
 ##
 sub copyFile(*$$$){
 
 	my $self = shift;
   	my $URL = shift;
+
+  	#optional
   	my $file = shift;
 	my $folder = shift;
 
 	my $content = '';
+
+	#copying a file without directory or filename
 	if ($folder ne '' and $file ne ''){
-  	$content = '{
-  "title": "'.$file. '",
-  "parents": [{
-    "kind": "drive#fileLink",
-    "id": "'.$folder.'"
-  }]
-}'."\n\n";
+  		$content = '{
+  			"title": "'.$file. '",
+  			"parents": [{
+    		"kind": "drive#fileLink",
+    		"id": "'.$folder.'"
+  			}]
+			}'."\n\n";
 	}
+
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request POST => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	$req->content_length(length $content);
-	$req->content_type('application/json');
-	$req->content($content);
+		my $req = new HTTP::Request POST => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		$req->content_length(length $content);
+		$req->content_type('application/json');
+		$req->content($content);
 
-	my $res = $self->{_ua}->request($req);
+		my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+	  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
 
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 			return 1;
 
-  		}
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-	#	print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
-	}
+		}elsif ($res->code == 401){
+	 	 	my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
 
+		}else{
+		#	print STDOUT $req->as_string;
+  			print STDOUT $res->as_string;
+  			return 0;
+		}
+	}
 }
+
+
 
 #
 # Create a folder
 ##
-sub createFolder(*$$){
+sub createFolder(*$$$){
 
 	my $self = shift;
   	my $URL = shift;
@@ -784,57 +776,57 @@ sub createFolder(*$$){
 
 
   	my $content = '{
-  "title": "'.$folder. '",
-  "mimeType": "application/vnd.google-apps.folder"';
+  		"title": "'.$folder. '",
+  		"mimeType": "application/vnd.google-apps.folder"';
   	$content .= ' ,"parents": [{"id":"'.$parentFolder.'"}]' if $parentFolder ne '';
 	$content .= '}'."\n\n";
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request POST => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	$req->content_length(length $content);
-	$req->content_type('application/json');
-	$req->content($content);
+		my $req = new HTTP::Request POST => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		$req->content_length(length $content);
+		$req->content_type('application/json');
+		$req->content($content);
 
-	my $res = $self->{_ua}->request($req);
+		my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+	  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
+
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+
+  			my $block = $res->as_string;
+
+  			while (my ($line) = $block =~ m%([^\n]*)\n%){
+
+    			$block =~ s%[^\n]*\n%%;
+
+		    	if ($line =~ m%\"id\"%){
+		    		my ($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
+	      			return $resourceID;
+    			}
+
+  			}
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+
+		}else{
+			#print STDOUT $req->as_string;
+  			print STDOUT $res->as_string;
+  			return 0;
+		}
 	}
-
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-
-  		my $block = $res->as_string;
-
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
-
-    		$block =~ s%[^\n]*\n%%;
-
-		    if ($line =~ m%\"id\"%){
-		    	my ($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
-	      		return $resourceID;
-    		}
-
-  		}
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-
-	}else{
-		#print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
-	}
-
 }
+
 
 #
 # Add a file to a folder
@@ -853,6 +845,7 @@ sub addFile(*$$){
 
 #
 # Delete  a file given resource ID
+# ** skips trash, deletes permanently
 #
 ##
 sub deleteFile(*$){

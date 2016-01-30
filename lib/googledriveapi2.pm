@@ -108,10 +108,10 @@ sub getToken(*$){
 
 
 	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
- 	 open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
- 	 print LOG $req->as_string;
- 	 print LOG $res->as_string;
- 	 close(LOG);
+ 	 	open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+ 	 	print LOG $req->as_string;
+ 	 	print LOG $res->as_string;
+ 	 	close(LOG);
 	}
 
 	my $token;
@@ -147,42 +147,41 @@ sub refreshToken(*){
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request POST => $URL;
-	$req->content_type("application/x-www-form-urlencoded");
-	$req->protocol('HTTP/1.1');
-	$req->content('client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
-	my $res = $self->{_ua}->request($req);
+		my $req = new HTTP::Request POST => $URL;
+		$req->content_type("application/x-www-form-urlencoded");
+		$req->protocol('HTTP/1.1');
+		$req->content('client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
+		my $res = $self->{_ua}->request($req);
 
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
- 	 open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
- 	 print LOG $req->as_string;
- 	 print LOG $res->as_string;
- 	 close(LOG);
-	}
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+ 	 		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+ 	 		print LOG $req->as_string;
+ 	 		print LOG $res->as_string;
+ 	 		close(LOG);
+		}
 
-	my $token;
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n";
+		my $token;
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n";
 
-	  	my $block = $res->as_string;
+	  		my $block = $res->as_string;
 
-		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
-		$retryCount=0;
+			($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
+			$retryCount=0;
 
-	}else{
-		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
-		#die ($res->as_string."error in loading page");}
-	}
-	if ($token ne ''){
-		$self->{_token} = $token;
-	}
+		}else{
+			print STDOUT $res->as_string;
+			$retryCount--;
+			sleep(10);
+			#die ($res->as_string."error in loading page");}
+		}
+		if ($token ne ''){
+			$self->{_token} = $token;
+		}
 
-	}
+		}
 		return ($self->{_token},$self->{_refreshToken});
-
 
 }
 
@@ -215,7 +214,6 @@ sub testAccess(*){
 		#	print STDOUT $res->as_string;
 		return 0;}
 
-
 }
 
 #
@@ -233,30 +231,30 @@ sub getList(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req);
+		my $req = new HTTP::Request GET => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
 
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-	  	return \$res->as_string;
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
-	}
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+	  		return \$res->as_string;
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+		}else{
+			print STDOUT $res->as_string;
+			$retryCount--;
+			sleep(10);
+		}
 
 	}
 
@@ -275,39 +273,38 @@ sub getFolderInfo(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req);
+		my $req = new HTTP::Request GET => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
-
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-  		my ($title) = $res->as_string =~ m%\"title\"\:\s?\"([^\"]+)\"%;
-		my ($resourceID) = $res->as_string =~ m%\"parentLink\"\:\s?\"[^\"]+\/([^\"]+)\"%;
-		my ($isRoot) = $res->as_string =~ m%\"isRoot\"\:\s?([^\s]+)%;
-		if ($isRoot eq 'true'){
-			return (0,$title,$resourceID);
-		}else{
-			return (1,$title,$resourceID);
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
 		}
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-		return $fileID;
 
-		#		print STDOUT $res->as_string;
-		#die($res->as_string."error in loading page");
-	}
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+  			my ($title) = $res->as_string =~ m%\"title\"\:\s?\"([^\"]+)\"%;
+			my ($resourceID) = $res->as_string =~ m%\"parentLink\"\:\s?\"[^\"]+\/([^\"]+)\"%;
+			my ($isRoot) = $res->as_string =~ m%\"isRoot\"\:\s?([^\s]+)%;
+			if ($isRoot eq 'true'){
+				return (0,$title,$resourceID);
+			}else{
+				return (1,$title,$resourceID);
+			}
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+		}else{
+			return $fileID;
 
+			#		print STDOUT $res->as_string;
+			#die($res->as_string."error in loading page");
+		}
 	}
 }
 
@@ -325,33 +322,33 @@ sub getListRoot(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req);
+		my $req = new HTTP::Request GET => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
 
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-  		my $block = $res->as_string;
-		my ($resourceID) = $block =~ m%\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s?\"([^\"]+)\"%;
-		return $resourceID;
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
-		#die($res->as_string."error in loading page");
-	}
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+  			my $block = $res->as_string;
+			my ($resourceID) = $block =~ m%\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s?\"([^\"]+)\"%;
+			return $resourceID;
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+		}else{
+			print STDOUT $res->as_string;
+			$retryCount--;
+			sleep(10);
+			#die($res->as_string."error in loading page");
+		}
 	}
   	return '';
 
@@ -376,32 +373,32 @@ sub getChanges(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req);
+		my $req = new HTTP::Request GET => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
 
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
-		#die($res->as_string."error in loading page");}
-	}
-  	return \$res->as_string;
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+		}else{
+			print STDOUT $res->as_string;
+			$retryCount--;
+			sleep(10);
+			#die($res->as_string."error in loading page");}
+		}
+  		return \$res->as_string;
 	}
 
 }
@@ -421,31 +418,31 @@ sub getSubFolderID(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req);
+		my $req = new HTTP::Request GET => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
 
-	if($res->is_success){
-  		return \$res->as_string;
+		if($res->is_success){
+  			return \$res->as_string;
 
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
-		#die($res->as_string."error in loading page");
-	}
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+		}else{
+			print STDOUT $res->as_string;
+			$retryCount--;
+			sleep(10);
+			#die($res->as_string."error in loading page");
+		}
 	}
 
 }
@@ -463,31 +460,31 @@ sub getSubFolderIDList(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req);
+		my $req = new HTTP::Request GET => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
 
-	if($res->is_success){
-  		return \$res->as_string;
+		if($res->is_success){
+  			return \$res->as_string;
 
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
-		#die($res->as_string."error in loading page");
-	}
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+		}else{
+			print STDOUT $res->as_string;
+			$retryCount--;
+			sleep(10);
+			#die($res->as_string."error in loading page");
+		}
 	}
 
 }
@@ -530,23 +527,23 @@ sub downloadFile(*$$$){
 	my $retryCount = 2;
 	while ($retryCount){
 
-	my $req = new HTTP::Request GET => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	my $res = $self->{_ua}->request($req, $path);
-	 if ($res->is_success) {
-     print STDOUT "ok\n";
-     return 1;
-	}elsif ($res->code == 401 or $res->code == 403){
+		my $req = new HTTP::Request GET => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		my $res = $self->{_ua}->request($req, $path);
+	 	if ($res->is_success) {
+     		print STDOUT "ok\n";
+     		return 1;
+		}elsif ($res->code == 401 or $res->code == 403){
 
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-  }  else {
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+  		}  else {
 
-     print STDOUT $res->status_line, "\n";
-     return 0;
-  }
+     		print STDOUT $res->status_line, "\n";
+     		return 0;
+  		}
 	}
 #  	open (FILE, "> ".$path) or die ("Cannot save image file".$path.": $!\n");
  # 	FILE->autoflush;
@@ -564,11 +561,11 @@ sub downloadFile(*$$$){
 #downloadChunk adapted from: http://www.perlmonks.org/?node_id=953833
 # all rights reserved from original author
 sub downloadChunk {
-  my ($data) = @_;
+  	my ($data) = @_;
 
-  # write the $data to a filehandle or whatever should happen
-  # with it here.
-  print FILE $data;
+  	# write the $data to a filehandle or whatever should happen
+  	# with it here.
+  	print FILE $data;
 }
 ###
 
@@ -589,41 +586,41 @@ sub uploadFile(*$$$$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-	my $req = new HTTP::Request PUT => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	$req->content_type($filetype);
-	$req->content_length($chunkSize);
-	$req->header('Content-Range' => $chunkRange);
-	$req->content($$chunk);
-	my $res = $self->{_ua}->request($req);
+		my $req = new HTTP::Request PUT => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		$req->content_type($filetype);
+		$req->content_length($chunkSize);
+		$req->header('Content-Range' => $chunkRange);
+		$req->content($$chunk);
+		my $res = $self->{_ua}->request($req);
 
 
-	if($res->is_success or $res->code == 308){
+		if($res->is_success or $res->code == 308){
 
-  		my $block = $res->as_string;
-		my ($resourceType,$resourceID);
-		while (my ($line) = $block =~ m%([^\n]*)\n%){
-			$block =~ s%[^\n]*\n%%;
+  			my $block = $res->as_string;
+			my ($resourceType,$resourceID);
+			while (my ($line) = $block =~ m%([^\n]*)\n%){
+				$block =~ s%[^\n]*\n%%;
 
-		    if ($line =~ m%\"id\"%){
-		    	my ($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
-	      		return $resourceID;
-	    	}
+		    	if ($line =~ m%\"id\"%){
+		    		my ($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
+	      			return $resourceID;
+	    		}
 
-		}
+			}
 
-		return $resourceID;
-#	}elsif ($res->code == 401){
-# 		my ($token,$refreshToken) = $self->refreshToken();
-#		$self->setToken($token,$refreshToken);
-#		$retryCount--;
-	}else{
-  		print STDERR "error";
-  		print STDOUT $req->headers_as_string;
+			return $resourceID;
+#		}elsif ($res->code == 401){
+# 			my ($token,$refreshToken) = $self->refreshToken();
+#			$self->setToken($token,$refreshToken);
+#			$retryCount--;
+		}else{
+  			print STDERR "error";
+  			print STDOUT $req->headers_as_string;
 #  		print STDOUT $res->as_string;
-  		return 0;
-	}
+	  		return 0;
+		}
 	}
 
 }
@@ -643,58 +640,58 @@ sub createFile(*$$$$$){
 
 
   	my $content = '{
-  "title": "'.$file. '",
-  "parents": [{
-    "kind": "drive#fileLink",
-    "id": "'.$folder.'"
-  }]
-}'."\n\n";
+  		"title": "'.$file. '",
+  		"parents": [{
+    		"kind": "drive#fileLink",
+    		"id": "'.$folder.'"
+  		}]
+		}'."\n\n";
 
 	my $retryCount = 2;
 	while ($retryCount){
-#  convert=false prevents plain/text from becoming docs
-	my $req = new HTTP::Request POST => $URL;
-	$req->protocol('HTTP/1.1');
-	$req->header('Authorization' => 'Bearer '.$self->{_token});
-	$req->header('X-Upload-Content-Type' => $fileType);
-	$req->header('X-Upload-Content-Length' => $fileSize);
-	$req->content_length(length $content);
-	$req->content_type('application/json');
-	$req->content($content);
+		# convert=false prevents plain/text from becoming docs
+		my $req = new HTTP::Request POST => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		$req->header('X-Upload-Content-Type' => $fileType);
+		$req->header('X-Upload-Content-Length' => $fileSize);
+		$req->content_length(length $content);
+		$req->content_type('application/json');
+		$req->content($content);
 
-	my $res = $self->{_ua}->request($req);
+		my $res = $self->{_ua}->request($req);
 
-	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  		print LOG $req->as_string;
-  		print LOG $res->as_string;
-  		close(LOG);
-	}
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
 
-	if($res->is_success){
-  		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 
-  		my $block = $res->as_string;
+	  		my $block = $res->as_string;
 
-  		while (my ($line) = $block =~ m%([^\n]*)\n%){
+  			while (my ($line) = $block =~ m%([^\n]*)\n%){
 
-    		$block =~ s%[^\n]*\n%%;
+    			$block =~ s%[^\n]*\n%%;
 
-		    if ($line =~ m%^Location:%){
-      			($URL) = $line =~ m%^Location:\s+(\S+)%;
-	      		return $URL;
-    		}
+			    if ($line =~ m%^Location:%){
+    	  			($URL) = $line =~ m%^Location:\s+(\S+)%;
+	    	  		return $URL;
+    			}
 
-  		}
-	}elsif ($res->code == 401){
- 	 	my ($token,$refreshToken) = $self->refreshToken();
-		$self->setToken($token,$refreshToken);
-		$retryCount--;
-	}else{
-	#	print STDOUT $req->as_string;
-  		print STDOUT $res->as_string;
-  		return 0;
-	}
+  			}
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+		}else{
+			#	print STDOUT $req->as_string;
+	  		print STDOUT $res->as_string;
+  			return 0;
+		}
 	}
 
 }

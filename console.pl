@@ -438,6 +438,11 @@ while (my $input = <$userInput>){
     	($driveListings) = $services[$currentService]->getListAll();
 
 
+  	}elsif($input =~ m%^get folderid details%i){
+    	my ($folderID) = $input =~ m%^get folderid details\s([^\s]+)%i;
+
+    	my $listURL;
+    	($driveListings) = $services[$currentService]->getListAll();
 
   	}elsif($input =~ m%^set changeid%i){
     	my ($changeID) = $input =~ m%^set changeid\s([^\s]+)%i;
@@ -555,6 +560,12 @@ while (my $input = <$userInput>){
 			print STDOUT "service = $service\n";
 		}
     	syncGoogleFolder('',$folderID, '',0,0, @drives);
+
+  	}elsif($input =~ m%^navigate folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^navigate folderid\s+(\S+)%i;
+
+    	navigateFolder('',$folderID,  $services[$currentService]);
+
 
   	}elsif($input =~ m%^sync inboundid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync inboundid\s+(\S+)%i;
@@ -1114,6 +1125,57 @@ sub syncGoogleFolder($){
 
 }
 
+
+
+##
+# Sync a folder (and all subfolders) from one Google service to one or more other Google services (using API copy command)
+# params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
+##
+sub navigateFolder($$$){
+	my $folder = shift;
+	my $folderID = shift;
+	my $service = shift;
+
+	my $nextURL = '';
+	my @subfolders;
+
+	push(@subfolders, $folderID);
+
+	for (my $i=0; $i <= $#subfolders;$i++){
+		$folderID = $subfolders[$i];
+		while (1){
+
+			my $newDocuments =  $service->getSubFolderIDList($folderID, $nextURL);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+					push(@subfolders, $resourceID);
+  			 	}else{
+
+#  					$path = $service->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
+
+#					my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+#							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
+#					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
+#							$services[$drives[$j]]->copyFile( $resourceID, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+					print STDOUT "resourceID $resourceID\n";
+  				}
+
+
+
+			}
+			$nextURL = $service->{_nextURL};
+			print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+
+	  	}
+
+	}
+
+
+}
 __END__
 
 =head1 AUTHORS

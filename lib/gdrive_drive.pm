@@ -519,7 +519,7 @@ sub uploadFile(*$$){
 
 
 
-sub copyFile(*$$){
+sub copyFile(*$$$$){
 
 	my $self = shift;
 	my $fileID = shift;

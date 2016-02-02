@@ -715,7 +715,7 @@ sub copyFile(*$$$){
 
 	my $content = '';
 
-	#copying a file without directory or filename
+	#copying a file with directory and filename
 	if ($folder ne '' and $fileName ne ''){
   		$content = '{
   			"title": "'.$fileName. '",
@@ -724,6 +724,15 @@ sub copyFile(*$$$){
     		"id": "'.$folder.'"
   			}]
 			}'."\n\n";
+	#copying a file with directory but no filename
+	}elsif ($folder ne ''){
+  		$content = '{
+  			"parents": [{
+    		"kind": "drive#fileLink",
+    		"id": "'.$folder.'"
+  			}]
+			}'."\n\n";
+	}
 	}
 
 	my $retryCount = 2;

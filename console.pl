@@ -730,6 +730,18 @@ while (my $input = <$userInput>){
     	close(LIST);
 
 
+	}elsif($input =~ m%^copy fileid list\s+\S+\s+folderid\s+%i){
+		my ($list,$folderid) = $input =~ m%^copy fileid listt\s+(\S+)s+folderid\s+([^\n]+)\n%;
+
+		open (LIST, '<./'.$list) or  die ('cannot read file ./'.$list);
+    	while (my $line = <LIST>){
+			my ($fileID) = $line =~ m%([^\n]+)\n%;
+      		print STDOUT "fileID = $fileID\n";
+
+  			$services[$currentService]->copyFile($fileID, $folderid);
+    	}
+    	close(LIST);
+
 	}elsif($input =~ m%^copy fileid list%i){
 		my ($list) = $input =~ m%^copy fileid list\s([^\n]+)\n%;
 

@@ -731,7 +731,7 @@ while (my $input = <$userInput>){
 
 
 	}elsif($input =~ m%^copy fileid list\s+\S+\s+folderid\s+%i){
-		my ($list,$folderid) = $input =~ m%^copy fileid listt\s+(\S+)s+folderid\s+([^\n]+)\n%;
+		my ($list,$folderid) = $input =~ m%^copy fileid listt\s+(\S+)\s+folderid\s+([^\n]+)\n%;
 
 		open (LIST, '<'.$list) or  die ('cannot read file ./'.$list);
     	while (my $line = <LIST>){

@@ -733,7 +733,7 @@ sub copyFile(*$$$){
   			}]
 			}'."\n\n";
 	}
-	}
+
 
 	my $retryCount = 2;
 	while ($retryCount){

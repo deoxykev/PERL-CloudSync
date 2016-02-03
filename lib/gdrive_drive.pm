@@ -564,6 +564,20 @@ sub copyFile(*$$$$){
 }
 
 
+sub getFileMeta(*$$$$){
+
+	my $self = shift;
+	my $fileID = shift;
+
+	print STDOUT $fileID . "\n";
+
+#			$status =  $self->{_serviceapi}->getFileMeta($fileID);
+			my $driveListings = $self->{_serviceapi}->getFileMeta($fileID);
+  			my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+			return $newDocuments;
+
+}
+
 
 sub renameFile(*$$){
 

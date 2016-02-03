@@ -733,14 +733,7 @@ while (my $input = <$userInput>){
 	}elsif($input =~ m%^copy fileid list\s+\S+\s+folderid\s+%i){
 		my ($list,$folderid) = $input =~ m%^copy fileid list\s+(\S+)\s+folderid\s+([^\n]+)\n%;
 
-		open (LIST, '<'.$list) or  die ('cannot read file ./'.$list);
-    	while (my $line = <LIST>){
-			my ($fileID) = $line =~ m%([^\n]+)\n%;
-      		print STDOUT "fileID = $fileID\n";
-
-  			$services[$currentService]->copyFile($fileID, $folderid);
-    	}
-    	close(LIST);
+		syncGoogleFileList($list, $folderid, $services[$currentService]);
 
 	}elsif($input =~ m%^copy fileid list%i){
 		my ($list) = $input =~ m%^copy fileid list\s([^\n]+)\n%;
@@ -1148,13 +1141,12 @@ sub syncGoogleFileList($){
 	 print STDERR "folder = $folderID\n";
 	$dbase[0] = $dbm->openDBM($service->{_db_checksum});
 	$dbase[1] = $dbm->openDBM($service->{_db_fisi});
-	my $nextURL = '';
 
 	open (LIST, '<'.$fileList) or  die ('cannot read file '.$fileList);
     while (my $line = <LIST>){
 			my ($fileID) = $line =~ m%([^\n]+)\n%;
       		print STDOUT "fileID = $fileID\n";
-			my $newDocuments =  $service->copyFile($folderID, $nextURL);
+			my $newDocuments =  $service->getFileMeta($fileID);
 
 
   			foreach my $resourceID (keys %{$newDocuments}){
@@ -1190,7 +1182,7 @@ sub syncGoogleFileList($){
   						}else{
 							print STDOUT  "copy to service ". $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($service).' #' .' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
-							$service->copyFile( $resourceID, , $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) ;
+							$service->copyFile($fileID, $folderID);
   						}
 	  				}else{
  						 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
@@ -1199,9 +1191,7 @@ sub syncGoogleFileList($){
 				}
 
 	  		}
-		$nextURL = $service->{_nextURL};
-		print STDOUT "next url " . $nextURL. "\n";
-  		last if  $nextURL eq '';
+
     }
     close(LIST);
 

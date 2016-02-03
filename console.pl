@@ -1141,13 +1141,14 @@ sub syncGoogleFileList($){
 	 print STDERR "folder = $folderID\n";
 	$dbase[0] = $dbm->openDBM($service->{_db_checksum});
 	$dbase[1] = $dbm->openDBM($service->{_db_fisi});
+	$dbase[2] = my %md5tmp;
 
 	open (LIST, '<'.$fileList) or  die ('cannot read file '.$fileList);
     while (my $line = <LIST>){
 			my ($fileID) = $line =~ m%([^\n]+)\n%;
+			$fileID =~ s%\s%%g;
       		print STDOUT "fileID = $fileID\n";
 			my $newDocuments =  $service->getFileMeta($fileID);
-
 
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
@@ -1160,12 +1161,13 @@ sub syncGoogleFileList($){
 		  			###
 	  				#Google Drive (MD5 comparision) already exists; skip
   					if 	( (Scalar::Util::blessed($service) eq 'pDrive::gDrive')
-  					and  ((defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+  					and  ((defined($dbase[3]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[3]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
  						 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
 					}else{
 							print STDOUT  "copy to service ". $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($service).' #' .' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
 							$service->copyFile($fileID, $folderID);
+							$dbase[3]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} = $resourceID;
   					}
 
 				}

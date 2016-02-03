@@ -302,6 +302,7 @@ sub getFileMeta(*$){
 		}
 
 	}
+	return '-1';
 
 }
 

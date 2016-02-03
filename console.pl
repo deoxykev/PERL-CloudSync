@@ -1138,6 +1138,81 @@ sub syncGoogleFolder($){
 }
 
 
+##
+# Sync a folder (and all subfolders) from one Google service to one or more other Google services (using API copy command)
+# params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
+##
+sub syncGoogleFileList($){
+	my ($fileList, $folderID, $service) = @_;
+	my @dbase;
+	 print STDERR "folder = $folderID\n";
+	$dbase[0] = $dbm->openDBM($service->{_db_checksum});
+	$dbase[1] = $dbm->openDBM($service->{_db_fisi});
+	my $nextURL = '';
+
+	open (LIST, '<'.$fileList) or  die ('cannot read file '.$fileList);
+    while (my $line = <LIST>){
+			my ($fileID) = $line =~ m%([^\n]+)\n%;
+      		print STDOUT "fileID = $fileID\n";
+			my $newDocuments =  $service->copyFile($folderID, $nextURL);
+
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+				my $doDownload=0;
+	  			#	folder
+  				#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+
+  			 	}else{
+
+					#Google Drive -> Google Drive
+		  			###
+	  				#Google Drive (MD5 comparision) already exists; skip
+  					if 	( (Scalar::Util::blessed($service) eq 'pDrive::gDrive')
+  					and  ((defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+
+  					}else{
+  						$doDownload=1;
+  					}
+
+					if ($doDownload){
+
+						#Google Drive -> Google Drive
+	  					###
+			  			#	Google Drive (MD5 comparision) already exists; skip
+  						if 	( (Scalar::Util::blessed($service) eq 'pDrive::gDrive' )
+  						and  ( (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'})
+  								and $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
+  								or (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
+  								and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+							print STDOUT  "skip to service(duplicate MD5)\n";
+
+  						}else{
+							print STDOUT  "copy to service ". $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
+					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($service).' #' .' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
+							$service->copyFile( $resourceID, , $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) ;
+  						}
+	  				}else{
+ 						 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
+  					}
+
+				}
+
+	  		}
+		$nextURL = $service->{_nextURL};
+		print STDOUT "next url " . $nextURL. "\n";
+  		last if  $nextURL eq '';
+    }
+    close(LIST);
+
+
+	$dbm->closeDBM($dbase[0]);
+	$dbm->closeDBM($dbase[1]);
+
+
+
+}
+
 
 ##
 # Sync a folder (and all subfolders) from one Google service to one or more other Google services (using API copy command)

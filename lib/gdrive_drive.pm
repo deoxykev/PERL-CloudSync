@@ -13,7 +13,7 @@ use constant FOLDER_TITLE => 0;
 use constant FOLDER_ROOT => 1;
 use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
-
+use constant RETRY_COUNT => 3;
 
 #my $types = {'document' => ['doc','html'],'drawing' => 'png', 'pdf' => 'pdf','presentation' => 'ppt', 'spreadsheet' => 'xls'};
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
@@ -481,7 +481,7 @@ sub uploadFile(*$$){
     	print STDERR "\r".$i . '/'.$chunkNumbers;
     	my $status=0;
     	$retrycount=0;
-    	while ($status eq '0' and $retrycount < 10){
+    	while ($status eq '0' and $retrycount < RETRY_COUNT){
 			$status = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
       		print STDOUT "\r"  . $status;
 	      	if ($status eq '0'){
@@ -501,7 +501,7 @@ sub uploadFile(*$$){
 	      	}
 
     	}
-		if ($retrycount >= 10){
+		if ($retrycount >= RETRY_COUNT){
 			print STDERR "\r" . $file . "'...retry failed - $file\n";
 
     		pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
@@ -511,7 +511,7 @@ sub uploadFile(*$$){
     	$fileID=$status;
 		$pointerInFile += $chunkSize;
   	}
-  	if ($retrycount < 10){
+  	if ($retrycount < RETRY_COUNT){
 		print STDOUT "\r" . $file . "'...success - $file\n";
   	}
   	close(INPUT);
@@ -532,7 +532,7 @@ sub copyFile(*$$$$){
 
   	my $status=0;
    	$retrycount=0;
-   	while ($status eq '0' and $retrycount < 10){
+   	while ($status eq '0' and $retrycount < RETRY_COUNT){
 			$status =  $self->{_serviceapi}->copyFile($fileID,$fileName, $folder);
       		print STDOUT "\r"  . $status;
 	      	if ($status eq '0'){
@@ -551,14 +551,14 @@ sub copyFile(*$$$$){
         		$retrycount++;
 	      	}
 
-			if ($retrycount >= 10){
+			if ($retrycount >= RETRY_COUNT){
 				print STDERR "\r" . $fileID . "'...retry failed - $fileID\n";
 
     			pDrive::masterLog("failed copy (all attempts failed) - $fileID\n");
     			last;
 			}
   	}
-  	if ($retrycount < 10){
+  	if ($retrycount < RETRY_COUNT){
 		print STDOUT "\r" . $file . "'...success - $fileID\n";
   	}
 }
@@ -575,7 +575,7 @@ sub renameFile(*$$){
 
   	my $status=0;
    	$retrycount=0;
-   	while ($status eq '0' and $retrycount < 10){
+   	while ($status eq '0' and $retrycount < RETRY_COUNT){
 			$status =  $self->{_serviceapi}->renameFile($fileID,$fileName);
 	      	if ($status eq '0'){
 	       		print STDERR "...retrying\n";
@@ -593,14 +593,14 @@ sub renameFile(*$$){
         		$retrycount++;
 	      	}
 
-			if ($retrycount >= 10){
+			if ($retrycount >= RETRY_COUNT){
 				print STDERR "\r" . $fileID . "'...retry failed - $fileID\n";
 
     			pDrive::masterLog("failed copy (all attempts failed) - $fileID\n");
     			last;
 			}
   	}
-  	if ($retrycount < 10){
+  	if ($retrycount < RETRY_COUNT){
 		print STDOUT "\r" . $file . "'...success - $fileID\n";
   	}
 }

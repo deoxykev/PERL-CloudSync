@@ -1162,30 +1162,11 @@ sub syncGoogleFileList($){
 	  				#Google Drive (MD5 comparision) already exists; skip
   					if 	( (Scalar::Util::blessed($service) eq 'pDrive::gDrive')
   					and  ((defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
-
-  					}else{
-  						$doDownload=1;
-  					}
-
-					if ($doDownload){
-
-						#Google Drive -> Google Drive
-	  					###
-			  			#	Google Drive (MD5 comparision) already exists; skip
-  						if 	( (Scalar::Util::blessed($service) eq 'pDrive::gDrive' )
-  						and  ( (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'})
-  								and $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
-  								or (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
-  								and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
-							print STDOUT  "skip to service(duplicate MD5)\n";
-
-  						}else{
+ 						 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
+					}else{
 							print STDOUT  "copy to service ". $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($service).' #' .' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
 							$service->copyFile($fileID, $folderID);
-  						}
-	  				}else{
- 						 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
   					}
 
 				}

@@ -716,7 +716,7 @@ while (my $input = <$userInput>){
 	}elsif($input =~ m%^upload dir list%i){
 		my ($list) = $input =~ m%^upload dir list\s([^\n]+)\n%;
 
-		open (LIST, '<./'.$list) or  die ('cannot read file ./'.$list);
+		open (LIST, '<'.$list) or  die ('cannot read file '.$list);
     	while (my $line = <LIST>){
 			my ($dir,$folder,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;
       		print STDOUT "folder = $folder, type = $filetype\n";
@@ -738,7 +738,7 @@ while (my $input = <$userInput>){
 	}elsif($input =~ m%^copy fileid list%i){
 		my ($list) = $input =~ m%^copy fileid list\s([^\n]+)\n%;
 
-		open (LIST, '<./'.$list) or  die ('cannot read file ./'.$list);
+		open (LIST, '<'.$list) or  die ('cannot read file '.$list);
     	while (my $line = <LIST>){
 			my ($fileID) = $line =~ m%([^\n]+)\n%;
       		print STDOUT "fileID = $fileID\n";
@@ -760,7 +760,7 @@ while (my $input = <$userInput>){
 	}elsif($input =~ m%^upload list%i){
     	my ($list) = $input =~ m%^upload list\s([^\n]+)\n%;
 
-		open (LIST, '<./'.$list) or  die ('cannot read file ./'.$list);
+		open (LIST, '<'.$list) or  die ('cannot read file '.$list);
     	while (my $line = <LIST>){
 		my ($file,$folderID) = $line =~ m%([^\t]+)\t([^\n]+)\n%;
       	print STDOUT "folder = $folderID, file = $file\n";
@@ -785,8 +785,8 @@ while (my $input = <$userInput>){
     	my ($list) = $input =~ m%^create list\s([^\n]+)\n%;
 
 		my $fileHandler;
-		open (LIST, '<./'.$list) or  die ('cannot read file ./'.$list);
-		open (OUTPUT, '>./'.$list.'.output') or  die ('cannot read file ./'.$list.'.output');
+		open (LIST, '<'.$list) or  die ('cannot read file '.$list);
+		open (OUTPUT, '>'.$list.'.output') or  die ('cannot read file '.$list.'.output');
 
     	while (my $line = <LIST>){
 		my ($dir,$folder,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;

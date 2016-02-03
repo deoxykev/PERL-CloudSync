@@ -1066,6 +1066,83 @@ sub readDriveListings(**){
 	return \%newDocuments;
 }
 
+#
+# Parse the drive listings
+##
+sub readSingleDriveListings(**){
+
+	my $self = shift;
+	my $driveListings = shift;
+	my %newDocuments;
+
+	my $count=0;
+
+  	$$driveListings =~ s%\n%%g;
+	#print $$driveListings;
+#  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
+  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}%){ # [^\}]+
+
+    	my ($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}%;
+    	$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}%%;
+
+    	my ($title) = $entry =~ m%\"title\"\:\s?\"([^\"]+)\"%;
+    	#remove leading spaces from filename (causes issues with fisi)
+    	$title =~ s%^\s+%%g;
+    	#remove trailing spaces from filename (causes issues with fisi)
+    	$title =~ s%\s+$%%g;
+
+		my ($updated) = $entry =~ m%\"modifiedDate\"\:\s?\"([^\"]+)\"%;
+		my ($published) = $entry =~ m%\"createdDate\"\:\s?\"([^\"]+)\"%;
+		my ($resourceType) = $entry =~ m%\"mimeType\"\:\s?\"([^\"]+)\"%;
+		my ($resourceID) = $entry =~ m%\"id\"\:\s?\"([^\"]+)\"%;
+		my ($downloadURL) = $entry =~ m%\"downloadUrl\"\:\s?\"([^\"]+)\"%;
+		my ($parentID) = $entry =~ m%\"parentLink\"\:\s?\"([^\"]+)\"%;
+		my ($md5) = $entry =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;
+		my ($fileSize) = $entry =~ m%\"fileSize\"\:\s?\"([^\"]+)\"%;
+
+	    # 	is a folder
+	    if ($resourceType eq 'folder' or $resourceType eq 'application/vnd.google-apps.folder'){
+
+
+		      # is a root folder
+#			}else{
+
+#        		$$folders{$resourceID}[FOLDER_ROOT] = IS_ROOT;
+
+ #     		}
+
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = '';
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
+
+    	}else{
+
+      		$updated =~ s%\D+%%g;
+      		($updated) = $updated =~ m%^(\d{14})%;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
+			#      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
+
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;
+#      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_edit'}] = $editURL;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}] = $resourceType;
+
+      		($parentID) = $parentID =~ m%\/([^\/]+)$%;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] = $parentID;
+
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}] = $published;
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] = $fileSize;
+
+      		$title =~ s/\+//g; #remove +s in title for fisi)
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
+
+    	}
+    	$count++;
+  	}
+
+	return \%newDocuments;
+}
+
 
 #
 # Parse the change listings

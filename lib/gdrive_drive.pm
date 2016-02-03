@@ -527,7 +527,7 @@ sub copyFile(*$$$$){
 	my $fileName = shift;
 
 	print STDOUT $fileID . "\n";
-
+	$fileID =~ s%\s%%g; #remove spaces
   	my $retrycount=0;
 
   	my $status=0;
@@ -573,7 +573,7 @@ sub getFileMeta(*$$$$){
 
 #			$status =  $self->{_serviceapi}->getFileMeta($fileID);
 			my $driveListings = $self->{_serviceapi}->getFileMeta($fileID);
-  			my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+  			my $newDocuments = $self->{_serviceapi}->readSingleDriveListings($driveListings);
 			return $newDocuments;
 
 }

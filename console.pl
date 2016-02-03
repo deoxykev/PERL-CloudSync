@@ -1150,7 +1150,6 @@ sub syncGoogleFileList($){
 
 
   			foreach my $resourceID (keys %{$newDocuments}){
-				my $doDownload=0;
 	  			#	folder
   				#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){

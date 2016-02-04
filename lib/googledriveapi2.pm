@@ -997,13 +997,19 @@ sub readDriveListings(**){
   	$$driveListings =~ s%\n%%g;
 	#print $$driveListings;
 #  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
-  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{% or $$driveListings =~ m%\{\s+\"kind\"\:.*?\}\s*\]\s*\}%){ # [^\}]+
+  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{% or $$driveListings =~ m%\{\s+\"kind\"\:.*?\}\s*\]\s*\}% or $$driveListings =~ m%\{\s+\"kind\"\:.*?\}\s*%){ # [^\}]+
 
     	my ($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\,\s+\{%;
 
 		if ($entry eq ''){
     		($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\s*\]\s*\}%;
-	    	$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\s*\]\s*\}%%;
+    		if ($entry eq ''){
+	    		($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\s*%;
+    			$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\s*%%;
+    		}else{
+    			$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\s*\]\s*\}%%;
+    		}
+
 		}else{
     		$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\,\s+%%;
 		}

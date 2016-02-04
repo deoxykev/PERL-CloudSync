@@ -574,7 +574,7 @@ sub getFileMeta(*$$$$){
 #			$status =  $self->{_serviceapi}->getFileMeta($fileID);
 			my $driveListings = $self->{_serviceapi}->getFileMeta($fileID);
 			return if ($driveListings eq '-1');
-  			my $newDocuments = $self->{_serviceapi}->readSingleDriveListings($driveListings);
+  			my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 			return $newDocuments;
 
 }

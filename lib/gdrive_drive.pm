@@ -526,7 +526,6 @@ sub copyFile(*$$$$){
 	my $folder = shift;
 	my $fileName = shift;
 
-	print STDOUT $fileID . "\n";
 	$fileID =~ s%\s%%g; #remove spaces
   	my $retrycount=0;
 

@@ -4,6 +4,7 @@ package pDrive::CloudService;
 #use constant CHUNKSIZE => (8*256*1024);
 use constant CHUNKSIZE => (128*256*1024);
 
+open(OUTPUT, '>-');
 
 
 sub traverseFolder($){
@@ -59,4 +60,49 @@ sub bindIP(*$){
   	$self->{_serviceapi}->bindIP($IP);
 
 }
+
+sub setOutput(*$){
+	my $self = shift;
+
+	open(OUTPUT, '>>'.shift);
+}
+
+
+sub dumpFolder(*$$$){
+	my $self = shift;
+	my $folder = shift;
+	my $folderID = shift;
+	my $service = shift;
+
+	my $nextURL = '';
+	my @subfolders;
+
+	push(@subfolders, $folderID);
+
+	for (my $i=0; $i <= $#subfolders;$i++){
+		$folderID = $subfolders[$i];
+		while (1){
+
+			my $newDocuments =  $service->getSubFolderIDList($folderID, $nextURL);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+					push(@subfolders, $resourceID);
+  			 	}else{
+					print OUTPUT $resourceID."\t". $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]."\t". $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]."\t". $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. "\n";
+  				}
+
+			}
+			$nextURL = $service->{_nextURL};
+			print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+
+	  	}
+
+	}
+
+}
+
+
 1;

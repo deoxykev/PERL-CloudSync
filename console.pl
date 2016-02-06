@@ -225,6 +225,13 @@ while (my $input = <$userInput>){
     	print STDOUT "directory = $dir\n";
     	pDrive::FileIO::scanDir($dir);
 
+}elsif($input =~ m%^spool ([^\s]+)%i){
+    	my ($spoolFile) = $input =~ m%^spool\s([^\s]+)%i;
+		print STDOUT "spooling to ". $spoolFile . "\n";
+		$services[$currentService]->setOutput($spoolFile);
+		#open(OUTPUT, '>>'.$spoolFile);
+
+
   	}elsif($input =~ m%^load gd\s\d+\s([^\s]+)%i){
     	my ($account,$login) = $input =~ m%^load gd\s(\d+)\s([^\s]+)%i;
 		#my ($dbase,$folders) = $dbm->readHash();
@@ -569,7 +576,7 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^dump folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^dump folderid\s+(\S+)%i;
 
-    	dumpFolder('',$folderID,  $services[$currentService]);
+    	$services[$currentService]->dumpFolder('',$folderID,  $services[$currentService]);
 
 
 
@@ -882,7 +889,7 @@ sub syncDrive($){
 	}
 
 	#print STDOUT $$driveListings . "\n";
-
+close(OUTPUT);
 }
 
 ##
@@ -1226,51 +1233,6 @@ sub navigateFolder($$$){
 #					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
 #							$services[$drives[$j]]->copyFile( $resourceID, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
 					print STDOUT "resourceID $resourceID\n";
-  				}
-
-
-
-			}
-			$nextURL = $service->{_nextURL};
-			print STDOUT "next url " . $nextURL. "\n";
-  			last if  $nextURL eq '';
-
-	  	}
-
-	}
-
-
-}
-
-sub dumpFolder($$$){
-	my $folder = shift;
-	my $folderID = shift;
-	my $service = shift;
-
-	my $nextURL = '';
-	my @subfolders;
-
-	push(@subfolders, $folderID);
-
-	for (my $i=0; $i <= $#subfolders;$i++){
-		$folderID = $subfolders[$i];
-		while (1){
-
-			my $newDocuments =  $service->getSubFolderIDList($folderID, $nextURL);
-
-  			foreach my $resourceID (keys %{$newDocuments}){
-	  			#	folder
-  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-					push(@subfolders, $resourceID);
-  			 	}else{
-
-#  					$path = $service->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
-
-#					my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
-#							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
-#					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
-#							$services[$drives[$j]]->copyFile( $resourceID, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
-					print STDOUT "resourceID $resourceID - title ".$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}].  ' md5 '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' fisi '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].  "\n";
   				}
 
 

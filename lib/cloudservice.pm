@@ -6,6 +6,9 @@ package pDrive::CloudService;
 
 #use constant CHUNKSIZE => (8*256*1024);
 use constant CHUNKSIZE => (128*256*1024);
+use constant CHECKSUM => 0;
+use constant FISI => 1;
+use constant MEMORY_CHECKSUM => 2;
 
 open(OUTPUT, '>-');
 my $dbm = pDrive::DBM->new();

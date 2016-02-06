@@ -1,10 +1,14 @@
 package pDrive::CloudService;
 	use Fcntl;
 
+#use lib "$FindBin::Bin/../lib";
+#require 'lib/dbm.pm';
+
 #use constant CHUNKSIZE => (8*256*1024);
 use constant CHUNKSIZE => (128*256*1024);
 
 open(OUTPUT, '>-');
+my $dbm = pDrive::DBM->new();
 
 
 sub traverseFolder($){

@@ -28,6 +28,7 @@ sub new(*$) {
   			  _username => undef,
   			  _folders_dbm => undef,
   			  _db_checksum => undef,
+  			  _dbm => undef,
   			  _db_fisi => undef};
 
   	my $class = shift;
@@ -35,7 +36,7 @@ sub new(*$) {
 	$self->{_username} = shift;
 	$self->{_db_checksum} = 'gd.'.$self->{_username} . '.md5.db';
 	$self->{_db_fisi} = 'gd.'.$self->{_username} . '.fisi.db';
-
+	$self->{_dbm} = pDrive::DBM->new();
 
 
   	# initialize web connections
@@ -855,6 +856,28 @@ sub getFolderIDByPath(*$$){
 sub buildMemoryDBM()
  {	my %dbase; return \%dbase;};
 
+
+sub renameFileList(*$){
+	my $self = shift;
+	my $fileList = shift;
+
+	my @dbase;
+	$dbase[0] = $self->{_dbm}->openDBM($service->{_db_checksum});
+	$dbase[1] = $self->{_dbm}->openDBM($service->{_db_fisi});
+	$dbase[2] = my %md5tmp;
+
+	open (LIST, '<'.$fileList) or  die ('cannot read file '.$fileList);
+    while (my $line = <LIST>){
+			my ($fileID, $checksum, $fisi, $title, $rename_title) = $line =~ m%\"?([^\t]+)\"?\"?([^\t]+)\"?\"?([^\t]+)\"?\"?([^\t]+)\"?\"?([^\n]+)\"?\n%;
+			$fileID =~ s%\s%%g;
+      		print STDOUT "fileID = $fileID\n";
+
+    }
+    close(LIST);
+	$self->{_dbm}->closeDBM($dbase[0]);
+	$self->{_dbm}->closeDBM($dbase[1]);
+
+}
 
 1;
 

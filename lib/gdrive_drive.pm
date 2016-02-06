@@ -737,7 +737,6 @@ sub getListAll(*){
 	}
 	print STDOUT "last url " . $lastURL . "\n";
 
-
 }
 
 sub updateMD5Hash(**){

@@ -868,9 +868,12 @@ sub renameFileList(*$){
 
 	open (LIST, '<'.$fileList) or  die ('cannot read file '.$fileList);
     while (my $line = <LIST>){
-			my ($fileID, $checksum, $fisi, $title, $rename_title) = $line =~ m%\"?([^\t]+)\"?\"?([^\t]+)\"?\"?([^\t]+)\"?\"?([^\t]+)\"?\"?([^\n]+)\"?\n%;
+			my ($fileID, $checksum, $fisi, $title, $rename_title) = $line =~ m%\"?(.*?)\"?\t\"?(.*?)\"?\t\"?(.*?)\"?\t\"?(.*?)\"?\t\"?(.*?)\"?\n%;
 			$fileID =~ s%\s%%g;
-      		print STDOUT "fileID = $fileID\n";
+			next if $fileID eq '';
+			next if $title eq $rename_title;
+      		print STDOUT "renaming = $fileID $title to $rename_title\n";
+      		$self->{_serviceapi}->renameFile($fileID,$rename_title);
 
     }
     close(LIST);

@@ -1059,6 +1059,8 @@ sub syncGoogleFolder($){
 			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
 			$dbase[$drives[$i]][1] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
 	}
+	my %dbaseTMP;
+
 	my $nextURL = '';
 	my @subfolders;
 
@@ -1090,6 +1092,7 @@ sub syncGoogleFolder($){
 	  			#Google Drive (MD5 comparision) already exists; skip
   				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive')
   				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
+#  				and (defined($dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
   				and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 
   				}else{
@@ -1108,7 +1111,8 @@ sub syncGoogleFolder($){
   						if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' )
   						and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
   						and  ( (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'})
-  								and $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
+				  				and (defined($dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
+  								or  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
   								or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
   								and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
@@ -1121,6 +1125,8 @@ sub syncGoogleFolder($){
 							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
 							$services[$drives[$j]]->copyFile( $resourceID, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+							$dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} = $resourceID;
+
   						}
 					}
 

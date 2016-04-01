@@ -36,9 +36,19 @@ use constant FOLDER_ROOT => 1;
 use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
-&PDRIVE::DBM::init();
-&PDRIVE::DBM::printDBHash();
 
+use Getopt::Std;
+use constant USAGE => " usage: $0 [-d dbm]\n";
+
+my %opt;
+die (USAGE) unless (getopts ('d:p',\%opt));
+my $dbm_file = $opt{d};
+
+&PDRIVE::DBM::init($dbm_file);
+
+if ($opt{p}){
+	&PDRIVE::DBM::printDBHash();
+}
 
 {
 package PDRIVE::DBM;
@@ -50,9 +60,9 @@ use strict;
 
 my $dbm;
 my %dbase;
-sub init(){
+sub init($){
 
- $dbm = './od.durdle.db';
+ $dbm = shift;
 
 }
 

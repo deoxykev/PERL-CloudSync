@@ -1176,6 +1176,11 @@ sub readChangeListings(**){
 
 		$$driveListings =~ s%\{\s+\"kind\"\:\s+\"drive\#file\"\,\s+\"id\"\:\s+\"[^\"]+\".*?\"quotaBytesUsed\"\:\s+\"[^\"]+\"%%;
 
+ 		if (pDrive::Config->DEBUG){
+	 		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+	 	 	print LOG 'title = '. $title . "\t\t\t" . $md5 . "\n";
+	 	 	close(LOG);
+ 		}
     	next if $md5 eq '';
 #		$$driveListings =~ s%drive\#file%%;
 

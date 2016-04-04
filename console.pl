@@ -1,6 +1,3 @@
-#
-#
-
 package pDrive;
 
 use strict;
@@ -119,6 +116,7 @@ die (USAGE) unless (getopts ('c:u:p:',\%opt));
 #die("missing parameter\n". USAGE) unless($opt{c} ne '');
 
 #die("config file $opt{c} doesn't exit\n") unless (-e $opt{c});
+
 
 
 

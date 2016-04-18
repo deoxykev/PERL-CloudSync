@@ -1100,7 +1100,6 @@ sub syncGoogleFolder($){
 
 				my $path;
 				if ($doDownload){
-  					$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
 
 					for(my $j=1; $j <= $#drives; $j++){
 						#Google Drive -> Google Drive
@@ -1116,6 +1115,8 @@ sub syncGoogleFolder($){
 							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
 
   						}else{
+							$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
+
   							#for inbound, remove Inbound from path when creating on target
 							$path =~ s%\/[^\/]+%% if ($pathTarget ne '');
 							$path = $pathTarget . '/' . $path if ($pathTarget ne '');

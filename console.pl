@@ -1075,6 +1075,8 @@ sub syncGoogleFolder($){
 		my $newDocuments =  $services[$drives[0]]->getSubFolderIDList($folderID, $nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
 
+		my $path;
+		my @mypath;
   		foreach my $resourceID (keys %{$newDocuments}){
 			my $doDownload=0;
   			#folder
@@ -1098,7 +1100,7 @@ sub syncGoogleFolder($){
   				}
 				}
 
-				my $path;
+#				my $path;
 				if ($doDownload){
 
 					for(my $j=1; $j <= $#drives; $j++){
@@ -1115,15 +1117,17 @@ sub syncGoogleFolder($){
 							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
 
   						}else{
-							$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
+							$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]) if $path eq '';
 
   							#for inbound, remove Inbound from path when creating on target
 							$path =~ s%\/[^\/]+%% if ($pathTarget ne '');
 							$path = $pathTarget . '/' . $path if ($pathTarget ne '');
-							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+							if ($mypath[$j] eq ''){
+								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+							}
 							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
-							$services[$drives[$j]]->copyFile( $resourceID, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+							$services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
 							$dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} = $resourceID;
 
   						}

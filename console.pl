@@ -553,6 +553,18 @@ while (my $input = <$userInput>){
 			print STDOUT "service path = $service $pathTarget \n";
 		}
     	syncGoogleFolder('',$folderID,$pathTarget,0,0, @drives);
+  	}elsif($input =~ m%^copy folderid\s+\S+\sinbound\s+\S+%i){
+    	my ($folderID, $pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+inbound\s+(\S+)%i;
+		$input =~ s%^copy folderid\s+\S+\s+inbound\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+			print STDOUT "service path = $service $pathTarget \n";
+		}
+    	syncGoogleFolder('',$folderID,$pathTarget,0,1, @drives);
   	}elsif($input =~ m%^copy folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^copy folderid\s+(\S+)%i;
 		$input =~ s%^copy folderid\s+\S+%%;
@@ -1120,7 +1132,7 @@ sub syncGoogleFolder($){
 							$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]) if $path eq '';
 
   							#for inbound, remove Inbound from path when creating on target
-							$path =~ s%\/[^\/]+%% if ($pathTarget ne '');
+							$path =~ s%\/[^\/]+%% if ($isInbound);
 							$path = $pathTarget . '/' . $path if ($pathTarget ne '');
 							if ($mypath[$j] eq ''){
 								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));

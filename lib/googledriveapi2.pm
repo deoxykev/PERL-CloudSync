@@ -28,7 +28,8 @@ sub new() {
               _clientID => undef,
               _clientSecret => undef,
               _refreshToken  => undef,
-              _token => undef
+              _token => undef,
+              _IP => undef
 	};
 
   	my $class = shift;
@@ -74,7 +75,7 @@ sub bindIP(*$){
   	my $IP = shift;
 
   	$self->{_ua}->local_address($IP);
-
+	$self->{_IP} = $IP;
 }
 
 #
@@ -567,7 +568,11 @@ sub downloadFile(*$$$){
   	my $URL = shift;
   	my $timestamp = shift;
     print STDERR "URL = $URL $self->{_token} $path\n";
-    `wget --header="Authorization: Bearer $self->{_token}" "$URL" -O $path`;
+    if (defined($self->{_IP})){
+    	`wget --bind-address=$self->{_IP} --header="Authorization: Bearer $self->{_token}" "$URL" -O $path`;
+    }else{
+    	`wget --header="Authorization: Bearer $self->{_token}" "$URL" -O $path`;
+    }
     return;
 	my $retryCount = 2;
 	while ($retryCount){

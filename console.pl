@@ -190,7 +190,7 @@ while (my $input = <$userInput>){
 
 	if($input =~ m%^exit%i or$input =~ m%^quit%i){
   		last;
-  	}elsif($input =~ m%^help%i or $input =~ m%\?%i){
+  	}elsif($input =~ m%^help%i or $input =~ m%^\?%i){
     	print STDERR HELP;
 
 	###
@@ -677,6 +677,10 @@ while (my $input = <$userInput>){
 
 
 
+ 	}elsif($input =~ m%^download url\s+\S+\s+path%i){
+    		my ($url, $path) = $input =~ m%^download url\s+(\S+)\s+path\s+\"?(.*?)\"?\n%;
+			print STDERR "url = $url path = $path\n";
+	    	$services[$currentService]->downloadFile($path,$url,'');
  	}elsif($input =~ m%^download all%i){
   		my %sortedDocuments;
 

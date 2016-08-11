@@ -583,6 +583,8 @@ while (my $input = <$userInput>){
 
     	navigateFolder('',$folderID,  $services[$currentService]);
 
+
+	#return a list of empty folder IDs
   	}elsif($input =~ m%^empty folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^empty folderid\s+(\S+)%i;
 
@@ -738,6 +740,13 @@ while (my $input = <$userInput>){
 
 	  	my $folderID = $services[$currentService]->createFolder($path);
 	    print "resource ID = " . $folderID . "\n";
+
+	}elsif($input =~ m%^trash folderid%i){
+    	my ($folderID) = $input =~ m%^trash folderid\s([^\n]+)\n%;
+
+	  	my $folderID = $services[$currentService]->trashFile($folderID);
+	    print "resource ID = " . $folderID . "\n";
+
 
 
 	# remote upload using URL (OneDrive))

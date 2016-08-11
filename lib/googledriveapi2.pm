@@ -989,6 +989,44 @@ sub deleteFile(*$){
 
 
 #
+# Trash  a file/folder given resource ID
+#
+##
+sub trashFile(*$){
+
+	my $self = shift;
+  	my $resourceID = shift;
+
+	my $URL = API_URL . 'files/'.$resourceID. '/trash';
+	my $req = new HTTP::Request POST => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $content = '';
+	$req->content_length(length $content);
+	$req->content_type('application/json');
+	$req->content($content);
+
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "trashed file $resourceID\n\n";
+  		return;
+
+	}else{
+		print STDOUT $req->as_string;
+		print STDOUT $res->as_string;
+		return;}
+
+}
+
+#
 # Parse the drive listings
 ##
 sub readDriveListings(**){

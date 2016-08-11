@@ -656,6 +656,14 @@ sub deleteFile(*$){
 }
 
 
+sub trashFile(*$){
+
+	my $self = shift;
+	my $resourceID = shift;
+
+	return $self->{_serviceapi}->trashFile($resourceID);
+
+}
 sub getListAllOLD(*){
 
 	my $self = shift;

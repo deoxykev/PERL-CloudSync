@@ -632,7 +632,17 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 		}
     	syncFolder('DOWNLOAD',$folderID,0,0,@drives);
-
+  	}elsif($input =~ m%^download folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^download folderid\s+(\S+)%i;
+		$input =~ s%^download folderid\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+		}
+    	downloadFolder($folderID,0,0,@drives);
   	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
     	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;
 		my $dbase1 = $dbm->openDBM($services[$service1]->{_db_fisi});
@@ -1076,6 +1086,71 @@ sub syncFolder($){
 }
 
 
+
+##
+# Sync a folder (and all subfolders) from one service to one or more other services
+# params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
+##
+sub downloadFolder($){
+	my ($folderID, $isMock, $isInbound, @drives) = @_;
+	my @dbase;
+	for(my $i=1; $i <= $#drives; $i++){
+			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
+			$dbase[$drives[$i]][1] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
+	}
+	my $nextURL = '';
+	my @subfolders;
+
+	#no folder ID provided, look it up from looking at the root folder
+	push(@subfolders, $folderID);
+
+	for (my $i=0; $i <= $#subfolders;$i++){
+		$folderID = $subfolders[$i];
+	while (1){
+
+		my $newDocuments =  $services[$drives[0]]->getSubFolderIDList($folderID, $nextURL);
+  		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
+
+  		foreach my $resourceID (keys %{$newDocuments}){
+			my $doDownload=0;
+  			#folder
+  			#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
+  			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+				push(@subfolders, $resourceID);
+  			 }else{
+
+				my $path;
+  					$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
+					print STDOUT "DOWNLOAD $path " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ' ' . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]. "\n";
+					unlink pDrive::Config->LOCAL_PATH.'/'.$$;
+		    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
+			    	#	print STDERR "parent = ". $$newDocsyncFoluments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
+
+
+
+					unlink pDrive::Config->LOCAL_PATH.'/'.$$;
+
+
+
+
+
+			}
+
+	  	}
+		$nextURL = $services[$drives[0]]->{_nextURL};
+		print STDOUT "next url " . $nextURL. "\n";
+  		last if  $nextURL eq '';
+
+	}
+	}
+	for(my $i=0; $i < $#drives; $i++){
+		$dbm->closeDBM($dbase[$drives[$i]][0]);
+		$dbm->closeDBM($dbase[$drives[$i]][1]);
+
+	}
+
+
+}
 ##
 # Sync a folder (and all subfolders) from one Google service to one or more other Google services (using API copy command)
 # params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]

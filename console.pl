@@ -583,6 +583,11 @@ while (my $input = <$userInput>){
 
     	navigateFolder('',$folderID,  $services[$currentService]);
 
+  	}elsif($input =~ m%^catalog folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^catalog folderid\s+(\S+)%i;
+
+    	catalogFolderID('',$folderID,  $services[$currentService]);
+
 
 	#return a list of empty folder IDs
   	}elsif($input =~ m%^empty folderid\s\S+%i){
@@ -1346,6 +1351,82 @@ sub navigateFolder($$$){
 	  	}
 
 	}
+
+
+}
+
+sub catalogFolderID($$$){
+	my $folder = shift;
+	my $folderID = shift;
+	my $service = shift;
+
+	my $nextURL = '';
+	my @subfolders;
+
+	push(@subfolders, $folderID);
+
+	open(OUTPUT, '>./spreadsheet.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/spreadsheet.tab');
+
+	for (my $i=0; $i <= $#subfolders;$i++){
+		$folderID = $subfolders[$i];
+		while (1){
+
+			my $newDocuments =  $service->getSubFolderIDList($folderID, $nextURL);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+					push(@subfolders, $resourceID);
+  			 	}else{
+
+					my $directory = '';
+  			 		#tv1
+  			 		if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*S(\d\d?)E(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i){
+						my ($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*S(\d\d?)E(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
+			#			print STDOUT "show = $show\n";
+						my ($directory1) = $show =~ m%^\s?(\w)%;
+						my ($directory2) = "season ". $season;
+						$directory = "\tTV\t".lc $directory1 . "\t$show\t$directory2";
+
+  			 		#tv2
+  			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*season\s?(\d\d?)\s?episode\s?(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i){
+						my ($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~  m%(.+?)[ .]?[ \-]?\s*season\s?(\d\d?)\s?episode\s?(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
+		#				print STDOUT "show = $show\n";
+						my ($directory1) = $show =~ m%^\s?(\w)%;
+						my ($directory2) = "season ". $season;
+						$directory = "\tTV\t".lc $directory1 . "\t$show\t$directory2";
+
+  			 		#tv3
+  			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i){
+						my ($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
+	#					print STDOUT "show = $show\n";
+						my ($directory1) = $show =~ m%^\s?(\w)%;
+						my ($directory2) = "season ". $season;
+						$directory = "\tTV\t".lc $directory1 . "\t$show\t$directory2";
+
+					#movie
+  			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i){
+						my ($movie) =  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i;
+
+#						print STDOUT "movie = $movie\n";
+						my ($directory1) = $movie =~ m%^\s?(\w)%;
+						$directory = "\t\t\tMovies\t".lc $directory1;
+
+  			 		}
+
+					print STDOUT "$resourceID\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] .$directory."\n";
+					print OUTPUT "$resourceID\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] .$directory."\n";
+  				}
+
+			}
+			$nextURL = $service->{_nextURL};
+			print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+
+	  	}
+
+	}
+	close(OUTPUT);
 
 
 }

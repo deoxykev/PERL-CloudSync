@@ -1415,7 +1415,7 @@ sub catalogFolderID($$$){
 			#			print STDOUT "show = $show\n";
 						my ($directory1) = $show =~ m%^\s?(\w)%;
 						my ($directory2) = "season ". $season;
-						$directory = "\tTV\t".lc $directory1 . "\t$show\t$directory2";
+						$directory = "\tmedia/tv\t".lc $directory1 . "\t$show\t$directory2";
 
   			 		#tv2
   			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*season\s?(\d\d?)\s?episode\s?(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i){
@@ -1423,7 +1423,7 @@ sub catalogFolderID($$$){
 		#				print STDOUT "show = $show\n";
 						my ($directory1) = $show =~ m%^\s?(\w)%;
 						my ($directory2) = "season ". $season;
-						$directory = "\tTV\t".lc $directory1 . "\t$show\t$directory2";
+						$directory = "\tmedia/tv\t".lc $directory1 . "\t$show\t$directory2";
 
   			 		#tv3
   			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i){
@@ -1431,7 +1431,7 @@ sub catalogFolderID($$$){
 	#					print STDOUT "show = $show\n";
 						my ($directory1) = $show =~ m%^\s?(\w)%;
 						my ($directory2) = "season ". $season;
-						$directory = "\tTV\t".lc $directory1 . "\t$show\t$directory2";
+						$directory = "\tmedia/tv\t".lc $directory1 . "\t$show\t$directory2";
 
 					#movie
   			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i){
@@ -1439,7 +1439,7 @@ sub catalogFolderID($$$){
 
 #						print STDOUT "movie = $movie\n";
 						my ($directory1) = $movie =~ m%^\s?(\w)%;
-						$directory = "\t\t\tMovies\t".lc $directory1;
+						$directory = "\t\t\tmedia/movies\t".lc $directory1;
 
   			 		}
 

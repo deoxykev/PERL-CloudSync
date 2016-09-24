@@ -1111,6 +1111,9 @@ sub spreadsheetCleanup($){
 
 		if ($folderCache{$path} eq ''){
 			$path = $service->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+			$folderCache{$path} = $path;
+		}else{
+			$path = $folderCache{$path};
 		}
 
 		print $resourceID . ','.$path,"\n";

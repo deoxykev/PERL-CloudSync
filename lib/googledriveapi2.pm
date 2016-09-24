@@ -954,6 +954,64 @@ sub addFile(*$$){
 
 
 #
+# Move a file from one folder to another
+# * needs updating*
+##
+sub moveFile(*$$$){
+
+	my $self = shift;
+  	my $file = shift;
+  	my $toFolder = shift;
+  	my $fromFolder = shift;
+
+	my $URL = API_URL . 'files/'.$file;
+
+	$URL .= '?removeParents='.$fromFolder . '&addParents=' . $toFolder;
+print $URL;
+
+	my $retryCount = 2;
+		while ($retryCount){
+			my $req = new HTTP::Request PUT => $URL;
+			$req->protocol('HTTP/1.1');
+			$req->header('Authorization' => 'Bearer '.$self->{_token});
+			$req->content_length(0);
+
+			my $res = $self->{_ua}->request($req);
+
+
+			if($res->is_success or $res->code == 308){
+
+	  			my $block = $res->as_string;
+				my ($resourceType,$resourceID);
+				while (my ($line) = $block =~ m%([^\n]*)\n%){
+					$block =~ s%[^\n]*\n%%;
+
+			    	if ($line =~ m%\"id\"%){
+			    		my ($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
+		      			return $resourceID;
+		    		}
+
+				}
+
+				return $resourceID;
+	#		}elsif ($res->code == 401){
+	# 			my ($token,$refreshToken) = $self->refreshToken();
+	#			$self->setToken($token,$refreshToken);
+	#			$retryCount--;
+			}else{
+	  			print STDERR "error";
+	  			print STDOUT $req->headers_as_string;
+		  		print STDOUT $res->as_string;
+		  		return 0;
+			}
+		}
+
+
+	return;
+
+}
+
+#
 # Delete  a file given resource ID
 # ** skips trash, deletes permanently
 #

@@ -520,15 +520,8 @@ while (my $input = <$userInput>){
     	syncFolder($folder,'',0, 0, @drives);
   	}elsif($input =~ m%^cleanup\s+(\S+)%i){
     	my ($folder) = $input =~ m%^cleanup\s+(\S+)%i;
-		$input =~ s%^cleanup\s+\S+%%;
-		my @drives;
-		my $count=0;
-		while ($input =~ m%^\s+\S+%){
-			my ($service) = $input =~ m%^\s+(\S+)%;
-			$input =~ s%^\s+\S+%%;
-			$drives[$count++] = $service;
-		}
-    	spreadsheetCleanup(0, @drives);
+
+    	spreadsheetCleanup(0,  $services[$currentService]);
   	}elsif($input =~ m%^mock sync folder\s+(\S+)%i){
     	my ($folder) = $input =~ m%^mock sync folder\s+(\S+)%i;
 		$input =~ s%^mock sync folder\s+\S+%%;
@@ -1108,13 +1101,17 @@ sub syncFolder($){
 # params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
 ##
 sub spreadsheetCleanup($){
-	my ($isMock, @drives) = @_;
+	my ($isMock, $service) = @_;
 
 	open(SPREADSHEET, './spreadsheet.tab');
 	while(my $line = <SPREADSHEET>){
-		my ($resourceID,$title,$md5,$dir1,$dir2,$dir3,$dir4) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\n%;
+		my ($resourceID,$title,$md5,$fromFolder,$dir1,$dir2,$dir3,$dir4) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\n%;
 		my $path = ($dir1 ne ''? $dir1 . '/' : '') . ($dir2 ne ''? $dir2 . '/' : '') .($dir3 ne ''? $dir3 . '/' : '') . ($dir4 ne ''? $dir4 . '/' : '');
+
+		$path = $service->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+
 		print $resourceID . ','.$path,"\n";
+		$service->moveFile($resourceID,  $path, $fromFolder);
 	}
 	close(SPREADSHEET);
 }
@@ -1443,8 +1440,8 @@ sub catalogFolderID($$$){
 
   			 		}
 
-					print STDOUT "$resourceID\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] .$directory."\n";
-					print OUTPUT "$resourceID\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] .$directory."\n";
+					print STDOUT "$resourceID\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] ."\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]  . $directory."\n";
+					print OUTPUT "$resourceID\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] ."\t".$$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]  .$directory."\n";
   				}
 
 			}

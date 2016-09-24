@@ -201,6 +201,17 @@ sub createFolder(*$$){
 
 }
 
+sub moveFile(*$$){
+
+	my $self = shift;
+	my $file = shift;
+	my $toFolder = shift;
+	my $fromFolder = shift;
+
+	return $self->{_serviceapi}->moveFile($file, $toFolder, $fromFolder);
+
+}
+
 sub getSubFolderID(*$$){
 
 	my $self = shift;

@@ -965,9 +965,7 @@ sub moveFile(*$$$){
   	my $fromFolder = shift;
 
 	my $URL = API_URL . 'files/'.$file;
-
 	$URL .= '?removeParents='.$fromFolder . '&addParents=' . $toFolder;
-print $URL;
 
 	my $retryCount = 2;
 		while ($retryCount){

@@ -1104,11 +1104,14 @@ sub spreadsheetCleanup($){
 	my ($isMock, $service) = @_;
 
 	open(SPREADSHEET, './spreadsheet.tab');
+	my %folderCache;
 	while(my $line = <SPREADSHEET>){
 		my ($resourceID,$title,$md5,$fromFolder,$dir1,$dir2,$dir3,$dir4) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\n%;
 		my $path = ($dir1 ne ''? $dir1 . '/' : '') . ($dir2 ne ''? $dir2 . '/' : '') .($dir3 ne ''? $dir3 . '/' : '') . ($dir4 ne ''? $dir4 . '/' : '');
 
-		$path = $service->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+		if ($folderCache{$path} eq ''){
+			$path = $service->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+		}
 
 		print $resourceID . ','.$path,"\n";
 		$service->moveFile($resourceID,  $path, $fromFolder);

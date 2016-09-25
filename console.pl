@@ -603,8 +603,8 @@ while (my $input = <$userInput>){
 
     	findEmpyFolders($folderID,  $services[$currentService]);
 
-  	}elsif($input =~ m%^trash empty folers folderid\s\S+%i){
-    	my ($folderID) = $input =~ m%^trash empty folers folderid\s+(\S+)%i;
+  	}elsif($input =~ m%^trash empty folders folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^trash empty folders folderid\s+(\S+)%i;
 
     	trashEmpyFolders($folderID,  $services[$currentService]);
 
@@ -1507,7 +1507,8 @@ sub trashEmpyFolders($$){
 
   	}
   	if ($fileFolderCount == 0){
-  		print STDOUT "empty folder - ". $folderID . "\n";
+  		print STDOUT "trashing empty folder - ". $folderID . "\n";
+  		$service->trashFile($folderID);
   	}
 
 

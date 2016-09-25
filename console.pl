@@ -590,8 +590,12 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^catalog folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^catalog folderid\s+(\S+)%i;
 
-    	catalogFolderID('',$folderID,  $services[$currentService]);
+    	catalogFolderID('',$folderID,  $services[$currentService], 1);
 
+  	}elsif($input =~ m%^catalog immediate folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^catalog immediate folderid\s+(\S+)%i;
+
+    	catalogFolderID('',$folderID,  $services[$currentService], 0);
 
 	#return a list of empty folder IDs
   	}elsif($input =~ m%^empty folderid\s\S+%i){
@@ -1392,6 +1396,7 @@ sub catalogFolderID($$$){
 	my $folder = shift;
 	my $folderID = shift;
 	my $service = shift;
+	my $traverseFolder = shift;
 
 	my $nextURL = '';
 	my @subfolders;
@@ -1408,7 +1413,7 @@ sub catalogFolderID($$$){
 
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
-  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  				 if  ($traverseFolder and $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
 					push(@subfolders, $resourceID);
   			 	}else{
 

@@ -601,7 +601,12 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^empty folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^empty folderid\s+(\S+)%i;
 
-    	findEmpyFolder($folderID,  $services[$currentService]);
+    	findEmpyFolders($folderID,  $services[$currentService]);
+
+  	}elsif($input =~ m%^trash empty folers folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^trash empty folers folderid\s+(\S+)%i;
+
+    	trashEmpyFolders($folderID,  $services[$currentService]);
 
 
   	}elsif($input =~ m%^dump folderid\s\S+%i){
@@ -1420,6 +1425,7 @@ sub catalogFolderID($$$){
 					my $directory = '';
   			 		#tv1
   			 		if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*S0?(\d\d?)E(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
+  			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*(\d)(\d\d)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
   			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*season\s?(\d\d?)\s?episode\s?(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
   			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*0?(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i){
 						my ($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*S0?(\d\d?)E(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
@@ -1427,6 +1433,9 @@ sub catalogFolderID($$$){
 							($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~  m%(.+?)[ .]?[ \-]?\s*season\s?(\d\d?)\s?episode\s?(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
 							if ($show eq ''){
 								($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*0?(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
+								if ($show eq ''){
+									($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*(\d)(\d\d)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
+								}
 							}
 						}
 						$show =~ s%\.% %g; #remove . from name
@@ -1468,7 +1477,44 @@ sub catalogFolderID($$$){
 
 
 
-sub findEmpyFolder($$){
+
+sub trashEmpyFolders($$){
+
+	my $folderID = shift;
+	my $service = shift;
+
+	my $nextURL = '';
+
+	my $fileFolderCount=0;
+	while (1){
+
+			my $newDocuments =  $service->getSubFolderIDList($folderID, $nextURL);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+					trashEmpyFolders($resourceID,$service);
+					$fileFolderCount++;
+
+  			 	}else{
+					$fileFolderCount++;
+  				}
+
+			}
+			$nextURL = $service->{_nextURL};
+			#print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+
+  	}
+  	if ($fileFolderCount == 0){
+  		print STDOUT "empty folder - ". $folderID . "\n";
+  	}
+
+
+
+}
+
+sub findEmpyFolders($$){
 
 	my $folderID = shift;
 	my $service = shift;

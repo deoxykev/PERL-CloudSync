@@ -1425,7 +1425,7 @@ sub catalogFolderID($$$){
 					my $directory = '';
   			 		#tv1
   			 		if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*S0?(\d\d?)E(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
-  			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*(\d)(\d\d)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
+  			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*[^\d]+(\d)(\d\d)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
   			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*season\s?(\d\d?)\s?episode\s?(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
   			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*0?(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i){
 						my ($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*S0?(\d\d?)E(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;

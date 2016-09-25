@@ -1429,7 +1429,7 @@ sub catalogFolderID($$$){
 								($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*0?(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
 							}
 						}
-						$show =~ s%\.%%g; #remove . from show name
+						$show =~ s%\.%%g; #remove . from name
 			#			print STDOUT "show = $show\n";
 						my ($directory1) = $show =~ m%^\s?(\w)%;
 						my ($directory2) = "season ". $season;
@@ -1438,7 +1438,8 @@ sub catalogFolderID($$$){
 					#movie
   			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i){
 						my ($movie) =  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i;
-
+						$movie =~ s%\.(\d\d\d\d)\.%\($1\)%;
+						$movie =~ s%\.%%g; #remove . from name
 #						print STDOUT "movie = $movie\n";
 						my ($directory1) = $movie =~ m%^\s?(\w)%;
 						$directory = "\t\tmedia/movies\t".lc $directory1 . "\t".lc $movie;

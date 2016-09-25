@@ -1441,6 +1441,7 @@ sub catalogFolderID($$$){
 						my ($movie) =  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.*?[ \(]?[\[]?[\{]?[ .]?[ \-]?\d{4}[ \)]?[\]]?[\}]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i;
 						$movie =~ s%\.(\d\d\d\d)\.% \($1\)%;
 						$movie =~ s%\[(\d\d\d\d)\]% \($1\)%;
+						$movie =~ s%\{(\d\d\d\d)\}% \($1\)%;
 						$movie =~ s%\.% %g; #remove . from name
 #						print STDOUT "movie = $movie\n";
 						my ($directory1) = $movie =~ m%^\s?(\w)%;

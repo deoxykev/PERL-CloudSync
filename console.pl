@@ -1109,15 +1109,16 @@ sub spreadsheetCleanup($){
 		my ($resourceID,$title,$md5,$fromFolder,$dir1,$dir2,$dir3,$dir4) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\n%;
 		my $path = ($dir1 ne ''? $dir1 . '/' : '') . ($dir2 ne ''? $dir2 . '/' : '') .($dir3 ne ''? $dir3 . '/' : '') . ($dir4 ne ''? $dir4 . '/' : '');
 
+		my $folderID;
 		if ($folderCache{$path} eq ''){
-			$path = $service->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
-			$folderCache{$path} = $path;
+			$folderID = $service->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+			$folderCache{$path} = $folderID;
 		}else{
-			$path = $folderCache{$path};
+			$folderID = $folderCache{$path};
 		}
 
-		print $resourceID . ','.$path,"\n";
-		$service->moveFile($resourceID,  $path, $fromFolder);
+		print $resourceID . ','.$folderID,"\n";
+		$service->moveFile($resourceID,  $folderID, $fromFolder);
 	}
 	close(SPREADSHEET);
 }
@@ -1442,7 +1443,7 @@ sub catalogFolderID($$$){
 
 #						print STDOUT "movie = $movie\n";
 						my ($directory1) = $movie =~ m%^\s?(\w)%;
-						$directory = "\t\t\tmedia/movies\t".lc $directory1;
+						$directory = "\t\tmedia/movies\t".lc $directory1 . "\t".lc $movie;
 
   			 		}
 

@@ -1430,6 +1430,7 @@ sub catalogFolderID($$$){
 							}
 						}
 						$show =~ s%\.% %g; #remove . from name
+						$season =~ s%^(\d)$%0$1%; #pad season with leading 0
 			#			print STDOUT "show = $show\n";
 						my ($directory1) = $show =~ m%^\s?(\w)%;
 						my ($directory2) = "season ". $season;
@@ -1438,7 +1439,7 @@ sub catalogFolderID($$$){
 					#movie
   			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i){
 						my ($movie) =  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i;
-						$movie =~ s%\.(\d\d\d\d)\.%\($1\)%;
+						$movie =~ s%\.(\d\d\d\d)\.% \($1\)%;
 						$movie =~ s%\.% %g; #remove . from name
 #						print STDOUT "movie = $movie\n";
 						my ($directory1) = $movie =~ m%^\s?(\w)%;

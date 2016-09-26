@@ -1125,6 +1125,7 @@ sub spreadsheetCleanup($){
 	open(SPREADSHEET, './spreadsheet.tab');
 	my %folderCache;
 	while(my $line = <SPREADSHEET>){
+		print $line;
 		my ($resourceID,$title,$md5,$fromFolder,$dir1,$dir2,$dir3,$dir4) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\n%;
 		my $path = ($dir1 ne ''? $dir1 . '/' : '') . ($dir2 ne ''? $dir2 . '/' : '') .($dir3 ne ''? $dir3 . '/' : '') . ($dir4 ne ''? $dir4 . '/' : '');
 		next if $path eq '';

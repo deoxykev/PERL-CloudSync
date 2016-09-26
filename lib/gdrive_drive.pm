@@ -738,6 +738,72 @@ sub getChangesAll(*){
 }
 
 
+sub getTrash(*){
+
+	my $self = shift;
+
+	my $nextURL='';
+
+	#last run failed to finish, attempt to continue where left
+	my $driveListings;
+	while (1){
+		$driveListings = $self->{_serviceapi}->getTrash($nextURL);
+  		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
+  		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+
+
+  		foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+					print STDOUT "folder $resourceID " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}].  "\n";
+  			 	}else{
+
+					print STDOUT "file $resourceID " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}].  "\n";
+  				}
+
+  		}
+		print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+	}
+
+}
+
+
+sub restoreTrash(*){
+
+	my $self = shift;
+
+	my $nextURL='';
+
+	#last run failed to finish, attempt to continue where left
+	my $driveListings;
+	while (1){
+		$driveListings = $self->{_serviceapi}->getTrash($nextURL);
+  		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
+  		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+
+		my $folderID = '';
+  		foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  			 	}else{
+					#fetch recovery folder (or create)
+  			 		if ($folderID eq ''){
+  			 			$folderID = $self->getFolderIDByPath('recovery', 1);
+  			 		}
+  			 		# untrash and move to recovery folder
+  			 		$self->{_serviceapi}->untrashFile($resourceID);
+					$self->{_serviceapi}->moveFile($resourceID,$folderID);
+					print STDOUT "recovered file $resourceID " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}].  "\n";
+
+  				}
+
+  		}
+		print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+	}
+
+}
 sub getListAll(*){
 
 	my $self = shift;
@@ -751,7 +817,6 @@ sub getListAll(*){
 		$driveListings = $self->{_serviceapi}->getList($nextURL);
   		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
   		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
-		$self->updateMD5Hash($newDocuments);
 
 		print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';

@@ -265,6 +265,50 @@ sub getList(*$){
 
 
 #
+# get list of the content in the Google Drive
+##
+sub getTrash(*$){
+
+	my $self = shift;
+	my $URL = shift;
+
+	if ($URL eq ''){
+		$URL =  API_URL . 'files?maxResults=400&q=trashed%3Dtrue&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	}
+
+
+	my $retryCount = 2;
+	while ($retryCount){
+		my $req = new HTTP::Request GET => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		my $res = $self->{_ua}->request($req);
+
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
+
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
+	  		return \$res->as_string;
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+		}else{
+			print STDOUT $res->as_string;
+			$retryCount--;
+			sleep(10);
+		}
+
+	}
+
+}
+
+#
 # get meta data for a file in the Google Drive
 ##
 sub getFileMeta(*$){
@@ -964,8 +1008,13 @@ sub moveFile(*$$$){
   	my $toFolder = shift;
   	my $fromFolder = shift;
 
-	my $URL = API_URL . 'files/'.$file;
-	$URL .= '?removeParents='.$fromFolder . '&addParents=' . $toFolder;
+	my $URL = API_URL . 'files/'.$file . '?';
+
+	$URL .=  'addParents=' . $toFolder;
+
+	if ($fromFolder ne ''){
+		$URL .=  '&removeParents='.$fromFolder;
+	}
 
 	my $retryCount = 2;
 		while ($retryCount){
@@ -1073,6 +1122,44 @@ sub trashFile(*$){
 
 	if($res->is_success){
   		print STDOUT "trashed file $resourceID\n\n";
+  		return;
+
+	}else{
+		print STDOUT $req->as_string;
+		print STDOUT $res->as_string;
+		return;}
+
+}
+
+#
+# Untrash  a file/folder given resource ID
+#
+##
+sub untrashFile(*$){
+
+	my $self = shift;
+  	my $resourceID = shift;
+
+	my $URL = API_URL . 'files/'.$resourceID. '/untrash';
+	my $req = new HTTP::Request POST => $URL;
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $content = '';
+	$req->content_length(length $content);
+	$req->content_type('application/json');
+	$req->content($content);
+
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "untrashed file $resourceID\n\n";
   		return;
 
 	}else{

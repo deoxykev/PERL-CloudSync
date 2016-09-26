@@ -449,6 +449,12 @@ while (my $input = <$userInput>){
     	my $listURL;
     	($driveListings) = $services[$currentService]->getListAll();
 
+  	}elsif($input =~ m%^get trash%i){
+		$services[$currentService]->getTrash();
+
+  	}elsif($input =~ m%^restore trash%i){
+		$services[$currentService]->restoreTrash();
+
   	}elsif($input =~ m%^set changeid%i){
     	my ($changeID) = $input =~ m%^set changeid\s([^\s]+)%i;
     	$services[$currentService]->updateChange($changeID);

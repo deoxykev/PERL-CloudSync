@@ -540,13 +540,16 @@ sub getSubFolderID(*$){
 #
 # get the folderID for a subfolder
 ##
-sub getSubFolderIDList(*$){
+sub getSubFolderIDList(*$$){
 
 	my $self = shift;
+	my $URL = shift;
 	my $folderName = shift;
 
+	if ($URL eq ''){
+		$URL =  API_URL .'files?q=\''. $folderName.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	}
 	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
-	my $URL =  API_URL .'files?q=\''. $folderName.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -570,6 +573,54 @@ sub getSubFolderIDList(*$){
 			$self->setToken($token,$refreshToken);
 			$retryCount--;
 		}else{
+			print STDOUT $res->as_string;
+			$retryCount--;
+			sleep(10);
+			#die($res->as_string."error in loading page");
+		}
+	}
+
+}
+
+
+#
+# get the folderID for a subfolder
+##
+sub getFolderList(*$$){
+
+	my $self = shift;
+	my $folderID = shift;
+	my $URL = shift;
+
+	if ($URL eq ''){
+		$URL =  API_URL .'files?q=\''. $folderID.'\'+in+parents';#s&fields=nextLink';
+		#%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	}
+	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
+
+	my $retryCount = 2;
+	while ($retryCount){
+		my $req = new HTTP::Request GET => $URL;
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		my $res = $self->{_ua}->request($req);
+
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
+
+		if($res->is_success){
+  			return \$res->as_string;
+
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount--;
+		}else{
+			print STDOUT $req->as_string;
 			print STDOUT $res->as_string;
 			$retryCount--;
 			sleep(10);
@@ -1236,7 +1287,7 @@ sub readDriveListings(**){
 
       		$updated =~ s%\D+%%g;
       		($updated) = $updated =~ m%^(\d{14})%;
-      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
+#      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
 			#      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
 
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;
@@ -1313,7 +1364,7 @@ sub readSingleDriveListings(**){
 
       		$updated =~ s%\D+%%g;
       		($updated) = $updated =~ m%^(\d{14})%;
-      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
+#      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
 			#      $newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = $updated;
 
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $downloadURL;

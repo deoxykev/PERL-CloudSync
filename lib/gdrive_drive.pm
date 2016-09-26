@@ -769,6 +769,38 @@ sub getTrash(*){
 }
 
 
+sub getFolderSize(*$){
+
+	my $self = shift;
+	my $folderID = shift;
+
+	my $nextURL='';
+
+	#last run failed to finish, attempt to continue where left
+	my $driveListings;
+	my $folderSize = 0;
+	while (1){
+		$driveListings = $self->{_serviceapi}->getFolderList($folderID, $nextURL);
+  		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
+  		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+
+
+  		foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  				 	$folderSize += $self->getFolderSize($resourceID);
+  			 	}else{
+  				 	$folderSize +=  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}];
+  				}
+
+  		}
+		print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+	}
+	return $folderSize;
+}
+
+
 sub restoreTrash(*){
 
 	my $self = shift;
@@ -804,6 +836,8 @@ sub restoreTrash(*){
 	}
 
 }
+
+
 sub getListAll(*){
 
 	my $self = shift;

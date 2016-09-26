@@ -614,7 +614,11 @@ while (my $input = <$userInput>){
 
     	trashEmpyFolders($folderID,  $services[$currentService]);
 
+  	}elsif($input =~ m%^get folder size folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^get folder size folderid\s+(\S+)%i;
 
+    	my $folderSize = $services[$currentService]->getFolderSize($folderID);
+    	print "folder size for $folderID = " . $folderSize . "\n";
   	}elsif($input =~ m%^dump folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^dump folderid\s+(\S+)%i;
 

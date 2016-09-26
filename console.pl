@@ -1489,6 +1489,7 @@ sub trashEmpyFolders($$){
 	while (1){
 
 			my $newDocuments =  $service->getSubFolderIDList($folderID, $nextURL);
+			$nextURL = $service->{_nextURL};
 
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
@@ -1501,7 +1502,6 @@ sub trashEmpyFolders($$){
   				}
 
 			}
-			$nextURL = $service->{_nextURL};
 			#print STDOUT "next url " . $nextURL. "\n";
   			last if  $nextURL eq '';
 

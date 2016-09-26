@@ -246,9 +246,11 @@ sub getSubFolderIDList(*$$){
 
 
 	my $driveListings = $self->{_serviceapi}->getList($URL);
+	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
+
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
-	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
+	#$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
 	#$self->updateMD5Hash($newDocuments);
 	return $newDocuments;
 

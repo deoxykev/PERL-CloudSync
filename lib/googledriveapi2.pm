@@ -247,6 +247,7 @@ sub getList(*$){
 		}
 
 		if($res->is_success){
+
   			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
 	  		return \$res->as_string;
 		}elsif ($res->code == 401){
@@ -547,7 +548,7 @@ sub getSubFolderIDList(*$$){
 	my $folderName = shift;
 
 	if ($URL eq ''){
-		$URL =  API_URL .'files?q=\''. $folderName.'\'+in+parents';#&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+		$URL =  API_URL .'files?q=\''. $folderName.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
 
@@ -593,8 +594,7 @@ sub getFolderList(*$$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL =  API_URL .'files?q=\''. $folderID.'\'+in+parents';#s&fields=nextLink';
-		#%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+		$URL =  API_URL .'files?q=\''. $folderID.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
 
@@ -1232,11 +1232,11 @@ sub readDriveListings(**){
 	my $count=0;
 
   	$$driveListings =~ s%\n%%g;
-	#print $$driveListings;
 #  	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{%){ # [^\}]+
+
   	while ($$driveListings =~ m%\{\s+\"kind\"\:.*?\}\,\s+\{% or $$driveListings =~ m%\{\s+\"kind\"\:.*?\}\s*\]\s*\}% or $$driveListings =~ m%\{\s+\"kind\"\:.*?\}$%){ # [^\}]+
 
-    	my ($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\,\s+\{%;
+    	my ($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\,\s\s\{%;
 
 		if ($entry eq ''){
     		($entry) = $$driveListings =~ m%\{\s+\"kind\"\:(.*?)\}\s*\]\s*\}%;
@@ -1253,6 +1253,7 @@ sub readDriveListings(**){
     		$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\,\s+%%;
 		}
 
+	print $entry;
 
     	my ($title) = $entry =~ m%\"title\"\:\s?\"([^\"]+)\"%;
     	#remove leading spaces from filename (causes issues with fisi)
@@ -1268,7 +1269,6 @@ sub readDriveListings(**){
 		my ($parentID) = $entry =~ m%\"parentLink\"\:\s?\"([^\"]+)\"%;
 		my ($md5) = $entry =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;
 		my ($fileSize) = $entry =~ m%\"fileSize\"\:\s?\"([^\"]+)\"%;
-
 	    # 	is a folder
 	    if ($resourceType eq 'folder' or $resourceType eq 'application/vnd.google-apps.folder'){
 

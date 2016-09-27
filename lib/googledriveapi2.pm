@@ -1253,7 +1253,6 @@ sub readDriveListings(**){
     		$$driveListings =~ s%\{\s+\"kind\"\:(.*?)\}\,\s+%%;
 		}
 
-	print $entry;
 
     	my ($title) = $entry =~ m%\"title\"\:\s?\"([^\"]+)\"%;
     	#remove leading spaces from filename (causes issues with fisi)

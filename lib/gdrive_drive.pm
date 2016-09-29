@@ -269,7 +269,7 @@ sub mergeFolder(*$$){
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-  				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] ;
+  				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] ;
   				 	$folders1{$title} = $resourceID;
   				}
 
@@ -288,7 +288,7 @@ sub mergeFolder(*$$){
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq '' ){
-  				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] ;
+  				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] ;
 					#merge subfolder
   				 	if  ($folders1{$title} ne ''){
 						$self->mergeFolder($folders1{$title}, $resourceID);

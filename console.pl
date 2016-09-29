@@ -597,6 +597,10 @@ while (my $input = <$userInput>){
     	my ($folderID1, $folderID2) = $input =~ m%^merge folderid\s+(\S+)\s+(\S+)%i;
 		$services[$currentService]->mergeFolder($folderID1, $folderID2);
 
+  	}elsif($input =~ m%^alpha folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^alpha folderid\s+(\S+)%i;
+		$services[$currentService]->alphabetizeFolder($folderID);
+
   	}elsif($input =~ m%^catalog folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^catalog folderid\s+(\S+)%i;
 

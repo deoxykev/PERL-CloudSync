@@ -312,6 +312,43 @@ sub mergeFolder(*$$){
 
 }
 
+
+
+sub alphabetizeFolder(*$){
+	my $self = shift;
+	my $folderID = shift;
+
+
+	#construct folders (target)
+	my %folders;
+	while (1){
+
+			my $newDocuments =  $self->getSubFolderIDList($folderID, $nextURL);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  				 	my ($folderName) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^(\S)\S+% ;
+  				 	$folderName = lc $folderName;
+  				 	if ($folderName ne '' and $folders{$folderName} eq ''){
+  				 		my $subfolderID = $self->createFolder($folderName, $folderID);
+  				 		$folders{$folderName} = $subfolderID;
+  				 		$self->moveFile($resourceID, $folders{$folderName}, $folderID);
+  				 	}elsif ($folderName ne '' and $folders{$folderName} ne ''){
+  				 		$self->moveFile($resourceID, $folders{$folderName}, $folderID);
+  				 	}
+
+  				}
+
+			}
+			$nextURL = $self->{_nextURL};
+			print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+
+	}
+
+}
+
 sub uploadFolder(*$$){
 	my $self = shift;
 	my $localPath = shift;

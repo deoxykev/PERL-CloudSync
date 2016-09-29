@@ -593,6 +593,10 @@ while (my $input = <$userInput>){
 
     	navigateFolder('',$folderID,  $services[$currentService]);
 
+  	}elsif($input =~ m%^merge folderid\s\S+%i){
+    	my ($folderID1, $folderID2) = $input =~ m%^merge folderid\s+(\S+)\s+(\S+)%i;
+		$services[$currentService]->mergeFolder($folderID1, $folderID2);
+
   	}elsif($input =~ m%^catalog folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^catalog folderid\s+(\S+)%i;
 

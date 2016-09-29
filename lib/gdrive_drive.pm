@@ -250,9 +250,65 @@ sub getSubFolderIDList(*$$){
 
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
-	#$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
-	#$self->updateMD5Hash($newDocuments);
 	return $newDocuments;
+
+}
+
+sub mergeFolder(*$$){
+	my $self = shift;
+	my $folderID1 = shift;
+	my $folderID2 = shift;
+
+
+	#construct folders (target)
+	my %folders1;
+	while (1){
+
+			my $newDocuments =  $self->getSubFolderIDList($folderID1, $nextURL);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] ;
+  				 	$folders1{$title} = $resourceID;
+  				}
+
+			}
+			$nextURL = $self->{_nextURL};
+			print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+
+	}
+
+	my %folders2;
+	while (1){
+
+			my $newDocuments =  $self->getSubFolderIDList($folderID2, $nextURL);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq '' ){
+  				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] ;
+					#merge subfolder
+  				 	if  ($folders1{$title} ne ''){
+						$self->mergeFolder($folders1{$title}, $resourceID);
+  				 	#move subfolder
+  				 	}else{
+						$self->moveFile($resourceID, $folderID1, $folderID2);
+  				 	}
+
+				#move file from 2 to 1
+  				}else{
+						$self->moveFile($resourceID, $folderID1, $folderID2);
+  				}
+
+			}
+			$nextURL = $self->{_nextURL};
+			print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+
+	}
+
 
 }
 

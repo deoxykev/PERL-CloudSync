@@ -524,6 +524,11 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 		}
     	syncFolder($folder,'',0, 0, @drives);
+
+  	}elsif($input =~ m%^clean names folderid\s+(\S+)%i){
+    	my ($folderID) = $input =~ m%^clean names folderid\s+(\S+)%i;
+		$services[$currentService]->cleanNames($folderID);
+
   	}elsif($input =~ m%^cleanup\s+(\S+)%i){
     	my ($folder) = $input =~ m%^cleanup\s+(\S+)%i;
 

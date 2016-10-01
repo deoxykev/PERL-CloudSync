@@ -686,6 +686,50 @@ sub getFileMeta(*$$$$){
 }
 
 
+
+sub cleanNames(*$){
+	my $self = shift;
+	my $folderID = shift;
+
+	my $nextURL='';
+
+	#last run failed to finish, attempt to continue where left
+	while (1){
+  		my $newDocuments = $self->getSubFolderIDList($folderID, $nextURL);
+
+
+  		foreach my $resourceID (keys %{$newDocuments}){
+
+				my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}];
+				#fix season folders
+				if ($filename =~ m%^\S+\_s\d?\d$%){
+					$filename =~ s%^\S+\_s(\d?\d)$%Season $1%;
+				#fix MixedCase names
+				}else{
+					$filename =~ s%(\S)([A-Z][a-z]+)%$1 $2%g;
+					$filename =~ s%(\S)([A-Z])\s%$1 $2 %g;
+				}
+				#something to rename?
+				if ($filename ne $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]){
+					$self->renameFile($resourceID, $filename);
+					print "rename " .  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ' to ' . $filename . "\n";
+				}
+
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  				 	$self->cleanNames($resourceID);
+  				}
+
+  		}
+			$nextURL = $self->{_nextURL};
+			print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+	}
+
+
+}
+
+
 sub renameFile(*$$){
 
 	my $self = shift;

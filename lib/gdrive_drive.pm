@@ -707,6 +707,8 @@ sub cleanNames(*$){
 				#fix MixedCase names
 				}else{
 					$filename =~ s%(\S)([A-Z][a-z]+)%$1 $2%g;
+					$filename =~ s%(\S)([A-Z][a-z]+)%$1 $2%g;
+
 					$filename =~ s%(\S)([A-Z])\s%$1 $2 %g;
 				}
 				#something to rename?

@@ -314,6 +314,42 @@ sub mergeFolder(*$$){
 
 
 
+sub mergeDuplicateFolder(*$){
+	my $self = shift;
+	my $folderID = shift;
+
+
+	#construct folders (target)
+	my %folders;
+	while (1){
+
+			my $newDocuments =  $self->getSubFolderIDList($folderID, $nextURL);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] ;
+
+					#duplicate folder; merge
+  				 	if ($folders{$title} ne ''){
+  				 		$self->mergeFolder($folders{$title}, $resourceID);
+  				 	}else{
+	  				 	$folders{$title} = $resourceID;
+  				 	}
+
+  				}
+
+			}
+			$nextURL = $self->{_nextURL};
+			print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+
+	}
+
+}
+
+
+
 sub alphabetizeFolder(*$){
 	my $self = shift;
 	my $folderID = shift;

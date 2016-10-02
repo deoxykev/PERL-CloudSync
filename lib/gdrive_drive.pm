@@ -1212,7 +1212,8 @@ sub catalogMedia(*$$){
 	my $nextURL='';
 
 	while (1){
-		my ($nextURL, $newDocuments) = $self->getSubFolderIDListWithMedia($folderID, $nextURL);
+		my $newDocuments;
+		 ($nextURL, $newDocuments) = $self->getSubFolderIDListWithMedia($folderID, $nextURL);
 
 
   		foreach my $resourceID (keys %{$newDocuments}){

@@ -1233,6 +1233,7 @@ sub catalogMedia(*$$){
 
 		open(MOVIES, '>>./movies.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/movies.tab');
 		open(TV, '>>./tv.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/tv.tab');
+		open(OTHER, '>>./other.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/other.tab');
 
   		foreach my $resourceID (keys %{$newDocuments}){
 
@@ -1268,8 +1269,8 @@ sub catalogMedia(*$$){
 							$show =~ s%\.% %g; #remove . from name
 							$season =~ s%^(\d)$%0$1%; #pad season with leading 0
 
-						$output = lc $show . "\t"  . $season . "\t" . $episode . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" .  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t" . $resourceID . "\n";
-						print TV $output;
+							$output = lc $show . "\t"  . $season . "\t" . $episode . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" .  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t" . $resourceID . "\n";
+							print TV $output;
 
 						#movie
 	  			 		}elsif ($_title ne '' or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i){
@@ -1279,8 +1280,12 @@ sub catalogMedia(*$$){
 							}
 							$movie =~ s%\.% %g; #remove . from name
 
-						$output = lc $movie . "\t"  . $year . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t"  . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t". $resourceID . "\n";
-						print MOVIES $output;
+							$output = lc $movie . "\t"  . $year . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t"  . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t". $resourceID . "\n";
+							print MOVIES $output;
+
+	  			 		}else{
+							$output =   "\t\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t"  . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t". $resourceID . "\n";
+							print OTHER $output;
 
 	  			 		}
 
@@ -1291,6 +1296,7 @@ sub catalogMedia(*$$){
 	  		}
 
 		}
+		close(OTHER);
 		close(TV);
 		close(MOVIES);
 

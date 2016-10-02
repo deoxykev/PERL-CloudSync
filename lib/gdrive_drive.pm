@@ -1272,7 +1272,7 @@ sub catalogMedia(*$$){
 						print TV $output;
 
 						#movie
-	  			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i){
+	  			 		}elsif ($_title ne '' or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i){
 							my ($movie, $year) =  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.*?)[ \(]?[\[]?[\{]?[ .]?[ \-]?(\d{4})[ \)]?[\]]?[\}]?[ .]?[ \-]?.*?(?:(\d{3}\d?p)|\Z)?%i;
 							if ($movie eq ''){
 								($movie, $year)  = $_title =~   m%(.*?)[ \(]?[\[]?[\{]?[ .]?[ \-]?(\d{4})[ \)]?[\]]?[\}]?[ .]?[ \-]?.*?(?:(\d{3}\d?p)|\Z)?%i;

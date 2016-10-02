@@ -1364,7 +1364,7 @@ sub trashEmptyFolders(*$){
 	  			foreach my $resourceID (keys %{$newDocuments}){
 		  			#	folder
 	  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-						$self->trashEmpyFolders($resourceID);
+						$self->trashEmptyFolders($resourceID);
 						$fileFolderCount++;
 
 	  			 	}else{

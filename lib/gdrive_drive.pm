@@ -267,11 +267,11 @@ sub getSubFolderIDListWithMedia(*$$){
 
 
 	my $driveListings = $self->{_serviceapi}->getList($URL);
-	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
+	my $nextURL =  $self->{_serviceapi}->getNextURL($driveListings);
 
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
-	return $newDocuments;
+	return ($nextURL, $newDocuments);
 
 }
 
@@ -1212,7 +1212,7 @@ sub catalogMedia(*$$){
 	my $nextURL='';
 
 	while (1){
-		my $newDocuments = $self->getSubFolderIDListWithMedia($folderID, $nextURL);
+		my ($nextURL, $newDocuments) = $self->getSubFolderIDListWithMedia($folderID, $nextURL);
 
 
   		foreach my $resourceID (keys %{$newDocuments}){
@@ -1300,8 +1300,8 @@ sub catalogMedia(*$$){
 		close(TV);
 		close(MOVIES);
 
-		$nextURL = $self->{_nextURL};
-		print STDOUT "next url " . $nextURL. "\n";
+		#$nextURL = $self->{_nextURL};
+		#print STDOUT "next url " . $nextURL. "\n";
 	  	last if  $nextURL eq '';
 
 	}

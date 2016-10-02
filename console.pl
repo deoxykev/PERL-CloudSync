@@ -616,6 +616,11 @@ while (my $input = <$userInput>){
 
     	catalogFolderID('',$folderID,  $services[$currentService], 1);
 
+  	}elsif($input =~ m%^catalog media folderid\s\S+%i){
+    	my ($folderID) = $input =~ m%^catalog media folderid\s+(\S+)%i;
+
+    	$services[$currentService]->catalogMedia($folderID);
+
   	}elsif($input =~ m%^catalog immediate folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^catalog immediate folderid\s+(\S+)%i;
 
@@ -1502,7 +1507,6 @@ sub catalogFolderID($$$){
 
 
 }
-
 
 
 

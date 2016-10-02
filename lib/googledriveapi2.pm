@@ -1269,6 +1269,9 @@ sub readDriveListings(**){
 		my ($parentID) = $entry =~ m%\"parentLink\"\:\s?\"([^\"]+)\"%;
 		my ($md5) = $entry =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;
 		my ($fileSize) = $entry =~ m%\"fileSize\"\:\s?\"([^\"]+)\"%;
+		my ($resolution) = $entry =~ m%\"height\"\:\s?(\d+),%;
+		my ($duration) = $entry =~ m%\"durationMillis\"\:\s?\"([^\"]+)\"%;
+
 	    # 	is a folder
 	    if ($resourceType eq 'folder' or $resourceType eq 'application/vnd.google-apps.folder'){
 
@@ -1304,7 +1307,8 @@ sub readDriveListings(**){
 
       		$title =~ s/\+//g; #remove +s in title for fisi)
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
-
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}] = $resolution;
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}] = int($duration/60000);
     	}
     	$count++;
   	}
@@ -1345,6 +1349,8 @@ sub readSingleDriveListings(**){
 		my ($parentID) = $entry =~ m%\"parentLink\"\:\s?\"([^\"]+)\"%;
 		my ($md5) = $entry =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;
 		my ($fileSize) = $entry =~ m%\"fileSize\"\:\s?\"([^\"]+)\"%;
+		my ($resolution) = $entry =~ m%\"height\"\:\s?(\d+),%;
+		my ($duration) = $entry =~ m%\"durationMillis\"\:\s?\"([^\"]+)\"%;
 
 	    # 	is a folder
 	    if ($resourceType eq 'folder' or $resourceType eq 'application/vnd.google-apps.folder'){
@@ -1381,6 +1387,8 @@ sub readSingleDriveListings(**){
 
       		$title =~ s/\+//g; #remove +s in title for fisi)
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}] = $resolution;
+  			$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}] = int($duration/60000);
 
     	}
     	$count++;

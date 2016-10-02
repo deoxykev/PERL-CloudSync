@@ -25,7 +25,10 @@ use constant D => {
   'title' => 9,
   'published' => 10,
   'size' => 11,
-  'server_fisi' => 12
+  'server_fisi' => 12,
+  'resolution' => 13,
+  'duration' => 14
+
 
 };
 

@@ -1300,7 +1300,7 @@ sub catalogMedia(*$$){
 		close(TV);
 		close(MOVIES);
 
-		$nextURL = $service->{_nextURL};
+		$nextURL = $self->{_nextURL};
 		print STDOUT "next url " . $nextURL. "\n";
 	  	last if  $nextURL eq '';
 

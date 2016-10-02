@@ -1209,6 +1209,20 @@ sub catalogMedia(*$$){
 	my $_season = shift;
 
 
+	my %db;
+	open(MOVIES, './movies.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/movies.tab');
+	open(TV, './tv.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/tv.tab');
+	while(my $line = <MOVIES>){
+		my ($fileID) = $line =~ m%\t([^\t]+)\n$%;
+		$db{$fileID} = 1;
+	}
+	while(my $line = <TV>){
+		my ($fileID) = $line =~ m%\t([^\t]+)\n$%;
+		$db{$fileID} = 1;
+	}
+	close(MOVIES);
+	close(TV);
+
 	my $nextURL='';
 
 	while (1){
@@ -1237,6 +1251,8 @@ sub catalogMedia(*$$){
 		open(OTHER, '>>./other.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/other.tab');
 
   		foreach my $resourceID (keys %{$newDocuments}){
+
+			next if $db{$resourceID} == 1;	#pre-existing, skip
 
 			# is video
 			if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  > 0){

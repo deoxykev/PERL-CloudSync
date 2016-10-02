@@ -1202,11 +1202,11 @@ sub renameFileList(*$){
 
 
 
-sub catalogMedia(*$){
+sub catalogMedia(*$$){
 	my $self = shift;
 	my $folderID = shift;
-
-
+	my $_title = shift;
+	my $_season = shift;
 
 
 	my $nextURL='';
@@ -1219,65 +1219,78 @@ sub catalogMedia(*$){
   				my $output;
 	  			#	folder
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-					$self->catalogMedia($resourceID);
+  				 	# is a season folder, therefore the parent is a show folder
+  				 	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^season \d+%i){
+  				 		my ($season) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^season (\d+)%i;
+						$self->catalogMedia($resourceID, $_title, $season);
+  				 	}else{
+						$self->catalogMedia($resourceID, lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $_season);
+  				 	}
+
   				}
 
   		}
 
-		open(MOVIES, '>./movies.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/movies.tab');
-		open(TV, '>./tv.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/tv.tab');
+		open(MOVIES, '>>./movies.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/movies.tab');
+		open(TV, '>>./tv.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/tv.tab');
 
   		foreach my $resourceID (keys %{$newDocuments}){
-  				my $output;
-	  			#	folder
-  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-  			 	}else{
 
-					print STDOUT "file $resourceID " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}].  "\n";
-					my $directory = '';
-  			 		#tv1
-  			 		if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*S0?(\d\d?)E(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
-#  			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*[^\d]+(\d)(\d\d)[^\d]+(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
-  			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*season\s?(\d\d?)\s?episode\s?(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
-  			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*0?(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i){
-						my ($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*S0?(\d\d?)E(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
-						if ($show eq ''){
-							($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~  m%(.+?)[ .]?[ \-]?\s*season\s?(\d\d?)\s?episode\s?(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
+			# is video
+			if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  > 0){
+	  				my $output;
+		  			#	folder
+	  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+	  			 	}else{
+
+						print STDOUT "file $resourceID " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}].  "\n";
+						my $directory = '';
+	  			 		#tv1
+	  			 		if ($season ne '' or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*S0?(\d\d?)E(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
+	#  			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*[^\d]+(\d)(\d\d)[^\d]+(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
+	  			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*season\s?(\d\d?)\s?episode\s?(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i
+	  			 		or $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.+?)[ .]?[ \-]?\s*0?(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i){
+							my ($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*S0?(\d\d?)E(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
 							if ($show eq ''){
-								($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*0?(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
+								($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~  m%(.+?)[ .]?[ \-]?\s*season\s?(\d\d?)\s?episode\s?(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
 								if ($show eq ''){
-									($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*(\d)(\d\d)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
+									($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*0?(\d\d?)x(\d\d?)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
+									if ($show eq ''){
+										($show, $season, $episode) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.+?)[ .]?[ \-]?\s*(\d)(\d\d)(.*)(?:[ .](\d{3}\d?p)|\Z)?\..*%i;
+										#episode is not parseable
+										if ($show eq ''){
+											$show = $_title;
+											$season = $_season;
+										}
+									}
 								}
 							}
-						}
-						$show =~ s%\.% %g; #remove . from name
-						$season =~ s%^(\d)$%0$1%; #pad season with leading 0
-			#			print STDOUT "show = $show\n";
-						my ($directory1) = $show =~ m%^\s?(\w)%;
-						my ($directory2) = "season ". $season;
-						$directory = "\tmedia/tv\t".lc $directory1 . "\t$show\t$directory2";
+							$show =~ s%\.% %g; #remove . from name
+							$season =~ s%^(\d)$%0$1%; #pad season with leading 0
 
-					$output = $show . "\t"  . $season . "\t" . $episode . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" .  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t" . $resourceID . "\n";
-					print TV $output;
+						$output = lc $show . "\t"  . $season . "\t" . $episode . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" .  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t" . $resourceID . "\n";
+						print TV $output;
 
-					#movie
-  			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i){
-						my ($movie, $year) =  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.*?)[ \(]?[\[]?[\{]?[ .]?[ \-]?(\d{4})[ \)]?[\]]?[\}]?[ .]?[ \-]?.*?(?:(\d{3}\d?p)|\Z)?%i;
-						$movie =~ s%\.% %g; #remove . from name
-#						print STDOUT "movie = $movie\n";
-						my ($directory1) = $movie =~ m%^\s?(\w)%;
-						$directory = "\t\tmedia/movies\t".lc $directory1 . "\t".lc $movie;
+						#movie
+	  			 		}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%(.*?[ \(]?[ .]?[ \-]?\d{4}[ \)]?[ .]?[ \-]?).*?(?:(\d{3}\d?p)|\Z)?%i){
+							my ($movie, $year) =  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]  =~ m%(.*?)[ \(]?[\[]?[\{]?[ .]?[ \-]?(\d{4})[ \)]?[\]]?[\}]?[ .]?[ \-]?.*?(?:(\d{3}\d?p)|\Z)?%i;
+							if ($movie eq ''){
+								($movie, $year)  = $_title =~   m%(.*?)[ \(]?[\[]?[\{]?[ .]?[ \-]?(\d{4})[ \)]?[\]]?[\}]?[ .]?[ \-]?.*?(?:(\d{3}\d?p)|\Z)?%i;
+							}
+							$movie =~ s%\.% %g; #remove . from name
 
-					$output = $movie . "\t"  . $year . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t"  . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t". $resourceID . "\n";
-					print MOVIES $output;
+						$output = lc $movie . "\t"  . $year . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t"  . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t". $resourceID . "\n";
+						print MOVIES $output;
 
-  			 		}
+	  			 		}
 
-					print STDOUT $output;
+						print STDOUT $output;
 
-  				}
+	  				}
 
-  		}
+	  		}
+
+		}
 		close(TV);
 		close(MOVIES);
 

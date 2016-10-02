@@ -1292,7 +1292,7 @@ sub catalogMedia(*$){
 
 
 
-sub trashEmpyFolders(*$){
+sub trashEmptyFolders(*$){
 
 	my $self = shift;
 	my $folderID = shift;

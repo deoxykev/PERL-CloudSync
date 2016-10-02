@@ -635,7 +635,7 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^trash empty folders folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^trash empty folders folderid\s+(\S+)%i;
 
-		$services[$currentService]->trashEmpyFolders($folderID);
+		$services[$currentService]->trashEmptyFolders($folderID);
 
   	}elsif($input =~ m%^get folder size folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^get folder size folderid\s+(\S+)%i;

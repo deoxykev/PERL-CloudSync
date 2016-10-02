@@ -1292,6 +1292,48 @@ sub catalogMedia(*$){
 
 
 
+sub findEmpyFolders(*$){
+
+	my $self = shift;
+	my $folderID = shift;
+
+	my $nextURL = '';
+	my @subfolders;
+
+	push(@subfolders, $folderID);
+
+	for (my $i=0; $i <= $#subfolders;$i++){
+		$folderID = $subfolders[$i];
+		my $fileFolderCount=0;
+		while (1){
+
+			my $newDocuments =  $self->getSubFolderIDList($folderID, $nextURL);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+					push(@subfolders, $resourceID);
+					$fileFolderCount++;
+
+  			 	}else{
+					$fileFolderCount++;
+  				}
+
+			}
+			$nextURL = $self->{_nextURL};
+			#print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+
+	  	}
+	  	if ($fileFolderCount == 0){
+	  		print STDOUT "empty folder - ". $folderID . "\n";
+	  	}
+
+	}
+
+
+}
+
 sub trashEmptyFolders(*$){
 
 	my $self = shift;

@@ -630,7 +630,7 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^empty folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^empty folderid\s+(\S+)%i;
 
-    	findEmpyFolders($folderID,  $services[$currentService]);
+    	$services[$currentService]->findEmpyFolders($folderID);
 
   	}elsif($input =~ m%^trash empty folders folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^trash empty folders folderid\s+(\S+)%i;
@@ -1509,48 +1509,6 @@ sub catalogFolderID($$$){
 }
 
 
-
-sub findEmpyFolders($$){
-
-	my $folderID = shift;
-	my $service = shift;
-
-	my $nextURL = '';
-	my @subfolders;
-
-	push(@subfolders, $folderID);
-
-	for (my $i=0; $i <= $#subfolders;$i++){
-		$folderID = $subfolders[$i];
-		my $fileFolderCount=0;
-		while (1){
-
-			my $newDocuments =  $service->getSubFolderIDList($folderID, $nextURL);
-
-  			foreach my $resourceID (keys %{$newDocuments}){
-	  			#	folder
-  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-					push(@subfolders, $resourceID);
-					$fileFolderCount++;
-
-  			 	}else{
-					$fileFolderCount++;
-  				}
-
-			}
-			$nextURL = $service->{_nextURL};
-			#print STDOUT "next url " . $nextURL. "\n";
-  			last if  $nextURL eq '';
-
-	  	}
-	  	if ($fileFolderCount == 0){
-	  		print STDOUT "empty folder - ". $folderID . "\n";
-	  	}
-
-	}
-
-
-}
 
 __END__
 

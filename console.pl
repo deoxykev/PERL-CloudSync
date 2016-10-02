@@ -635,7 +635,7 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^trash empty folders folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^trash empty folders folderid\s+(\S+)%i;
 
-    	trashEmpyFolders($folderID,  $services[$currentService]);
+		$services[$currentService]->trashEmpyFolders($folderID);
 
   	}elsif($input =~ m%^get folder size folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^get folder size folderid\s+(\S+)%i;
@@ -1509,43 +1509,6 @@ sub catalogFolderID($$$){
 }
 
 
-
-sub trashEmpyFolders($$){
-
-	my $folderID = shift;
-	my $service = shift;
-
-	my $nextURL = '';
-
-	my $fileFolderCount=0;
-	while (1){
-
-			my $newDocuments =  $service->getSubFolderIDList($folderID, $nextURL);
-			$nextURL = $service->{_nextURL};
-
-  			foreach my $resourceID (keys %{$newDocuments}){
-	  			#	folder
-  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-					trashEmpyFolders($resourceID,$service);
-					$fileFolderCount++;
-
-  			 	}else{
-					$fileFolderCount++;
-  				}
-
-			}
-			#print STDOUT "next url " . $nextURL. "\n";
-  			last if  $nextURL eq '';
-
-  	}
-  	if ($fileFolderCount == 0){
-  		print STDOUT "trashing empty folder - ". $folderID . "\n";
-  		$service->trashFile($folderID);
-  	}
-
-
-
-}
 
 sub findEmpyFolders($$){
 

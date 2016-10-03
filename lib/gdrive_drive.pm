@@ -1207,9 +1207,8 @@ sub catalogMedia(*$$){
 	my $folderID = shift;
 
 	my %db;
-	open(MOVIES, './movies.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/movies.tab');
-	open(TV, './tv.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/tv.tab');
-	print STDERR "xxx i\n";
+	open(MOVIES, './movies.tab');
+	open(TV, './tv.tab');
 
 	while(my $line = <MOVIES>){
 		my ($fileID) = $line =~ m%\t([^\t]+)\n$%;

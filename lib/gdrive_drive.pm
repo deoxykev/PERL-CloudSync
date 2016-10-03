@@ -1205,16 +1205,17 @@ sub renameFileList(*$){
 sub catalogMedia(*$$){
 	my $self = shift;
 	my $folderID = shift;
-	my $_title = shift;
-	my $_season = shift;
-
 
 	my %db;
 	open(MOVIES, './movies.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/movies.tab');
 	open(TV, './tv.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/tv.tab');
+	print STDERR "xxx i\n";
+
 	while(my $line = <MOVIES>){
 		my ($fileID) = $line =~ m%\t([^\t]+)\n$%;
 		$db{$fileID} = 1;
+		print '"'.$fileID.'"' . $db{$fileID} . "\n";
+
 	}
 	while(my $line = <TV>){
 		my ($fileID) = $line =~ m%\t([^\t]+)\n$%;
@@ -1222,6 +1223,19 @@ sub catalogMedia(*$$){
 	}
 	close(MOVIES);
 	close(TV);
+
+	$self->_catalogMedia($folderID, '', '', \%db);
+
+}
+
+
+
+sub _catalogMedia(*$$%){
+	my $self = shift;
+	my $folderID = shift;
+	my $_title = shift;
+	my $_season = shift;
+	my $db= shift;
 
 	my $nextURL='';
 
@@ -1237,9 +1251,9 @@ sub catalogMedia(*$$){
   				 	# is a season folder, therefore the parent is a show folder
   				 	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^season \d+%i){
   				 		my ($season) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^season (\d+)%i;
-						$self->catalogMedia($resourceID, $_title, $season);
+						$self->_catalogMedia($resourceID, $_title, $season, $db);
   				 	}else{
-						$self->catalogMedia($resourceID, lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $_season);
+						$self->_catalogMedia($resourceID, lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $_season, $db);
   				 	}
 
   				}
@@ -1252,7 +1266,7 @@ sub catalogMedia(*$$){
 
   		foreach my $resourceID (keys %{$newDocuments}){
 
-			next if $db{$resourceID} == 1;	#pre-existing, skip
+			next if $$db{$resourceID} ==1 ;	#pre-existing, skip
 
 			# is video
 			if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  > 0){
@@ -1286,7 +1300,7 @@ sub catalogMedia(*$$){
 							$show =~ s%\.% %g; #remove . from name
 							$season =~ s%^(\d)$%0$1%; #pad season with leading 0
 
-							$output = lc $show . "\t"  . $season . "\t" . $episode . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" .  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t" . $resourceID . "\n";
+							$output = (lc $show ). "\t"  . $season . "\t" . $episode . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" .  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t" . $resourceID . "\n";
 							print TV $output;
 
 						#movie
@@ -1297,7 +1311,7 @@ sub catalogMedia(*$$){
 							}
 							$movie =~ s%\.% %g; #remove . from name
 
-							$output = lc $movie . "\t"  . $year . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t"  . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t". $resourceID . "\n";
+							$output = (lc $movie) . "\t"  . $year . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t"  . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t". $resourceID . "\n";
 							print MOVIES $output;
 
 	  			 		}else{
@@ -1324,7 +1338,6 @@ sub catalogMedia(*$$){
 	}
 
 }
-
 
 
 

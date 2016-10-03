@@ -1297,6 +1297,8 @@ sub _catalogMedia(*$$%){
 								}
 							}
 							$show =~ s%\.% %g; #remove . from name
+							$show =~ s%\_% %g; #remove _ from name
+
 							$season =~ s%^(\d)$%0$1%; #pad season with leading 0
 
 							$output = (lc $show ). "\t"  . $season . "\t" . $episode . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" .  $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t" . $resourceID . "\n";
@@ -1309,6 +1311,7 @@ sub _catalogMedia(*$$%){
 								($movie, $year)  = $_title =~   m%(.*?)[ \(]?[\[]?[\{]?[ .]?[ \-]?(\d{4})[ \)]?[\]]?[\}]?[ .]?[ \-]?.*?(?:(\d{3}\d?p)|\Z)?%i;
 							}
 							$movie =~ s%\.% %g; #remove . from name
+							$movie =~ s%\_% %g; #remove _ from name
 
 							$output = (lc $movie) . "\t"  . $year . "\t\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'duration'}]  . "\t"  . $$newDocuments{$resourceID}[pDrive::DBM->D->{'resolution'}]  . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] . "\t" . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\t". $resourceID . "\n";
 							print MOVIES $output;

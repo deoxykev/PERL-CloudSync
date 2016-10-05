@@ -1202,6 +1202,33 @@ sub renameFileList(*$){
 
 
 
+
+sub generateSTRM(*$){
+	my $self = shift;
+	my $path = shift;
+
+	my %db;
+	open(MOVIES, './movies.tab');
+
+	while(my $line = <MOVIES>){
+		my ($title, $year,$fileID) = $line =~ m%^([^\t]+)\t([^\t]+)\t.*?\t([^\t]+)\n$%;
+		$title = lc $title;
+		my $filename =  "$path/$title ($year).strm";
+		if (! (-e $filename)){
+			open(STRM, '>'.$filename);
+			print STRM 	'plugin://plugin.video.gdrive-testing/?mode=video&strm=true&title='.$title.'&year='.$year.'&spreadsheet=10t5UULE8H4Xu_B0i3o0EWxsn_WAfyoF_pjPiE-MdCCI&sheet=ofx5r0l' . "\n";
+			close(STRM);
+		}
+
+		print "$title, $year, $fileID\n";
+
+	}
+	close(MOVIES);
+
+}
+
+
+
 sub catalogMedia(*$$){
 	my $self = shift;
 	my $folderID = shift;

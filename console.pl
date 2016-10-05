@@ -621,6 +621,11 @@ while (my $input = <$userInput>){
 
     	$services[$currentService]->catalogMedia($folderID);
 
+  	}elsif($input =~ m%^generate STRM path\s\S+%i){
+    	my ($path) = $input =~ m%^generate STRM path\s+(\S+)%i;
+
+    	$services[$currentService]->generateSTRM($path);
+
   	}elsif($input =~ m%^catalog immediate folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^catalog immediate folderid\s+(\S+)%i;
 

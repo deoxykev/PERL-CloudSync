@@ -385,7 +385,7 @@ sub alphabetizeFolder(*$){
 
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
-  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  				# if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
   				 	my ($folderName) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^(\S)\S+% ;
   				 	$folderName = lc $folderName;
   				 	if ($folderName ne '' and $folders{$folderName} eq ''){
@@ -398,7 +398,7 @@ sub alphabetizeFolder(*$){
 
   				}
 
-			}
+			#}
 			$nextURL = $self->{_nextURL};
 			print STDOUT "next url " . $nextURL. "\n";
   			last if  $nextURL eq '';

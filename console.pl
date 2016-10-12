@@ -616,6 +616,10 @@ while (my $input = <$userInput>){
 
     	catalogFolderID('',$folderID,  $services[$currentService], 1);
 
+  	}elsif($input =~ m%^catalog nfo path\s\S+%i){
+    	my ($path) = $input =~ m%^catalog nfo path\s+(\S+)%i;
+
+    	catalogNFO($path);
   	}elsif($input =~ m%^catalog media folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^catalog media folderid\s+(\S+)%i;
 
@@ -1513,6 +1517,49 @@ sub catalogFolderID($$$){
 
 }
 
+
+
+sub catalogNFO($){
+
+	my $path = shift;
+
+
+	open(OUTPUT, '>./movie2.tab') or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . '/movie2.tab');
+	my @fileList = pDrive::FileIO::getFilesDir($path);
+
+    for (my $i=0; $i <= $#fileList; $i++){
+
+    	#empty file; skip
+    	if (-z $fileList[$i]){
+			next;
+    	#folder
+    	}elsif ($fileList[$i] =~ m%\.nfo%i){
+
+			my ($title,$year,$plot, $genre);
+			my ($movie, $year) = $fileList[$i]  =~ m%^(.*?)\s?\((\d\d\d\d)\)%i;
+			open(NFO, $fileList[$i]) or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . $fileList[$i]);
+			while (my $line = <NFO>){
+				if ($line =~ m%<title>.*?</title>%){
+					($title) = $line =~ m%<title>(.*?)</title>%;
+				}elsif($line =~ m%<year>.*?</year>%){
+					($year) = $line =~ m%<year>(.*?)</year>%;
+				}elsif($line =~ m%<genre>.*?</genre>%){
+					($genre) = $line =~ m%<genre>(.*?)</genre>%;
+				}elsif($line =~ m%<plot>.*?</plot>%){
+					($plot) = $line =~ m%<plot>(.*?)</plot>%;
+					#print STDERR "movie =". $movie . ' year ' . $year . "\n";
+					print STDERR "plot $plot\n";
+
+				}
+			}
+			close(NFO);
+
+    	}
+    }
+	close (OUTPIT);
+
+
+}
 
 
 __END__

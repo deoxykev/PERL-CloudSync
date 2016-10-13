@@ -1535,25 +1535,41 @@ sub catalogNFO($){
     	#folder
     	}elsif ($fileList[$i] =~ m%\.nfo%i){
 
-			my ($title,$year,$plot, $genre);
+			my ($title,$year,$plot, $genre, $poster, $fanart, $country, $studio, $director, $rating, $actors, $set);
 			my ($movie, $year) = $fileList[$i]  =~ m%^(.*?)\s?\((\d\d\d\d)\)%i;
 			open(NFO, $fileList[$i]) or die ('Cannot save to ' . pDrive::Config->LOCAL_PATH . $fileList[$i]);
+			my $nfo='';
 			while (my $line = <NFO>){
+				$nfo .= $line;
 				if ($line =~ m%<title>.*?</title>%){
 					($title) = $line =~ m%<title>(.*?)</title>%;
+				}elsif($line =~ m%<rating>.*?</rating>%){
+					($rating) = $line =~ m%<rating>(.*?)</rating>%;
 				}elsif($line =~ m%<year>.*?</year>%){
 					($year) = $line =~ m%<year>(.*?)</year>%;
 				}elsif($line =~ m%<genre>.*?</genre>%){
 					($genre) = $line =~ m%<genre>(.*?)</genre>%;
 				}elsif($line =~ m%<plot>.*?</plot>%){
 					($plot) = $line =~ m%<plot>(.*?)</plot>%;
-					#print STDERR "movie =". $movie . ' year ' . $year . "\n";
-					print STDERR "plot $plot\n";
-
+				}elsif($line =~ m%<country>.*?</country>%){
+					($country) = $line =~ m%<country>(.*?)</country>%;
+				}elsif($line =~ m%<studio>.*?</studio>%){
+					($studio) = $line =~ m%<studio>(.*?)</studio>%;
+				}elsif($line =~ m%<director>.*?</director>%){
+					($director) = $line =~ m%<director>(.*?)</director>%;
+				}elsif($line =~ m%<set>.*?</set>%){
+					($set) = $line =~ m%<set>(.*?)</set>%;
+				}elsif($line =~ m%<name>.*?</name>%){
+					my ($actor) = $line =~ m%<name>(.*?)</name>%;
+					$actors .= $actor . '|';
+				}elsif ($poster eq '' and $line =~ m%<thumb aspect\=\"poster\"[^>]+>.*?</thumb>%){
+					($poster) = $line =~ m%<thumb aspect\=\"poster\"[^>]+>(.*?)</thumb>%;
+				}elsif ($fanart  eq ''  and $line =~ m%<thumb preview\=\"[^\"]+\">.*?</thumb>%){
+					($fanart) = $line =~ m%<thumb preview\=\"[^\"]+\">(.*?)</thumb>%;
 				}
 			}
 			close(NFO);
-
+	    	print OUTPUT $title . "\t" . $year . "\t" . $rating . "\t" . $genre . "\t" . $plot . "\t" . $poster . "\t". $fanart . "\t" . $country . "\t". $studio . "\t" . $director.  "\t" .$actors.  "\t" . $set ."\t\"" .$nfo . "\"\n";
     	}
     }
 	close (OUTPIT);

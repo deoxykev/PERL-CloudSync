@@ -842,7 +842,7 @@ while (my $input = <$userInput>){
     	close(LIST);
 	}elsif($input =~ m%^upload ftpfolder%i){
 		my ($folder) = $input =~ m%^upload ftpfolder\s([^\n]+)\n%;
-  		$services[$currentService]->uploadFTPFolder($folder);
+  		$services[$currentService]->uploadFTPFolder($folder, '/MEMBERS');
 
 	}elsif($input =~ m%^upload folder%i){
 		my ($folder) = $input =~ m%^upload folder\s([^\n]+)\n%;

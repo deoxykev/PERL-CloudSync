@@ -233,6 +233,87 @@ sub uploadFolder(*$$){
 	}
 }
 
+sub uploadFTPFolder(*$$){
+	my $self = shift;
+	my $localPath = shift;
+	my $serverPath = shift;
+
+    my ($folder) = $localPath =~ m%\/([^\/]+)$%;
+
+#	if ($serverPath ne ''){
+		$serverPath .= $folder;
+#	}
+  	print STDOUT "path = $localPath\n";
+   	my @fileList = pDrive::FileIO::getFilesDir($localPath);
+
+	print STDOUT "folder = $folder\n" if (pDrive::Config->DEBUG);
+
+	#check server-cache for folder
+	my $folderID =  '';# -- skip checking for folder locally $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	#folder doesn't exist, create it
+	if ($folderID eq ''){
+		$folderID = $self->getFolderIDByPath($localPath, 1);
+	}
+
+
+	print "resource ID = " . $folderID . "\n";
+
+    for (my $i=0; $i <= $#fileList; $i++){
+
+    	#empty file; skip
+    	if (-z $fileList[$i]){
+			next;
+    	#folder
+    	}elsif (-d $fileList[$i]){
+	  		my $fileID = $self->uploadFolder($fileList[$i], $serverPath);
+    	# file
+    	}else{
+
+	    	#check if file is updating
+	    	my $fileSize = -s $fileList[$i];
+	    	sleep 5;
+	    	if ($fileSize != -s $fileList[$i] or $fileSize == 0 ){
+				print STDOUT "SKIP $fileList[$i], still increasing or 0 byte file\n";
+				next;
+	    	}
+    		my $process = 1;
+    		#look for md5 file
+    		for (my $j=0; $j <= $#fileList; $j++){
+    			my $value = $fileList[$i];
+    			my ($file,$md5) = $fileList[$j] =~ m%[^\/]+\/\.(.*?)\.([^\.]+)$%;
+    			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
+
+    			if ($file eq $currentFile and $md5 ne ''){
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY, 0666) or die "can't open md5: $!";
+    				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
+    					$process = 0;
+				    	#pDrive::masterLog("skipped file (checksum $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
+    					last;
+	    			}
+    				untie(%dbase);
+    			}
+    		}
+    		#calculate the fisi
+			my ($fileName) = $fileList[$i] =~ m%\/([^\/]+)$%;
+			my $fileSize = -s $fileList[$i];
+ 			my $fisi = pDrive::FileIO::getMD5String($fileName .$fileSize);
+    		tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDONLY, 0666) or die "can't open fisi: $!";
+    		if (  (defined $dbase{$fisi.'_'} and $dbase{$fisi.'_'} ne '') or (defined $dbase{$fisi.'_0'} and $dbase{$fisi.'_0'} ne '')){
+    					$process = 0;
+				    	#pDrive::masterLog("skipped file (fisi $fisi exists ".$dbase{$fisi.'_0'}.") - $fileList[$i]\n");
+	    	}
+    		untie(%dbase);
+			if ($process){
+				print STDOUT "Upload $fileList[$i]\n";
+		  		my $fileID = $self->uploadFile($fileList[$i], $folderID);
+    		}else{
+				print STDOUT "SKIP $fileList[$i]\n";
+	    	}
+    	}
+	  	print STDOUT "\n";
+	}
+}
+
 
 sub createUploadListForFolder(*$$$$){
 	my $self = shift;

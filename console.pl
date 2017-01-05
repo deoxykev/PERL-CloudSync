@@ -841,7 +841,7 @@ while (my $input = <$userInput>){
     	}
     	close(LIST);
 	}elsif($input =~ m%^upload ftpfolder\s+\S+\s+\S+\s%i){
-		my ($localfolder, $serverpath,$serverfolderid) = $input =~ m%^upload ftpfolder\s+(\S+)\s+(\S+)\s([^\n]+)\n%;
+		my ($serverpath,$serverfolderid, $localfolder) = $input =~ m%^upload ftpfolder\s+(\S+)\s+(\S+)\s([^\n]+)\n%;
   		$services[$currentService]->uploadFTPFolder($localfolder, $serverpath, $serverfolderid);
 	}elsif($input =~ m%^upload ftpfolder%i){
 		my ($localfolder) = $input =~ m%^upload ftpfolder\s([^\n]+)\n%;

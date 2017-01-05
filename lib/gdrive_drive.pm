@@ -560,7 +560,7 @@ sub uploadFTPFolder(*$$){
 	    	if ($fileSize != -s $fileList[$i] or $fileSize == 0 ){
 				print STDOUT "SKIP $fileList[$i], still increasing or 0 byte file\n";
 				next;
-
+	    	}
     		my $process = 1;
     		#look for md5 file
     		for (my $j=0; $j <= $#fileList; $j++){

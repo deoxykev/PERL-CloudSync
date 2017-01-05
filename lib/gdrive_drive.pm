@@ -550,7 +550,7 @@ sub uploadFTPFolder(*$$){
 			next;
     	#folder
     	}elsif (-d $fileList[$i]){
-	  		my $fileID = $self->uploadFolder($fileList[$i], $serverPath, $folderID);
+	  		my $fileID = $self->uploadFTPFolder($fileList[$i], $serverPath, $folderID);
     	# file
     	}else{
 

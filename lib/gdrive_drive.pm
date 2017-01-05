@@ -499,6 +499,106 @@ sub uploadFolder(*$$){
 }
 
 
+sub uploadFTPFolder(*$$){
+	my $self = shift;
+	my $localPath = shift;
+	my $serverPath = shift;
+	my $parentFolder = shift;
+
+    my ($folder) = $localPath =~ m%\/([^\/]+)$%;
+
+#	if ($serverPath ne ''){
+		$serverPath .= $folder;
+#	}
+  	print STDOUT "path = $localPath\n";
+   	my @fileList = pDrive::FileIO::getFilesDir($localPath);
+
+	print STDOUT "folder = $folder\n";
+
+	#check server-cache for folder
+	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	#folder doesn't exist, create it
+	if ($folderID eq ''){
+		#*** validate it truly doesn't exist on the server before creating
+		#this is the parent?
+		if ($parentFolder eq ''){
+			#look at the root
+			#get root's children, look for folder as child
+			$folderID = $self->getSubFolderID($folder,'root');
+		}else{
+			#look at the parent
+			#get parent's children, look for folder as child
+			$folderID = $self->getSubFolderID($folder,$parentFolder);
+		}
+		if ($folderID eq '' and $parentFolder ne ''){
+			$folderID = $self->createFolder($folder, $parentFolder);
+		}elsif ($folderID eq '' and  $parentFolder eq ''){
+			$folderID = $self->createFolder($folder, 'root');
+		}
+		#$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');
+	}
+
+
+
+	print "resource ID = " . $folderID . "\n";
+
+    for (my $i=0; $i <= $#fileList; $i++){
+
+
+    	#empty file; skip
+    	if (-z $fileList[$i]){
+			next;
+    	#folder
+    	}elsif (-d $fileList[$i]){
+	  		my $fileID = $self->uploadFolder($fileList[$i], $serverPath, $folderID);
+    	# file
+    	}else{
+
+	    	#check if file is updating
+	    	my $fileSize = -s $fileList[$i];
+	    	sleep 5;
+	    	if ($fileSize != -s $fileList[$i] or $fileSize == 0 ){
+				print STDOUT "SKIP $fileList[$i], still increasing or 0 byte file\n";
+				next;
+
+    		my $process = 1;
+    		#look for md5 file
+    		for (my $j=0; $j <= $#fileList; $j++){
+    			my $value = $fileList[$i];
+    			my ($file,$md5) = $fileList[$j] =~ m%[^\/]+\/\.(.*?)\.([^\.]+)$%;
+    			my ($currentFile) = $fileList[$i] =~ m%\/([^\/]+)$%;
+
+    			if ($file eq $currentFile and $md5 ne ''){
+    				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY|O_CREAT, 0666) or die "can't open md5: $!";
+    				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
+    					$process = 0;
+				    	#pDrive::masterLog("skipped file (checksum $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
+    					last;
+	    			}
+    				untie(%dbase);
+    			}
+    		}
+    		#calculate the fisi
+			my ($fileName) = $fileList[$i] =~ m%\/([^\/]+)$%;
+			my $fileSize = -s $fileList[$i];
+ 			my $fisi = pDrive::FileIO::getMD5String($fileName .$fileSize);
+    		tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDONLY|O_CREAT, 0666) or die "can't open fisi: $!";
+    		if (  (defined $dbase{$fisi.'_'} and $dbase{$fisi.'_'} ne '') or (defined $dbase{$fisi.'_0'} and $dbase{$fisi.'_0'} ne '')){
+    					$process = 0;
+				    	#pDrive::masterLog("skipped file (fisi $fisi exists ".$dbase{$fisi.'_0'}.") - $fileList[$i]\n");
+	    	}
+    		untie(%dbase);
+			if ($process){
+				print STDOUT "Upload $fileList[$i]\n";
+		  		my $fileID = $self->uploadFile($fileList[$i], $folderID);
+    		}else{
+				print STDOUT "SKIP $fileList[$i], DELETE local file\n";
+				unlink $fileList[$i];
+	    	}
+    	}
+	  	print STDOUT "\n";
+	}
+}
 sub createUploadListForFolder(*$$$$){
 	my $self = shift;
 	my $localPath = shift;

@@ -840,6 +840,13 @@ while (my $input = <$userInput>){
   			$services[$currentService]->uploadFolder($dir . '/'. $folder);
     	}
     	close(LIST);
+	}elsif($input =~ m%^upload ftpfolder%i){
+		my ($folder) = $input =~ m%^upload ftpfolder\s([^\n]+)\n%;
+  		$services[$currentService]->uploadFTPFolder($folder);
+
+	}elsif($input =~ m%^upload folder%i){
+		my ($folder) = $input =~ m%^upload folder\s([^\n]+)\n%;
+  		$services[$currentService]->uploadFolder($folder);
 
 
 	}elsif($input =~ m%^copy fileid list\s+\S+\s+folderid\s+%i){

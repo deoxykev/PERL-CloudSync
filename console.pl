@@ -1088,6 +1088,7 @@ sub syncFolder($){
   								or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
   								and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
+		 					 $services[$drives[0]]->deleteFile($resourceID) if ($isInbound); #temporary
 
 
 						#Google Drive -> Google Photos
@@ -1569,7 +1570,7 @@ sub catalogNFO($){
 				}
 			}
 			close(NFO);
-	    	print OUTPUT $title . "\t" . $year . "\t" . $rating . "\t" . $genre . "\t" . $plot . "\t" . $poster . "\t". $fanart . "\t" . $country . "\t". $studio . "\t" . $director.  "\t" .$actors.  "\t" . $set ."\t\"" .$nfo . "\"\n";
+	    	print OUTPUT $title . "\t" . $year . "\t" . $rating . "\t" . $genre . "\t" . $plot . "\t" . $poster . "\t". $fanart . "\t" . $country . "\t". $studio . "\t" . $director.  "\t" .$actors.  "\t" . $set ."\t\n" ;#\"" .$nfo . "\"\n";
     	}
     }
 	close (OUTPIT);

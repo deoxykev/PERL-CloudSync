@@ -759,6 +759,9 @@ while (my $input = <$userInput>){
     		my ($url, $path) = $input =~ m%^download url\s+(\S+)\s+path\s+\"?(.*?)\"?\n%;
 			print STDERR "url = $url path = $path\n";
 	    	$services[$currentService]->downloadFile($path,$url,'');
+ 	}elsif($input =~ m%^download fileid\s+%i){
+    		my ($fileID) = $input =~ m%^download fileid\s+(.*?)\n%;
+	    	downloadFileID($fileID, $services[$currentService]);
  	}elsif($input =~ m%^download all%i){
   		my %sortedDocuments;
 
@@ -1413,6 +1416,34 @@ sub syncGoogleFileList($){
 
 }
 
+sub downloadFileID($$){
+	my ($fileID, $service) = @_;
+	my @dbase;
+      		print STDOUT "fileID = $fileID\n";
+			my $newDocuments =  $service->getFileMeta($fileID);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+
+  			 	}else{
+
+					#Google Drive -> Google Drive
+		  			###
+	  				#Google Drive (MD5 comparision) already exists; skip
+  					if 	( (Scalar::Util::blessed($service) eq 'pDrive::gDrive')
+  					and  ((defined($dbase[3]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[3]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+ 						 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
+					}else{
+							print STDOUT  "copy to service ". $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
+		    				$service->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+  					}
+				}
+
+	  		}
+
+
+}
 sub navigateFolder($$$){
 	my $folder = shift;
 	my $folderID = shift;

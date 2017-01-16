@@ -1436,7 +1436,7 @@ sub downloadFileID($$){
  						 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
 					}else{
 							print STDOUT  "copy to service ". $dbase[0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
-		    				$service->downloadFile('toupload',$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+		    				$service->downloadFile($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] ,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
   					}
 				}
 

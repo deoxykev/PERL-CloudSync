@@ -664,9 +664,9 @@ sub downloadFile(*$$$){
   	my $timestamp = shift;
     print STDERR "URL = $URL $self->{_token} $path\n";
     if (defined($self->{_IP})){
-    	`wget --bind-address=$self->{_IP} --header="Authorization: Bearer $self->{_token}" "$URL" -O $path`;
+    	`wget --bind-address=$self->{_IP} --header="Authorization: Bearer $self->{_token}" "$URL" -O "$path"`;
     }else{
-    	`wget --header="Authorization: Bearer $self->{_token}" "$URL" -O $path`;
+    	`wget --header="Authorization: Bearer $self->{_token}" "$URL" -O "$path"`;
     }
     return;
 	my $retryCount = 2;

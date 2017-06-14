@@ -1023,7 +1023,6 @@ sub syncFolder($){
 	}
 	my $nextURL = '';
 	my @subfolders;
-
 	#no folder ID provided, look it up from looking at the root folder
 	if ($folderID eq ''){
 		$folderID =  $services[$drives[0]]->getSubFolderID($folder,'root');
@@ -1032,12 +1031,14 @@ sub syncFolder($){
 
 	for (my $i=0; $i <= $#subfolders;$i++){
 		$folderID = $subfolders[$i];
+
 	while (1){
 
 		my $newDocuments =  $services[$drives[0]]->getSubFolderIDList($folderID, $nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
 
   		foreach my $resourceID (keys %{$newDocuments}){
+
 			my $doDownload=0;
   			#folder
   			#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){

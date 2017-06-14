@@ -242,6 +242,7 @@ sub getList(*$$){
 
 	my $retryCount = 0;
 	while ($self->backoffDelay($retryCount)){
+
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -745,7 +746,6 @@ sub readDriveListings(**){
 	my %newDocuments;
 
 	my $count=0;
-
 	my $title;
   	$$driveListings =~ s%\n%%g;
 #  	while ($$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\,\s*\{% or $$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\s*\]\s*\}%){
@@ -814,6 +814,7 @@ sub readDriveListings(**){
 
       		$title =~ s/\+//g; #remove +s in title for fisi)
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $self->{_metaURL} . '/nodes/'.$resourceID.'/content';
 
     	}
     	$count++;

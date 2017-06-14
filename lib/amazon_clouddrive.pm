@@ -91,7 +91,6 @@ sub downloadFile(*$$$){
 
       pDrive::FileIO::traverseMKDIR($finalPath);
       print STDOUT "downloading $finalPath...";
-
       # a simple non-google-doc file
       $returnStatus = $self->{_serviceapi}->downloadFile($finalPath,$link,$updated);
 
@@ -151,9 +150,13 @@ sub getSubFolderIDList(*$$){
 	my $folderName = shift;
 	my $URL = shift;
 
+	if ($URL eq ''){
+		$URL =   $self->{_serviceapi}->{_metaURL};
+		$URL .= 'nodes/'.$folderName . '/children?';
+	}
+
 	my $driveListings = $self->{_serviceapi}->getList($URL);
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
-
 	###$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
 	#$self->updateMD5Hash($newDocuments);
 	return $newDocuments;

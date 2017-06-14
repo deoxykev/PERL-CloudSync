@@ -814,7 +814,7 @@ sub readDriveListings(**){
 
       		$title =~ s/\+//g; #remove +s in title for fisi)
   			$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] = pDrive::FileIO::getMD5String($title .$fileSize);
-      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $self->{_metaURL} . '/nodes/'.$resourceID.'/content';
+      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}] = $self->{_contentURL} . '/nodes/'.$resourceID.'/content';
 
     	}
     	$count++;

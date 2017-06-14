@@ -285,7 +285,12 @@ sub getFolderInfo(*$){
 	my $self = shift;
 	my $fileID = shift;
 
-	my $URL = 'https://www.googleapis.com/drive/v2/files/'.$fileID.'?fields=title%2Cparents';
+	#my $URL = 'https://www.googleapis.com/drive/v2/files/'.$fileID.'?fields=title%2Cparents';
+	my $URL = $self->{_metaURL} . 'nodes/'.$fileID;
+
+		if ($fileID eq ''){
+			return (0,'','');
+		}
 
 	my $retryCount = 2;
 	while ($retryCount){
@@ -303,8 +308,8 @@ sub getFolderInfo(*$){
 
 	if($res->is_success){
   		print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-  		my ($title) = $res->as_string =~ m%\"title\"\:\s?\"([^\"]+)\"%;
-		my ($resourceID) = $res->as_string =~ m%\"parentLink\"\:\s?\"[^\"]+\/([^\"]+)\"%;
+  		my ($title) = $res->as_string =~ m%\"name\"\:\s?\"([^\"]+)\"%;
+		my ($resourceID) = $res->as_string =~ m%\"parents\"\:\s?\[\"([^\"]+)\"%;
 		my ($isRoot) = $res->as_string =~ m%\"isRoot\"\:\s?([^\s]+)%;
 		if ($isRoot eq 'true'){
 			return (0,$title,$resourceID);
@@ -805,7 +810,6 @@ sub readDriveListings(**){
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}] = $resourceType;
 
-      		($parentID) = $parentID =~ m%\/([^\/]+)$%;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}] = $parentID;
 
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] = $title;

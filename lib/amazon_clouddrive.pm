@@ -412,6 +412,8 @@ sub getFolderInfo(*$){
 	my $title;
 	my $path = -1;
 	while ($hasMore){
+		print STDERR "ID = $id\n";
+
 		($hasMore, $title,$id) = $self->{_serviceapi}->getFolderInfo($id);
 		if ($path == -1){
 			$path = $title;

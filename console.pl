@@ -1342,7 +1342,7 @@ sub syncGoogleFolder($){
   								or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
   								and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
-							$auditline = ',skip' if $AUDIT;
+							$auditline .= ',skip' if $AUDIT;
 
   						}else{
 							$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]) if $path eq '';
@@ -1358,9 +1358,9 @@ sub syncGoogleFolder($){
 
 							my $result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
 							if ($AUDIT and $result == 0){
-								$auditline = ',fail';
+								$auditline .= ',fail';
 							}elsif($AUDIT and $result == 1){
-								$auditline = ',success';
+								$auditline .= ',success';
 							}
 							$dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} = $resourceID;
 
@@ -1369,14 +1369,15 @@ sub syncGoogleFolder($){
 
   				}else{
  					 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
- 					 $auditline = ',skip';
+ 					 $auditline .= ',skip';
 
   				}
-				pDrive::auditLog($auditline);
 
 
 
 			}
+			pDrive::auditLog($auditline);
+
 
 	  	}
 

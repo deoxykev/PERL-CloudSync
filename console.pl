@@ -1033,6 +1033,12 @@ close(OUTPUT);
 sub syncFolder($){
 	my ($folder, $folderID, $isMock, $isInbound, @drives) = @_;
 	my @dbase;
+
+	my $maxSize=100000000000;
+	if (defined pDrive::Config->MAXSIZE){
+		$maxSize = pDrive::Config->MAXSIZE;
+	}
+
 	 print STDERR "folder = $folder\n";
 	for(my $i=1; $i <= $#drives; $i++){
 			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
@@ -1070,7 +1076,8 @@ sub syncFolder($){
 	  			#Google Drive (MD5 comparision) already exists; skip
   				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' or Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::amazon')
   				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive' or Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::amazon')
-  				and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+  				and  (($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > $maxSize) or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
+  				or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 
 				#Google -> Google Photos
 	  			###

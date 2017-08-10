@@ -185,6 +185,7 @@ if ($opt{c} ne ''){
 }
 
 print STDERR '>';
+my $AUDIT = 0;
 
 while (my $input = <$userInput>){
 
@@ -229,11 +230,10 @@ while (my $input = <$userInput>){
 		$services[$currentService]->setOutput($spoolFile);
 		#open(OUTPUT, '>>'.$spoolFile);
 
-	}elsif($input =~ m%^audit ([^\s]+)%i){
-    	my ($auditFile) = $input =~ m%^audit\s([^\s]+)%i;
-		print STDOUT "audit to ". $auditFile . "\n";
-		$services[$currentService]->setOutput($auditFile);
-		#open(OUTPUT, '>>'.$spoolFile);
+	}elsif($input =~ m%^audit on%i){
+		$AUDIT = 1;
+	}elsif($input =~ m%^audit off%i){
+		$AUDIT = 0;
 
   	}elsif($input =~ m%^load gd\s\d+\s([^\s]+)%i){
     	my ($account,$login) = $input =~ m%^load gd\s(\d+)\s([^\s]+)%i;
@@ -975,6 +975,16 @@ sub masterLog($){
 
 }
 
+sub auditLog($){
+
+  my $event = shift;
+
+  open (AUDITLOG, '>>' . pDrive::Config->AUDITFILE) or die('Cannot access audit file ' . pDrive::Config->AUDITFILE);
+  print AUDITLOG  $event . "\n";
+  close (AUDITLOG);
+
+}
+
 sub syncDrive($){
 	my (@drives) = @_;
 	my @dbase;
@@ -1292,7 +1302,9 @@ sub syncGoogleFolder($){
 
 		my $path;
 		my @mypath;
+
   		foreach my $resourceID (keys %{$newDocuments}){
+			my $auditline = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ','.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].','.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ','. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] if $AUDIT;
 			my $doDownload=0;
   			#folder
   			#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
@@ -1330,6 +1342,7 @@ sub syncGoogleFolder($){
   								or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
   								and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
+							$auditline = ',skip' if $AUDIT;
 
   						}else{
 							$path = $services[$drives[0]]->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]) if $path eq '';
@@ -1342,7 +1355,13 @@ sub syncGoogleFolder($){
 							}
 							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
-							$services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+
+							my $result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+							if ($AUDIT and $result == 0){
+								$auditline = ',fail';
+							}elsif($AUDIT and $result == 1){
+								$auditline = ',success';
+							}
 							$dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} = $resourceID;
 
   						}
@@ -1350,13 +1369,17 @@ sub syncGoogleFolder($){
 
   				}else{
  					 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
+ 					 $auditline = ',skip';
+
   				}
 
 
 
 			}
+			pDrive::auditLog($auditline);
 
 	  	}
+
 		$nextURL = $services[$drives[0]]->{_nextURL};
 		print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';

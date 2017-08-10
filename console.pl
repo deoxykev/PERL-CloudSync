@@ -1358,9 +1358,9 @@ sub syncGoogleFolder($){
 
 							my $result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
 							if ($AUDIT and $result == 0){
-								$auditline .= ',fail';
+								$auditline .= ',fail' if $AUDIT;
 							}elsif($AUDIT and $result == 1){
-								$auditline .= ',success';
+								$auditline .= ',success' if $AUDIT;
 							}
 							$dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} = $resourceID;
 
@@ -1369,14 +1369,14 @@ sub syncGoogleFolder($){
 
   				}else{
  					 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
- 					 $auditline .= ',skip';
+ 					 $auditline .= ',skip' if $AUDIT;
 
   				}
 
 
 
 			}
-			pDrive::auditLog($auditline);
+			pDrive::auditLog($auditline) if $AUDIT;
 
 
 	  	}

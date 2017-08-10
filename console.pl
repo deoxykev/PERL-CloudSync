@@ -223,12 +223,17 @@ while (my $input = <$userInput>){
     	print STDOUT "directory = $dir\n";
     	pDrive::FileIO::scanDir($dir);
 
-}elsif($input =~ m%^spool ([^\s]+)%i){
+	}elsif($input =~ m%^spool ([^\s]+)%i){
     	my ($spoolFile) = $input =~ m%^spool\s([^\s]+)%i;
 		print STDOUT "spooling to ". $spoolFile . "\n";
 		$services[$currentService]->setOutput($spoolFile);
 		#open(OUTPUT, '>>'.$spoolFile);
 
+	}elsif($input =~ m%^audit ([^\s]+)%i){
+    	my ($auditFile) = $input =~ m%^audit\s([^\s]+)%i;
+		print STDOUT "audit to ". $auditFile . "\n";
+		$services[$currentService]->setOutput($auditFile);
+		#open(OUTPUT, '>>'.$spoolFile);
 
   	}elsif($input =~ m%^load gd\s\d+\s([^\s]+)%i){
     	my ($account,$login) = $input =~ m%^load gd\s(\d+)\s([^\s]+)%i;

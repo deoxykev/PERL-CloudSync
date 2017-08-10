@@ -980,6 +980,7 @@ sub auditLog($){
 
   my $event = shift;
 
+  return if $event eq '';
   open (AUDITLOG, '>>' . pDrive::Config->AUDITFILE) or die('Cannot access audit file ' . pDrive::Config->AUDITFILE);
   print AUDITLOG  $event . "\n";
   close (AUDITLOG);
@@ -1370,7 +1371,7 @@ sub syncGoogleFolder($){
 
   				}else{
  					 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
- 					 $auditline .= ',skip' if $AUDIT;
+ 					 $auditline .= ',SKIP' if $AUDIT;
 
   				}
 

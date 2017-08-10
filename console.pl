@@ -1362,7 +1362,7 @@ sub syncGoogleFolder($){
 							}elsif($AUDIT and $result == 1){
 								$auditline .= ',success' if $AUDIT;
 							}
-							$dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} = $resourceID;
+							#$dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} = $resourceID;
 
   						}
 					}

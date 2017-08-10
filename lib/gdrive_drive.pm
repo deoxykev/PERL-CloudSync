@@ -29,6 +29,7 @@ sub new(*$) {
   			  _folders_dbm => undef,
   			  _db_checksum => undef,
   			  _dbm => undef,
+  			  _audit => 0,
   			  _db_fisi => undef};
 
   	my $class = shift;
@@ -170,6 +171,13 @@ sub unloadFolders(*){
 	#untie($self->{_folders_dbm});
 }
 
+
+
+sub auditON(*){
+	my $self = shift;
+	$self->{_audit} = 1;
+	#untie($self->{_folders_dbm});
+}
 
 sub downloadFile(*$$$){
 
@@ -1053,9 +1061,12 @@ sub getTrash(*){
 	  			#	folder
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
 					print STDOUT "folder $resourceID " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}].  "\n";
+					$self->auditLog('folder,'. $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if $self->{_audit};
   			 	}else{
 
 					print STDOUT "file $resourceID " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}].  "\n";
+					$self->auditLog('file,'. $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if $self->{_audit};
+
   				}
 
   		}

@@ -232,6 +232,7 @@ while (my $input = <$userInput>){
 
 	}elsif($input =~ m%^audit on%i){
 		$AUDIT = 1;
+		$services[$currentService]->auditON();
 	}elsif($input =~ m%^audit off%i){
 		$AUDIT = 0;
 

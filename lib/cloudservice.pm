@@ -75,6 +75,16 @@ sub setOutput(*$){
 }
 
 
+sub auditLog(*$){
+  my $self = shift;
+  my $event = shift;
+
+  open (AUDITLOG, '>>' . pDrive::Config->AUDITFILE) or die('Cannot access audit file ' . pDrive::Config->AUDITFILE);
+  print AUDITLOG  $event . "\n";
+  close (AUDITLOG);
+
+}
+
 sub dumpFolder(*$$$){
 	my $self = shift;
 	my $folder = shift;

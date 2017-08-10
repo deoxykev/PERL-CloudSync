@@ -65,21 +65,21 @@ EOF
 
 require './config.cfg';
 
-use lib "$FindBin::Bin/../lib";
-require 'lib/dbm.pm';
-require 'lib/time.pm';
-require 'lib/fileio.pm';
-require 'lib/gdrive_drive.pm';
-require 'lib/gdrive_photos.pm';
-require 'lib/onedrive.pm';
-require './lib/googledriveapi2.pm';
-require './lib/onedriveapi1.pm';
-require './lib/cloudservice.pm';
-require './lib/googlephotosapi2.pm';
-require 'lib/hive.pm';
-require 'lib/hiveapi.pm';
-require 'lib/amazon_clouddrive.pm';
-require 'lib/amazonapi.pm';
+use lib "$FindBin::Bin/./lib";
+require 'dbm.pm';
+require 'time.pm';
+require 'fileio.pm';
+require 'gdrive_drive.pm';
+require 'gdrive_photos.pm';
+require 'onedrive.pm';
+require 'googledriveapi2.pm';
+require 'onedriveapi1.pm';
+require 'cloudservice.pm';
+require 'googlephotosapi2.pm';
+require 'hive.pm';
+require 'hiveapi.pm';
+require 'amazon_clouddrive.pm';
+require 'amazonapi.pm';
 
 
 my $filetype = {
@@ -1372,11 +1372,11 @@ sub syncGoogleFolder($){
  					 $auditline = ',skip';
 
   				}
+				pDrive::auditLog($auditline);
 
 
 
 			}
-			pDrive::auditLog($auditline);
 
 	  	}
 

@@ -1144,7 +1144,13 @@ sub syncFolder($){
   						}else{
   							#for inbound, remove Inbound from path when creating on target
 							$path =~ s%\/inbound%%ig if ($isInbound);
-							my $mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+							my $mypath;
+							if ($path eq '/'){
+								$mypath = $services[$drives[$j]]->getFolderIDByPath('root', 1,) if (!($isMock));
+							}else{
+								$mypath = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+							}
+
 							print STDOUT  "upload to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('upload to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}].' - path '.$path."\n");
 							$services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);

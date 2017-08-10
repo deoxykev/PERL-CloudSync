@@ -245,11 +245,11 @@ sub uploadFile(*$$){
 	my $uploadURL = $self->{_gdrive}->createFile($URL,$fileSize);
 
 	# calculate the number of chunks
-	my $chunkNumbers = int($fileSize/(CHUNKSIZE))+1;
+	my $chunkNumbers = int($fileSize/(pDrive::Config->CHUNKSIZE))+1;
 	my $pointerInFile=0;
 	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
 	for (my $i=0; $i < $chunkNumbers; $i++){
-		my $chunkSize = CHUNKSIZE;
+		my $chunkSize = pDrive::Config->CHUNKSIZE;
     	my $chunk;
     	if ($i == $chunkNumbers-1){
       		$chunkSize = $fileSize - $pointerInFile;

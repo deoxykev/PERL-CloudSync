@@ -733,7 +733,7 @@ sub uploadFile(*$$){
   	my $uploadURL = $self->{_serviceapi}->createFile('https://www.googleapis.com/upload/drive/v2/files?fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
 
 
-  	my $chunkNumbers = int($fileSize/(pDrive::CloudService->CHUNKSIZE))+1;
+  	my $chunkNumbers = int($fileSize/(pDrive::Config->CHUNKSIZE))+1;
 	my $pointerInFile=0;
   	print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
   	open(INPUT, "<".$file) or die ('cannot read file '.$file);
@@ -744,13 +744,13 @@ sub uploadFile(*$$){
   	my $retrycount=0;
 
   	for (my $i=0; $i < $chunkNumbers; $i++){
-		my $chunkSize =pDrive::CloudService->CHUNKSIZE;
+		my $chunkSize =pDrive::Config->CHUNKSIZE;
 		my $chunk;
     	if ($i == $chunkNumbers-1){
 	    	$chunkSize = $fileSize - $pointerInFile;
     	}
 
-    	sysread INPUT, $chunk, pDrive::CloudService->CHUNKSIZE;
+    	sysread INPUT, $chunk, pDrive::Config->CHUNKSIZE;
     	print STDERR "\r".$i . '/'.$chunkNumbers;
     	my $status=0;
     	$retrycount=0;

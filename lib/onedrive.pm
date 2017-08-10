@@ -318,14 +318,14 @@ sub uploadLargeFile(*$$$){
     my $URL = $self->{_serviceapi}->createFile($path, $filename);
 
 	# calculate the number of chunks
-	my $chunkNumbers = int($fileSize/(pDrive::CloudService->CHUNKSIZE))+1;
+	my $chunkNumbers = int($fileSize/(pDrive::Config->CHUNKSIZE))+1;
 	my $pointerInFile=0;
 	#print STDOUT "file number is $chunkNumbers\n" if (pDrive::Config->DEBUG);
   	my $fileID=0;
   	my $retrycount=0;
 
 	for (my $i=0; $i < $chunkNumbers; $i++){
-		my $chunkSize = pDrive::CloudService->CHUNKSIZE;
+		my $chunkSize = pDrive::Config->CHUNKSIZE;
     	my $chunk;
     	if ($i == $chunkNumbers-1){
       		$chunkSize = $fileSize - $pointerInFile;

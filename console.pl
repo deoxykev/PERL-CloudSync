@@ -39,6 +39,7 @@ use constant ACDCLIENT_SECRET => '';
 # configuration
 use constant LOGFILE => '/tmp/pDrive.log';
 use constant SAMPLE_LIST => 'samplelist.txt';
+use constant AUDITFILE => '/tmp/audit.log';
 
 # when there is a new server version, save the current local as a "local_revision"
 use constant REVISIONS => 1;
@@ -56,6 +57,16 @@ use constant DBM_CONTAINER_FILE => LOCAL_PATH . '.pdrive.catalog.db';
 use constant DBM_TYPE => 'DB_File';
 use DB_File;
 
+#use constant CHUNKSIZE => (256*1024);
+#use constant CHUNKSIZE => 524288;
+#use constant CHUNKSIZE => (8*256*1024);
+
+
+#use constant CHUNKSIZE => (8*256*1024);
+use constant CHUNKSIZE => (128*256*1024); #vps
+
+#use constant CHUNKSIZE => (8*256*1024); #router
+use constant MAXSIZE => 5200000000;
 
 use constant APP_NAME => 'dmdgddperl';
 1;
@@ -103,9 +114,6 @@ use constant FOLDER_ROOT => 1;
 use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
-#use constant CHUNKSIZE => (256*1024);
-#use constant CHUNKSIZE => 524288;
-use constant CHUNKSIZE => (8*256*1024);
 
 use Getopt::Std;
 use constant USAGE => " usage: $0 [-c file.config]\n";

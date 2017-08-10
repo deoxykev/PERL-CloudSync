@@ -1304,14 +1304,14 @@ sub syncGoogleFolder($){
 		my @mypath;
 
   		foreach my $resourceID (keys %{$newDocuments}){
-			my $auditline = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ','.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].','.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ','. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] if $AUDIT;
+			my $auditline = '' if $AUDIT;
 			my $doDownload=0;
   			#folder
   			#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
   			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
 				push(@subfolders, $resourceID);
   			 }else{
-
+				$auditline .= $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ','.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].','.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ','. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] if $AUDIT;
 				for(my $j=1; $j <= $#drives; $j++){
 
 				#Google Drive -> Google Drive

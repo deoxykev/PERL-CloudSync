@@ -1203,6 +1203,8 @@ sub syncFolder($){
 
 			}
 
+			pDrive::auditLog($auditline) if $AUDIT;
+
 	  	}
 		$nextURL = $services[$drives[0]]->{_nextURL};
 		print STDOUT "next url " . $nextURL. "\n";

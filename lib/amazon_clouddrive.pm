@@ -412,7 +412,7 @@ sub getFolderInfo(*$){
 	my $title;
 	my $path = -1;
 	while ($hasMore){
-		print STDERR "ID = $id\n";
+		print STDOUT "ID = $id\n" if (pDrive::Config->DEBUG);
 
 		($hasMore, $title,$id) = $self->{_serviceapi}->getFolderInfo($id);
 		if ($path == -1){

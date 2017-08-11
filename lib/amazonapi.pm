@@ -483,13 +483,13 @@ sub downloadFile(*$$$){
   	my $URL = shift;
   	my $timestamp = shift;
     print STDERR "URL = $URL $self->{_token} $path\n";
-    #`wget --header="Authorization: Bearer $self->{_token}" "$URL" -O $path`;
-    #return;
+    `wget --header="Authorization: Bearer $self->{_token}" "$URL" -O $path`;
+    return;
   	open (FILE, "> ".$path) or die ("Cannot save image file".$path.": $!\n");
   	FILE->autoflush;
   	binmode(FILE);
     my $res = $self->{_ua}->get($URL,':content_cb' => \&downloadChunk,':read_size_hint' => 8192,'Authorization' => 'Bearer '.$self->{_token});
-    print $res;
+    print STDERR $res;
 	close(FILE);
   	print STDOUT "saved\n";
   	return;

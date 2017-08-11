@@ -483,8 +483,8 @@ sub downloadFile(*$$$){
   	my $URL = shift;
   	my $timestamp = shift;
     print STDERR "URL = $URL $self->{_token} $path\n";
-    `wget --header="Authorization: Bearer $self->{_token}" "$URL" -O $path`;
-    return;
+    #`wget --header="Authorization: Bearer $self->{_token}" "$URL" -O $path`;
+    #return;
   	open (FILE, "> ".$path) or die ("Cannot save image file".$path.": $!\n");
   	FILE->autoflush;
   	binmode(FILE);

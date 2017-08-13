@@ -489,7 +489,7 @@ sub downloadFile(*$$$){
   	FILE->autoflush;
   	binmode(FILE);
     my $res = $self->{_ua}->get($URL,':content_cb' => \&downloadChunk,':read_size_hint' => 8192,'Authorization' => 'Bearer '.$self->{_token});
-s	close(FILE);
+	close(FILE);
   	print STDOUT "saved\n";
   	return;
 	my $retryCount = 2;

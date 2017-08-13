@@ -1177,7 +1177,7 @@ sub updateMD5Hash(**){
 	my $skippedCountMD5=0;
 	my $createdCountFISI=0;
 	my $skippedCountFISI=0;
-	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
+	my $db = tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open md5: $!";
 	foreach my $resourceID (keys %{$newDocuments}){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq '';
 		for (my $i=0; 1; $i++){
@@ -1198,8 +1198,9 @@ sub updateMD5Hash(**){
 			}
 		}
 	}
+	$db->sync();
 	untie(%dbase);
-	tie( %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDWR|O_CREAT, 0666) or die "can't open fisi: $!";
+	my $db = tie( %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDWR|O_CREAT, 0666) or die "can't open fisi: $!";
 	foreach my $resourceID (keys %{$newDocuments}){
 		next if $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq '';
 		for (my $i=0; 1; $i++){
@@ -1220,6 +1221,7 @@ sub updateMD5Hash(**){
 			}
 		}
 	}
+	$db->sync();
 	untie(%dbase);
 	print STDOUT "MD5: created = $createdCountMD5, skipped = $skippedCountMD5\n";
 	print STDOUT "FISI: created = $createdCountFISI, skipped = $skippedCountFISI\n";

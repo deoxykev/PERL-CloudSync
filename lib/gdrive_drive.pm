@@ -228,12 +228,12 @@ sub getSubFolderID(*$$){
 
 	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $parentID.'\'+in+parents+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 
+	while ($URL ne ''){
 
 	my $driveListings = $self->{_serviceapi}->getList($URL);
 	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
-	while (1){
   	foreach my $resourceID (keys %{$newDocuments}){
     	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq $folderName){
     		print STDERR "returning $resourceID\n " if (pDrive::Config->DEBUG);
@@ -241,6 +241,7 @@ sub getSubFolderID(*$$){
     	}
 	}
 	last if $self->{_nextURL} eq '';
+	$URL = $self->{_nextURL};
 	}
 	return '';
 

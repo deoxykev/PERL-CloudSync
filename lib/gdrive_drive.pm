@@ -226,7 +226,7 @@ sub getSubFolderID(*$$){
 	my $folderName = shift;
 	my $parentID = shift;
 
-	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $parentID.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $parentID.'\'+in+parents+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 
 
 	my $driveListings = $self->{_serviceapi}->getList($URL);
@@ -528,7 +528,7 @@ sub uploadFTPFolder(*$$){
 	print STDOUT "folder = $folder\n";
 
 	#check server-cache for folder
-	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	my $folderID = '';#$self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 	#folder doesn't exist, create it
 	if ($folderID eq ''){
 		#*** validate it truly doesn't exist on the server before creating
@@ -629,7 +629,7 @@ sub createUploadListForFolder(*$$$$){
 	print STDOUT "folder = $folder\n";
 
 	#check server-cache for folder
-	my $folderID =  $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	my $folderID =  '';#$self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 	#folder doesn't exist, create it
 	if ($folderID eq ''){
 		#*** validate it truly doesn't exist on the server before creating

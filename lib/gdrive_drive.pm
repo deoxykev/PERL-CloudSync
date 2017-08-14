@@ -230,13 +230,17 @@ sub getSubFolderID(*$$){
 
 
 	my $driveListings = $self->{_serviceapi}->getList($URL);
+	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 
+	while (1){
   	foreach my $resourceID (keys %{$newDocuments}){
     	if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] eq $folderName){
     		print STDERR "returning $resourceID\n " if (pDrive::Config->DEBUG);
     		return $resourceID;
     	}
+	}
+	last if $self->{_nextURL} eq '';
 	}
 	return '';
 
@@ -432,7 +436,7 @@ sub uploadFolder(*$$){
 	print STDOUT "folder = $folder\n";
 
 	#check server-cache for folder
-	my $folderID = $self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	my $folderID = '';#$self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
 	#folder doesn't exist, create it
 	if ($folderID eq ''){
 		#*** validate it truly doesn't exist on the server before creating

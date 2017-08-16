@@ -369,12 +369,13 @@ sub mergeDuplicateFolder(*$$){
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-  				 	$self->mergeDuplicateFolder($resourceID,$recusiveLevel-1) if $recusiveLevel > 0;
+  				 	#$self->mergeDuplicateFolder($resourceID,$recusiveLevel-1) if $recusiveLevel > 0;
   				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] ;
 
 					#duplicate folder; merge
   				 	if ($folders{$title} ne ''){
   				 		$self->mergeFolder($folders{$title}, $resourceID,$recusiveLevel-1) if $recusiveLevel > 0;
+  				 		$self->trashEmptyFolders($resourceID,0);
   				 	}else{
 	  				 	$folders{$title} = $resourceID;
   				 	}
@@ -1537,12 +1538,18 @@ sub findEmpyFolders(*$){
 
 }
 
-sub trashEmptyFolders(*$){
+sub trashEmptyFolders(*$$){
 
 	my $self = shift;
 	my $folderID = shift;
 
-	for (my $count=0; $count < 2; $count++){
+	my $recusiveLevel = shift;
+
+	if ($recusiveLevel eq ''){
+		$recusiveLevel = 999;
+	}
+
+	#for (my $count=0; $count < 2; $count++){
 		my $nextURL = '';
 
 		my $fileFolderCount=0;
@@ -1554,7 +1561,7 @@ sub trashEmptyFolders(*$){
 	  			foreach my $resourceID (keys %{$newDocuments}){
 		  			#	folder
 	  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-						$self->trashEmptyFolders($resourceID);
+						$self->trashEmptyFolders($resourceID, $recusiveLevel-1) if $recusiveLevel > 0;
 						$fileFolderCount++;
 
 	  			 	}else{
@@ -1574,7 +1581,7 @@ sub trashEmptyFolders(*$){
 			last;
 	  	}
 
-	}
+	#}
 
 
 

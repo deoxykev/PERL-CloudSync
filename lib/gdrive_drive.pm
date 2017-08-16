@@ -369,7 +369,7 @@ sub mergeDuplicateFolder(*$$){
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-  				 	#$self->mergeDuplicateFolder($resourceID,$recusiveLevel-1) if $recusiveLevel > 0;
+  				 	$self->mergeDuplicateFolder($resourceID,$recusiveLevel-1) if $recusiveLevel > 0;
   				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] ;
 
 					#duplicate folder; merge

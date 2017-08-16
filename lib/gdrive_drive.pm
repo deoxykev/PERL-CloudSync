@@ -288,11 +288,15 @@ sub getSubFolderIDListWithMedia(*$$){
 
 }
 
-sub mergeFolder(*$$){
+sub mergeFolder(*$$$){
 	my $self = shift;
 	my $folderID1 = shift;
 	my $folderID2 = shift;
+	my $recusiveLevel = shift;
 
+    if ($recusiveLevel eq ''){
+    	$recusiveLevel = 999;
+    }
 
 	#construct folders (target)
 	my %folders1;
@@ -325,7 +329,7 @@ sub mergeFolder(*$$){
   				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] ;
 					#merge subfolder
   				 	if  ($folders1{$title} ne ''){
-						$self->mergeFolder($folders1{$title}, $resourceID);
+						$self->mergeFolder($folders1{$title}, $resourceID, $recusiveLevel-1) if $recusiveLevel > 0;
   				 	#move subfolder
   				 	}else{
 						$self->moveFile($resourceID, $folderID1, $folderID2);
@@ -370,7 +374,7 @@ sub mergeDuplicateFolder(*$$){
 
 					#duplicate folder; merge
   				 	if ($folders{$title} ne ''){
-  				 		$self->mergeFolder($folders{$title}, $resourceID);
+  				 		$self->mergeFolder($folders{$title}, $resourceID,$recusiveLevel-1) if $recusiveLevel > 0;
   				 	}else{
 	  				 	$folders{$title} = $resourceID;
   				 	}

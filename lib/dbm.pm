@@ -56,11 +56,11 @@ sub new(*) {
 #
 sub openDBM(**$){
 
-	return openDBMForUpdating(shift,shift);
-	#my $self = shift;
-	#my $file = shift;
-	#tie( my %dbase, pDrive::Config->DBM_TYPE, $file ,O_RDONLY, 0666) or die "can't open ". $file.": $!";
-	#return \%dbase;
+	#return openDBMForUpdating(shift,shift);
+	my $self = shift;
+	my $file = shift;
+	tie( my %dbase, pDrive::Config->DBM_TYPE, $file ,O_RDONLY, 0666) or die "can't open ". $file.": $!";
+	return \%dbase;
 }
 
 #

@@ -620,6 +620,10 @@ while (my $input = <$userInput>){
     	my ($folderID) = $input =~ m%^merge duplicates folderid\s+(\S+)%i;
 		$services[$currentService]->mergeDuplicateFolder($folderID);
 
+  	}elsif($input =~ m%^merge duplicates level \d+ folderid\s\S+%i){
+    	my ($level,$folderID) = $input =~ m%^merge duplicates level (\d+) folderid\s+(\S+)%i;
+		$services[$currentService]->mergeDuplicateFolder($folderID, $level);
+
 
   	}elsif($input =~ m%^alpha folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^alpha folderid\s+(\S+)%i;

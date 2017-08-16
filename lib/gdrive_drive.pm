@@ -343,11 +343,14 @@ sub mergeFolder(*$$){
 
 
 
-sub mergeDuplicateFolder(*$){
+sub mergeDuplicateFolder(*$$){
 	my $self = shift;
 	my $folderID = shift;
+	my $recusiveLevel = shift;
 
-
+    if ($recusiveLevel eq ''){
+    	$recusiveLevel = 999;
+    }
 	#construct folders (target)
 	my %folders;
 	while (1){
@@ -357,7 +360,7 @@ sub mergeDuplicateFolder(*$){
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-  				 	$self->mergeDuplicateFolder($resourceID);
+  				 	$self->mergeDuplicateFolder($resourceID,$recusiveLevel-1) if $recusiveLevel > 0;
   				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] ;
 
 					#duplicate folder; merge

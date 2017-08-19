@@ -374,8 +374,10 @@ sub mergeDuplicateFolder(*$$){
 
 					#duplicate folder; merge
   				 	if ($folders{$title} ne ''){
+  				 		my $safeNext = $self->{_nextURL};
   				 		$self->mergeFolder($folders{$title}, $resourceID,0);
-  				 		$self->trashEmptyFolders($resourceID,0);
+  				 		#$self->trashEmptyFolders($resourceID,0);
+  				 		$self->{_nextURL} = $safeNext;
   				 	}else{
 	  				 	$folders{$title} = $resourceID;
   				 	}
@@ -1578,7 +1580,7 @@ sub trashEmptyFolders(*$$){
 	  	if ($fileFolderCount == 0){
 	  		print STDOUT "trashing empty folder - ". $folderID . "\n";
 	  		$self->trashFile($folderID);
-			last;
+			#last;
 	  	}
 
 	#}

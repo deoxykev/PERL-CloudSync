@@ -328,7 +328,7 @@ sub mergeFolder(*$$$){
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq '' ){
   				 	my $title = lc $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] ;
 					#merge subfolder
-  				 	if  ($folders1{$title} ne ''){
+  				 	if  ($folders1{$title} ne '' and $recusiveLevel > 0){
 						$self->mergeFolder($folders1{$title}, $resourceID, $recusiveLevel-1) if $recusiveLevel > 0;
   				 	#move subfolder
   				 	}else{
@@ -374,7 +374,7 @@ sub mergeDuplicateFolder(*$$){
 
 					#duplicate folder; merge
   				 	if ($folders{$title} ne ''){
-  				 		$self->mergeFolder($folders{$title}, $resourceID,$recusiveLevel-1) if $recusiveLevel > 0;
+  				 		$self->mergeFolder($folders{$title}, $resourceID,0);
   				 		$self->trashEmptyFolders($resourceID,0);
   				 	}else{
 	  				 	$folders{$title} = $resourceID;

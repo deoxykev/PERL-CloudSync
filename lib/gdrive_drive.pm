@@ -376,7 +376,7 @@ sub mergeDuplicateFolder(*$$){
   				 	if ($folders{$title} ne ''){
   				 		my $safeNext = $self->{_nextURL};
   				 		$self->mergeFolder($folders{$title}, $resourceID,0);
-  				 		#$self->trashEmptyFolders($resourceID,0);
+  				 		$self->trashEmptyFolders($resourceID,0);
   				 		$self->{_nextURL} = $safeNext;
   				 	}else{
 	  				 	$folders{$title} = $resourceID;

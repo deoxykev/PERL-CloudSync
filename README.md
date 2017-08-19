@@ -5,6 +5,7 @@ PERL-CloudSync
 A PERL implementation of Google Drive for cross-platform
 
 
+FOR USAGE and help, see the WIKI -- https://github.com/ddurdle/PERL-CloudSync/wiki
 
 Amazon Cloud Drive -
 -------------------------------

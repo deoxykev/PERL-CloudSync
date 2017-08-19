@@ -613,12 +613,16 @@ while (my $input = <$userInput>){
     	navigateFolder('',$folderID,  $services[$currentService]);
 
 
+
+	## merging
 	# merge two folders (trash source)
   	}elsif($input =~ m%^merge folderid\s\S+%i){
     	my ($folderID1, $folderID2) = $input =~ m%^merge folderid\s+(\S+)\s+(\S+)%i;
 		$services[$currentService]->mergeFolder($folderID1, $folderID2);
 		$services[$currentService]->trashEmptyFolders($folderID1);
 
+
+	# find all  two folders (trash source)
   	}elsif($input =~ m%^merge duplicates folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^merge duplicates folderid\s+(\S+)%i;
 		$services[$currentService]->mergeDuplicateFolder($folderID);
@@ -628,9 +632,14 @@ while (my $input = <$userInput>){
 		$services[$currentService]->mergeDuplicateFolder($folderID, $level);
 
 
+
+	## folder manipulations
+	# move folders into alpha folders
   	}elsif($input =~ m%^alpha folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^alpha folderid\s+(\S+)%i;
 		$services[$currentService]->alphabetizeFolder($folderID);
+
+
 
   	}elsif($input =~ m%^catalog folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^catalog folderid\s+(\S+)%i;
@@ -659,13 +668,19 @@ while (my $input = <$userInput>){
 	#return a list of empty folder IDs
   	}elsif($input =~ m%^empty folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^empty folderid\s+(\S+)%i;
-
     	$services[$currentService]->findEmpyFolders($folderID);
 
+	#trash empty folders in folderid
   	}elsif($input =~ m%^trash empty folders folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^trash empty folders folderid\s+(\S+)%i;
-
 		$services[$currentService]->trashEmptyFolders($folderID);
+
+  	}elsif($input =~ m%^trash empty folders level \d+ folderid\s\S+%i){
+    	my ($level,$folderID) = $input =~ m%^trash empty folders level (\d+) folderid\s+(\S+)%i;
+		$services[$currentService]->trashEmptyFolders($folderID, $level);
+
+
+
 
   	}elsif($input =~ m%^get folder size folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^get folder size folderid\s+(\S+)%i;

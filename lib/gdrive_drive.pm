@@ -42,6 +42,8 @@ sub new(*$) {
 
   	# initialize web connections
   	$self->{_serviceapi} = pDrive::GoogleDriveAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
+  	#my $my = pDrive::GoogleDriveAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
+  	#$my->test();
 
   	my $loginsDBM = pDrive::DBM->new('./gd.'.$self->{_username}.'.db');
 #  	my $loginsDBM = pDrive::DBM->new(pDrive::Config->DBM_LOGIN_FILE);

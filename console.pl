@@ -81,11 +81,14 @@ require 'dbm.pm';
 require 'time.pm';
 require 'fileio.pm';
 require 'gdrive_drive.pm';
+require 'box.pm';
 require 'gdrive_photos.pm';
 require 'onedrive.pm';
 require 'googledriveapi2.pm';
+require 'boxapi.pm';
 require 'onedriveapi1.pm';
 require 'cloudservice.pm';
+require 'cloudserviceapi.pm';
 require 'googlephotosapi2.pm';
 require 'hive.pm';
 require 'hiveapi.pm';
@@ -241,6 +244,8 @@ while (my $input = <$userInput>){
 	}elsif($input =~ m%^audit on%i){
 		$AUDIT = 1;
 		$services[$currentService]->auditON();
+	}elsif($input =~ m%^test%i){
+		$services[$currentService]->test();
 	}elsif($input =~ m%^audit off%i){
 		$AUDIT = 0;
 
@@ -248,6 +253,24 @@ while (my $input = <$userInput>){
     	my ($account,$login) = $input =~ m%^load gd\s(\d+)\s([^\s]+)%i;
 		#my ($dbase,$folders) = $dbm->readHash();
 		$services[$account] = pDrive::gDrive->new($login);
+		$currentService = $account;
+
+		$loggedInUser = $bindIP;
+		for (my $i=0;$i <= $#services;$i++){
+			if (defined $services[$i]){
+				$loggedInUser .= ', ' if $i > 1;
+				if ($currentService == $i){
+					$loggedInUser .= '*'.$i. '*. ' . $services[$i]->{_username};
+				}else{
+					$loggedInUser .= $i. '. ' . $services[$i]->{_username};
+				}
+
+			}
+		}
+  	}elsif($input =~ m%^load bx\s\d+\s([^\s]+)%i){
+    	my ($account,$login) = $input =~ m%^load gd\s(\d+)\s([^\s]+)%i;
+		#my ($dbase,$folders) = $dbm->readHash();
+		$services[$account] = pDrive::gBox->new($login);
 		$currentService = $account;
 
 		$loggedInUser = $bindIP;

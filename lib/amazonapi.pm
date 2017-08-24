@@ -614,21 +614,7 @@ sub uploadFile(*$$){
 	}
 }
 
-#
-# Create a file
-##
-sub createFile(*$$$$$){
 
-	my $self = shift;
-  	my $URL = shift;
-  	my $fileSize = shift;
-  	my $file = shift;
-  	my $fileType = shift;
-	my $folder = shift;
-
-	return; #not implemented
-
-}
 
 
 #
@@ -688,34 +674,6 @@ sub createFolder(*$$){
   		return 0;
 	}
 	}
-
-}
-
-#
-# Add a file to a folder
-# * needs updating*
-##
-sub addFile(*$$){
-
-	my $self = shift;
-  	my $URL = shift;
-  	my $file = shift;
-
-	return; #not implemented
-
-}
-
-
-#
-# Delete  a file to a folder
-# * needs updating*
-##
-sub deleteFile(*$$){
-
-	my $self = shift;
-  	my $folderID = shift;
-  	my $fileID = shift;
-	return; #not implemented
 
 }
 

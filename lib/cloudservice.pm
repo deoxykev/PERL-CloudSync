@@ -10,12 +10,20 @@ use constant FISI => 1;
 use constant MEMORY_CHECKSUM => 2;
 
 open(OUTPUT, '>-');
-my $dbm = pDrive::DBM->new();
+##my $dbm = pDrive::DBM->new();
 
 sub auditON(*){
 	my $self = shift;
 	$self->{_audit} = 1;
 	#untie($self->{_folders_dbm});
+	print STDERR "audit on\n";
+}
+
+sub test(*){
+	my $self = shift;
+	print STDERR "in 1\n";
+  	$self->{_serviceapi}->test();
+
 }
 
 sub mergeFolder(*$$$){

@@ -20,7 +20,7 @@ use constant API_VER => 2;
 
 
 
-sub new() {
+sub new(*$$) {
 
 	my $self = {_ident => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.104 Safari/537.36",
               _ua => undef,
@@ -64,31 +64,7 @@ sub new() {
 }
 
 
-##
-# multiple NIC cards:
-# bind to a specific IP
-##
-sub bindIP(*$){
 
-	my $self = shift;
-  	my $IP = shift;
-
-  	$self->{_ua}->local_address($IP);
-
-}
-
-#
-# setTokens: access & refresh
-##
-sub setToken(*$$){
-	my $self = shift;
-	my $token = shift;
-	my $refreshToken = shift;
-
-	$self->{_refreshToken} = $refreshToken;
-	$self->{_token} = $token;
-
-}
 
 #
 # getTokens
@@ -102,7 +78,7 @@ sub getToken(*$){
 
 #	my  $URL = 'http://dmdsoftware.net/api/gdrive.php';
 
-	my $req = new HTTP::Request POST => $URL;
+	my $req = HTTP::Request->new(POST => $URL);
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
 	$req->content('code='.$code.'&client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&redirect_uri=urn:ietf:wg:oauth:2.0:oob&grant_type=authorization_code');
@@ -149,7 +125,8 @@ sub refreshToken(*){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request POST => $URL;
+		my $req = HTTP::Request->new(POST => $URL);
+
 		$req->content_type("application/x-www-form-urlencoded");
 		$req->protocol('HTTP/1.1');
 		$req->content('client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
@@ -196,7 +173,8 @@ sub testAccess(*){
   	my $self = shift;
 
 	my $URL = API_URL . 'about';
-	my $req = new HTTP::Request GET => $URL;
+	my $req = HTTP::Request->new(GET => $URL);
+
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	my $res = $self->{_ua}->request($req);
@@ -233,7 +211,9 @@ sub getList(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request GET => $URL;
+
+		my $req = HTTP::Request->new(GET => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		my $res = $self->{_ua}->request($req);
@@ -279,7 +259,8 @@ sub getTrash(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request GET => $URL;
+		my $req = HTTP::Request->new(GET => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		my $res = $self->{_ua}->request($req);
@@ -321,7 +302,8 @@ sub getFileMeta(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request GET => $URL;
+		my $req = HTTP::Request->new(GET => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		my $res = $self->{_ua}->request($req);
@@ -363,7 +345,8 @@ sub getFolderInfo(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request GET => $URL;
+		my $req = HTTP::Request->new(GET => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		my $res = $self->{_ua}->request($req);
@@ -412,7 +395,8 @@ sub getListRoot(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request GET => $URL;
+		my $req = HTTP::Request->new(GET => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		my $res = $self->{_ua}->request($req);
@@ -463,7 +447,8 @@ sub getChanges(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request GET => $URL;
+		my $req = HTTP::Request->new(GET => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		my $res = $self->{_ua}->request($req);
@@ -508,7 +493,8 @@ sub getSubFolderID(*$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request GET => $URL;
+		my $req = HTTP::Request->new(GET => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		my $res = $self->{_ua}->request($req);
@@ -553,7 +539,8 @@ sub getSubFolderIDList(*$$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request GET => $URL;
+		my $req = HTTP::Request->new(GET => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		my $res = $self->{_ua}->request($req);
@@ -599,7 +586,8 @@ sub getFolderList(*$$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request GET => $URL;
+		my $req = HTTP::Request->new(GET => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		my $res = $self->{_ua}->request($req);
@@ -671,7 +659,8 @@ sub downloadFile(*$$$){
 	my $retryCount = 2;
 	while ($retryCount){
 
-		my $req = new HTTP::Request GET => $URL;
+		my $req = HTTP::Request->new(GET => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		my $res = $self->{_ua}->request($req, $path);
@@ -730,7 +719,8 @@ sub uploadFile(*$$$$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request PUT => $URL;
+		my $req = HTTP::Request->new(PUT => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		$req->content_type($filetype);
@@ -794,7 +784,8 @@ sub createFile(*$$$$$){
 	my $retryCount = 2;
 	while ($retryCount){
 		# convert=false prevents plain/text from becoming docs
-		my $req = new HTTP::Request POST => $URL;
+		my $req = HTTP::Request->new(POST => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		$req->header('X-Upload-Content-Type' => $fileType);
@@ -881,7 +872,9 @@ sub copyFile(*$$$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request POST => $URL;
+
+		my $req = HTTP::Request->new(POST => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		$req->content_length(length $content);
@@ -934,7 +927,9 @@ sub renameFile(*$$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request PUT => $URL;
+
+		my $req = HTTP::Request->new(PUT => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		$req->content_length(length $content);
@@ -987,7 +982,8 @@ sub createFolder(*$$$){
 
 	my $retryCount = 2;
 	while ($retryCount){
-		my $req = new HTTP::Request POST => $URL;
+		my $req = HTTP::Request->new(POST => $URL);
+
 		$req->protocol('HTTP/1.1');
 		$req->header('Authorization' => 'Bearer '.$self->{_token});
 		$req->content_length(length $content);
@@ -1068,7 +1064,8 @@ sub moveFile(*$$$){
 
 	my $retryCount = 2;
 		while ($retryCount){
-			my $req = new HTTP::Request PUT => $URL;
+			my $req = HTTP::Request->new(PUT => $URL);
+
 			$req->protocol('HTTP/1.1');
 			$req->header('Authorization' => 'Bearer '.$self->{_token});
 			$req->content_length(0);
@@ -1120,7 +1117,8 @@ sub deleteFile(*$){
   	my $resourceID = shift;
 
 	my $URL = API_URL . 'files/'.$resourceID;
-	my $req = new HTTP::Request DELETE => $URL;
+	my $req = HTTP::Request->new(DELETE => $URL);
+
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	my $res = $self->{_ua}->request($req);
@@ -1154,7 +1152,8 @@ sub trashFile(*$){
   	my $resourceID = shift;
 
 	my $URL = API_URL . 'files/'.$resourceID. '/trash';
-	my $req = new HTTP::Request POST => $URL;
+	my $req = HTTP::Request->new(POST => $URL);
+
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	my $content = '';
@@ -1192,7 +1191,8 @@ sub untrashFile(*$){
   	my $resourceID = shift;
 
 	my $URL = API_URL . 'files/'.$resourceID. '/untrash';
-	my $req = new HTTP::Request POST => $URL;
+	my $req = HTTP::Request->new(POST => $URL);
+
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
 	my $content = '';

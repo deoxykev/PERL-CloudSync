@@ -50,7 +50,7 @@ sub new(*$) {
   	$self->{_login_dbm} = $loginsDBM;
   	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
 
-	$self->{_folders_dbm} = buildMemoryDBM();
+	$self->{_folders_dbm} = $self->buildMemoryDBM();
 	#$loginsDBM->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
 
 
@@ -107,7 +107,7 @@ sub newService(*$) {
   	$self->{_login_dbm} = $loginsDBM;
   	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
 
-	$self->{_folders_dbm} = buildMemoryDBM();#$loginsDBM->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
+	$self->{_folders_dbm} = $self->buildMemoryDBM();#$loginsDBM->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
 
 
 	# no token defined

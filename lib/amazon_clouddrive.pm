@@ -72,15 +72,7 @@ sub new(*$) {
 
 }
 
-sub loadFolders(*){
-	my $self = shift;
-	$self->{_folders_dbm} = $self->{_login_dbm}->openDBMForUpdating( 'acd.'.$self->{_username} . '.folders.db');
-}
 
-sub unloadFolders(*){
-	my $self = shift;
-	untie($self->{_folders_dbm});
-}
 
 
 sub downloadFile(*$$$){

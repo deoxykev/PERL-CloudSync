@@ -12,6 +12,20 @@ use constant MEMORY_CHECKSUM => 2;
 open(OUTPUT, '>-');
 ##my $dbm = pDrive::DBM->new();
 
+sub buildMemoryDBM()
+ {	my %dbase; return \%dbase;};
+
+sub loadFolders(*){
+	my $self = shift;
+	$self->{_folders_dbm} = buildMemoryDBM();#$self->{_login_dbm}->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
+}
+
+sub unloadFolders(*){
+	my $self = shift;
+	#untie($self->{_folders_dbm});
+}
+
+
 sub auditON(*){
 	my $self = shift;
 	$self->{_audit} = 1;

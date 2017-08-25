@@ -119,8 +119,8 @@ sub refreshToken(*){
 
 	my  $URL = 'https://api.amazon.com/auth/o2/token';
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 	my $req = new HTTP::Request POST => $URL;
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
@@ -143,11 +143,13 @@ sub refreshToken(*){
 
 		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
 		$retryCount=0;
+	}elsif ($res->code >= 500 and $res->code <= 505){
+		$retryCount++;
+		print STDOUT "backoff retry " . $retryCount . "\n";
 
 	}else{
 		print STDOUT $res->as_string;
-		$retryCount--;
-		sleep(10);
+		return '';
 		#die ($res->as_string."error in loading page");}
 	}
 	if ($token ne ''){
@@ -242,9 +244,8 @@ sub getList(*$$){
 		$retryCount++;
 		print STDOUT "backoff retry " . $retryCount . "\n";
 	}else{
-		print STDERR $req->as_string;
 		print STDERR $res->as_string;
-		$retryCount++;
+		return '';
 		#die($res->as_string."error in loading page");
 	}
 
@@ -268,8 +269,8 @@ sub getFolderInfo(*$){
 			return (0,'','');
 		}
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -295,7 +296,11 @@ sub getFolderInfo(*$){
 	}elsif ($res->code == 401){
  	 	my ($token,$refreshToken) = $self->refreshToken();
 		$self->setToken($token,$refreshToken);
-		$retryCount--;
+		$retryCount++;
+	}elsif ($res->code >= 500 and $res->code <= 505){
+		$retryCount++;
+		print STDOUT "backoff retry " . $retryCount . "\n";
+
 	}else{
 		return $fileID;
 
@@ -341,8 +346,8 @@ sub getChanges(*$){
   		$content = '{"checkpoint":"'.$changeID.'"}';
 	}
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 	my $req = new HTTP::Request POST => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -364,13 +369,15 @@ sub getChanges(*$){
 	}elsif ($res->code == 401){
  	 	my ($token,$refreshToken) = $self->refreshToken();
 		$self->setToken($token,$refreshToken);
-		$retryCount--;
+		$retryCount++;
+	}elsif ($res->code >= 500 and $res->code <= 505){
+		$retryCount++;
+		print STDOUT "backoff retry " . $retryCount . "\n";
+
 	}else{
-		print STDERR $req->headers_as_string;
+
 		print STDERR $res->decoded_content;
-		$retryCount--;
-		sleep(10);
-		#die($res->as_string."error in loading page");}
+		return '';
 	}
   	return \$res->decoded_content;
 	}
@@ -468,8 +475,8 @@ sub downloadFile(*$$$){
 	close(FILE);
   	print STDOUT "saved\n";
   	return;
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 
 	my $req = new HTTP::Request GET => $URL;
 	$req->protocol('HTTP/1.1');
@@ -483,7 +490,11 @@ sub downloadFile(*$$$){
 
  	 	my ($token,$refreshToken) = $self->refreshToken();
 		$self->setToken($token,$refreshToken);
-		$retryCount--;
+		$retryCount++;
+	}elsif ($res->code >= 500 and $res->code <= 505){
+		$retryCount++;
+		print STDOUT "backoff retry " . $retryCount . "\n";
+
   }  else {
 
      print $res->status_line, "\n";
@@ -539,8 +550,8 @@ sub uploadFile(*$$){
 #	`curl -X POST --form 'metadata={"name":"$fileName","kind":"FILE", "parents": ["$folder"]}' --form 'content=\@$file' 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId=$fileName' --header "Authorization: Bearer $self->{_token}"`;
 	`curl -X POST --form 'metadata={"name":"$fileName","kind":"FILE", "parents": ["$folder"]}' --form 'content=\@"$file"' 'https://content-na.drive.amazonaws.com/cdproxy/nodes' --header "Authorization: Bearer $self->{_token}"`;
 	}else{
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 	my $req = new HTTP::Request POST => 'https://content-na.drive.amazonaws.com/cdproxy/nodes?localId='.$file; #$self->{_contentURL}.'nodes?localId=testPhoto';
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -600,13 +611,16 @@ sub uploadFile(*$$){
 		}
 
 		return $resourceID;
-#	}elsif ($res->code == 401){
-# 		my ($token,$refreshToken) = $self->refreshToken();
-#		$self->setToken($token,$refreshToken);
-#		$retryCount--;
+	}elsif ($res->code == 401){
+ 		my ($token,$refreshToken) = $self->refreshToken();
+		$self->setToken($token,$refreshToken);
+		$retryCount++;
+	}elsif ($res->code >= 500 and $res->code <= 505){
+		$retryCount++;
+		print STDOUT "backoff retry " . $retryCount . "\n";
+
 	}else{
   		print STDERR "error";
-  		print STDERR $req->headers_as_string;
   		print STDERR $res->as_string;
   		return 0;
 	}
@@ -630,8 +644,8 @@ sub createFolder(*$$){
 	#"parents" : ["foo1","123"], "properties" : { "my_app_id" : {"key":"value", "key2","value2"} }
   	my $content = '{  "name" : "'.$folder.'",  '. ($parentFolder ne '' ?  '"parents" : ["'.$parentFolder.'"],':''). ' "kind" : "FOLDER" }'.  "\n\n";
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 	my $req = new HTTP::Request POST => $URL;
 	$req->protocol('HTTP/1.1');
 	$req->header('Authorization' => 'Bearer '.$self->{_token});
@@ -666,10 +680,12 @@ sub createFolder(*$$){
 	}elsif ($res->code == 401){
  	 	my ($token,$refreshToken) = $self->refreshToken();
 		$self->setToken($token,$refreshToken);
-		$retryCount--;
+		$retryCount++;
+	}elsif ($res->code >= 500 and $res->code <= 505){
+		$retryCount++;
+		print STDOUT "backoff retry " . $retryCount . "\n";
 
 	}else{
-		print STDERR $req->as_string;
   		print STDERR $res->as_string;
   		return 0;
 	}
@@ -821,30 +837,6 @@ sub readChangeListings(**){
 }
 
 
-#
-# Parse the change listings
-##
-sub backoffDelay(*$){
-	my $self = shift;
-	my $retryCount = shift;
 
-	if ($retryCount == 0){
-	}elsif ($retryCount == 1){
-		sleep(0.5);
-	}elsif ($retryCount == 2){
-		sleep(1);
-	}elsif ($retryCount == 3){
-		sleep(2);
-	}elsif ($retryCount == 4){
-		sleep(4);
-	}elsif ($retryCount == 5){
-		sleep(8);
-	}else{
-		sleep(10);
-		#return 0;
-	}
-	return 1;
-
-}
 1;
 

@@ -174,4 +174,30 @@ sub deleteFile(*$$){
 
 }
 
+#
+# Parse the change listings
+##
+sub backoffDelay(*$){
+	my $self = shift;
+	my $retryCount = shift;
+
+	if ($retryCount == 0){
+	}elsif ($retryCount == 1){
+		sleep(0.5);
+	}elsif ($retryCount == 2){
+		sleep(1);
+	}elsif ($retryCount == 3){
+		sleep(2);
+	}elsif ($retryCount == 4){
+		sleep(4);
+	}elsif ($retryCount == 5){
+		sleep(8);
+	}else{
+		sleep(10);
+		#return 0;
+	}
+	return 1;
+
+}
+
 1;

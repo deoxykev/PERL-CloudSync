@@ -16,7 +16,7 @@ use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
 use constant API_URL => 'https://www.googleapis.com/drive/v2/';
-use constant OAUTH2_TOKEN => 'https://www.googleapis.com/oauth2/v3';
+use constant OAUTH2_URL => 'https://www.googleapis.com/oauth2/v3';
 use constant OAUTH2_AUTH_OTHER => '&redirect_uri=urn:ietf:wg:oauth:2.0:oob';
 use constant API_VER => 2;
 
@@ -119,8 +119,8 @@ sub getList(*$){
 	}
 
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 
 		my $req = HTTP::Request->new(GET => $URL);
 
@@ -142,11 +142,13 @@ sub getList(*$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
 			print STDOUT $res->as_string;
-			$retryCount--;
-			sleep(10);
+			return '';
 		}
 
 	}
@@ -167,8 +169,8 @@ sub getTrash(*$){
 	}
 
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		my $req = HTTP::Request->new(GET => $URL);
 
 		$req->protocol('HTTP/1.1');
@@ -188,11 +190,13 @@ sub getTrash(*$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
 			print STDOUT $res->as_string;
-			$retryCount--;
-			sleep(10);
+			return '';
 		}
 
 	}
@@ -210,8 +214,8 @@ sub getFileMeta(*$){
 	my $URL =  API_URL . 'files/'.$fileID.'?fields=kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum';
 
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		my $req = HTTP::Request->new(GET => $URL);
 
 		$req->protocol('HTTP/1.1');
@@ -231,11 +235,13 @@ sub getFileMeta(*$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
 			print STDOUT $res->as_string;
-			$retryCount--;
-			sleep(10);
+			return '';
 		}
 
 	}
@@ -253,8 +259,8 @@ sub getFolderInfo(*$){
 
 	my $URL =  API_URL . 'files/'.$fileID.'?fields=title%2Cparents';
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		my $req = HTTP::Request->new(GET => $URL);
 
 		$req->protocol('HTTP/1.1');
@@ -281,7 +287,10 @@ sub getFolderInfo(*$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
 			return $fileID;
 
@@ -303,8 +312,8 @@ sub getListRoot(*$){
 		$URL =  API_URL . 'files/root';
 	}
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		my $req = HTTP::Request->new(GET => $URL);
 
 		$req->protocol('HTTP/1.1');
@@ -326,11 +335,14 @@ sub getListRoot(*$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
+
 		}else{
 			print STDOUT $res->as_string;
-			$retryCount--;
-			sleep(10);
+			return '';
 			#die($res->as_string."error in loading page");
 		}
 	}
@@ -355,8 +367,8 @@ sub getChanges(*$){
 		$URL =  API_URL . 'changes?includeSubscribed=false&includeDeleted=false&maxResults=400';
 	}
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		my $req = HTTP::Request->new(GET => $URL);
 
 		$req->protocol('HTTP/1.1');
@@ -376,12 +388,14 @@ sub getChanges(*$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
 			print STDOUT $res->as_string;
-			$retryCount--;
-			sleep(10);
-			#die($res->as_string."error in loading page");}
+			$retryCount++;
+			return '';
 		}
   		return \$res->as_string;
 	}
@@ -401,8 +415,8 @@ sub getSubFolderID(*$){
 
 	my $URL =  API_URL . 'files?q=\''. $folderName.'\'+in+parents';
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		my $req = HTTP::Request->new(GET => $URL);
 
 		$req->protocol('HTTP/1.1');
@@ -422,12 +436,15 @@ sub getSubFolderID(*$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
 			print STDOUT $res->as_string;
-			$retryCount--;
-			sleep(10);
-			#die($res->as_string."error in loading page");
+			$retryCount++;
+			return '';
+
 		}
 	}
 
@@ -447,8 +464,8 @@ sub getSubFolderIDList(*$$){
 	}
 	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		my $req = HTTP::Request->new(GET => $URL);
 
 		$req->protocol('HTTP/1.1');
@@ -468,12 +485,14 @@ sub getSubFolderIDList(*$$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
 			print STDOUT $res->as_string;
-			$retryCount--;
-			sleep(10);
-			#die($res->as_string."error in loading page");
+			$retryCount++;
+			return '';
 		}
 	}
 
@@ -494,8 +513,8 @@ sub getFolderList(*$$){
 	}
 	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		my $req = HTTP::Request->new(GET => $URL);
 
 		$req->protocol('HTTP/1.1');
@@ -515,13 +534,13 @@ sub getFolderList(*$$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
-		}else{
-			print STDOUT $req->as_string;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
-			$retryCount--;
-			sleep(10);
-			#die($res->as_string."error in loading page");
+			$retryCount++;
+		}else{
+			print STDOUT $res->as_string;
+			return '';
 		}
 	}
 
@@ -566,8 +585,8 @@ sub downloadFile(*$$$){
     	`wget --header="Authorization: Bearer $self->{_token}" "$URL" -O "$path"`;
     }
     return;
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 
 		my $req = HTTP::Request->new(GET => $URL);
 
@@ -581,7 +600,10 @@ sub downloadFile(*$$$){
 
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
   		}  else {
 
      		print STDOUT $res->status_line, "\n";
@@ -627,8 +649,8 @@ sub uploadFile(*$$$$){
   	my $filetype = shift;
  	my $resourceID = 0;
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		my $req = HTTP::Request->new(PUT => $URL);
 
 		$req->protocol('HTTP/1.1');
@@ -655,14 +677,16 @@ sub uploadFile(*$$$$){
 			}
 
 			return $resourceID;
-#		}elsif ($res->code == 401){
-# 			my ($token,$refreshToken) = $self->refreshToken();
-#			$self->setToken($token,$refreshToken);
-#			$retryCount--;
+		}elsif ($res->code == 401){
+ 			my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
   			print STDERR "error";
   			print STDOUT $req->headers_as_string;
-#  		print STDOUT $res->as_string;
 	  		return 0;
 		}
 	}
@@ -691,8 +715,8 @@ sub createFile(*$$$$$){
   		}]
 		}'."\n\n";
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		# convert=false prevents plain/text from becoming docs
 		my $req = HTTP::Request->new(POST => $URL);
 
@@ -731,7 +755,10 @@ sub createFile(*$$$$$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
 			#	print STDOUT $req->as_string;
 	  		print STDOUT $res->as_string;
@@ -780,8 +807,8 @@ sub copyFile(*$$$){
 	}
 
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 
 		my $req = HTTP::Request->new(POST => $URL);
 
@@ -807,10 +834,11 @@ sub copyFile(*$$$){
 		}elsif ($res->code == 401){
 	 	 	my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
-
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
-		#	print STDOUT $req->as_string;
   			print STDOUT $res->as_string;
   			return 0;
 		}
@@ -835,8 +863,8 @@ sub renameFile(*$$){
   			"title": "'.$fileName. '"
 			}'."\n\n";
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 
 		my $req = HTTP::Request->new(PUT => $URL);
 
@@ -862,10 +890,11 @@ sub renameFile(*$$){
 		}elsif ($res->code == 401){
 	 	 	my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
-
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
-		#	print STDOUT $req->as_string;
   			print STDOUT $res->as_string;
   			return 0;
 		}
@@ -890,8 +919,8 @@ sub createFolder(*$$$){
   	$content .= ' ,"parents": [{"id":"'.$parentFolder.'"}]' if $parentFolder ne '';
 	$content .= '}'."\n\n";
 
-	my $retryCount = 2;
-	while ($retryCount){
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
 		my $req = HTTP::Request->new(POST => $URL);
 
 		$req->protocol('HTTP/1.1');
@@ -927,8 +956,10 @@ sub createFolder(*$$$){
 		}elsif ($res->code == 401){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
-			$retryCount--;
-
+			$retryCount++;
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			$retryCount++;
 		}else{
 			#print STDOUT $req->as_string;
   			print STDOUT $res->as_string;
@@ -972,8 +1003,8 @@ sub moveFile(*$$$){
 		$URL .=  '&removeParents='.$fromFolder;
 	}
 
-	my $retryCount = 2;
-		while ($retryCount){
+	my $retryCount = 0;
+		while ($self->backoffDelay($retryCount)){
 			my $req = HTTP::Request->new(PUT => $URL);
 
 			$req->protocol('HTTP/1.1');
@@ -998,10 +1029,13 @@ sub moveFile(*$$$){
 				}
 
 				return $resourceID;
-	#		}elsif ($res->code == 401){
-	# 			my ($token,$refreshToken) = $self->refreshToken();
-	#			$self->setToken($token,$refreshToken);
-	#			$retryCount--;
+			}elsif ($res->code == 401){
+	 			my ($token,$refreshToken) = $self->refreshToken();
+				$self->setToken($token,$refreshToken);
+				$retryCount++;
+			}elsif ($res->code >= 500 and $res->code <= 505){
+				print STDOUT $res->as_string;
+				$retryCount++;
 			}else{
 	  			print STDERR "error";
 	  			print STDOUT $req->headers_as_string;

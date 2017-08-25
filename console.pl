@@ -81,11 +81,11 @@ require 'dbm.pm';
 require 'time.pm';
 require 'fileio.pm';
 require 'gdrive_drive.pm';
+require 'boxapi.pm';
 require 'box.pm';
 require 'gdrive_photos.pm';
 require 'onedrive.pm';
 require 'googledriveapi2.pm';
-require 'boxapi.pm';
 require 'onedriveapi1.pm';
 require 'cloudservice.pm';
 require 'cloudserviceapi.pm';
@@ -268,9 +268,9 @@ while (my $input = <$userInput>){
 			}
 		}
   	}elsif($input =~ m%^load bx\s\d+\s([^\s]+)%i){
-    	my ($account,$login) = $input =~ m%^load gd\s(\d+)\s([^\s]+)%i;
+    	my ($account,$login) = $input =~ m%^load bx\s(\d+)\s([^\s]+)%i;
 		#my ($dbase,$folders) = $dbm->readHash();
-		$services[$account] = pDrive::gBox->new($login);
+		$services[$account] = pDrive::Box->new($login);
 		$currentService = $account;
 
 		$loggedInUser = $bindIP;

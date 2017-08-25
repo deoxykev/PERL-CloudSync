@@ -42,22 +42,23 @@ sub new(*$) {
 
 
   	# initialize web connections
-  	$self->{_serviceapi} = pDrive::BoxAPI->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
+  	$self->{_serviceapi} = pDrive::BoxAPI->new(pDrive::Config->BOXCLIENT_ID,pDrive::Config->BOXCLIENT_SECRET);
 
   	my $loginsDBM = pDrive::DBM->new('./bx.'.$self->{_username}.'.db');
   	$self->{_login_dbm} = $loginsDBM;
   	my ($token,$refreshToken) = $loginsDBM->readLogin($self->{_username});
 
-	$self->{_folders_dbm} = buildMemoryDBM();
+	$self->{_folders_dbm} = $self->buildMemoryDBM();
 
 
 	# no token defined
 	if ($token eq '' or  $refreshToken  eq ''){
 		my $code;
-		my  $URL = 'https://accounts.google.com/o/oauth2/auth?scope=https://www.googleapis.com/auth/drive&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id='.pDrive::Config->CLIENT_ID;
+		my  $URL = 'https://account.box.com/api/oauth2/authorize?response_type=code&client_id='.pDrive::Config->BOXCLIENT_ID.'&redirect_uri=http://localhost&state=x';
 		print STDOUT "visit $URL\n";
 		print STDOUT 'Input Code:';
 		$code = <>;
+		$code =~ s%\n%%g;
 		print STDOUT "code = $code\n";
  	  	($token,$refreshToken) = $self->{_serviceapi}->getToken($code);
 	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);

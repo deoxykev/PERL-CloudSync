@@ -31,7 +31,9 @@ sub new(*$$) {
               _clientSecret => undef,
               _refreshToken  => undef,
               _token => undef,
-              _IP => undef
+              _IP => undef,
+              _oauthURL => OAUTH2_URL,
+              _oauthOTHER => OAUTH2_AUTH_OTHER
 	};
 
   	my $class = shift;

@@ -59,7 +59,7 @@ sub getToken(*$){
 sub refreshToken(*){
 	my $self = shift;
 
-	my  $URL =  OAUTH2_URL .'/token';
+	my  $URL =  $self->{_oauthURL} .'/token';
 
 	my $retryCount = 2;
 	while ($retryCount){

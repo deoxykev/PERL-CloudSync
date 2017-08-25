@@ -119,39 +119,8 @@ sub getList(*$){
 	}
 
 
-	my $retryCount = 0;
-	while ($self->backoffDelay($retryCount)){
+	return $self->generalGETdata($URL);
 
-		my $req = HTTP::Request->new(GET => $URL);
-
-		$req->protocol('HTTP/1.1');
-		$req->header('Authorization' => 'Bearer '.$self->{_token});
-		my $res = $self->{_ua}->request($req);
-
-		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  			print LOG $req->as_string;
-  			print LOG $res->as_string;
-  			close(LOG);
-		}
-
-		if($res->is_success){
-
-  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-	  		return \$res->as_string;
-		}elsif ($res->code == 401){
- 	 		my ($token,$refreshToken) = $self->refreshToken();
-			$self->setToken($token,$refreshToken);
-			$retryCount++;
-		}elsif ($res->code >= 500 and $res->code <= 505){
-			print STDOUT $res->as_string;
-			$retryCount++;
-		}else{
-			print STDOUT $res->as_string;
-			return '';
-		}
-
-	}
 
 }
 
@@ -169,37 +138,8 @@ sub getTrash(*$){
 	}
 
 
-	my $retryCount = 0;
-	while ($self->backoffDelay($retryCount)){
-		my $req = HTTP::Request->new(GET => $URL);
+	return $self->generalGETdata($URL);
 
-		$req->protocol('HTTP/1.1');
-		$req->header('Authorization' => 'Bearer '.$self->{_token});
-		my $res = $self->{_ua}->request($req);
-
-		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  			print LOG $req->as_string;
-  			print LOG $res->as_string;
-  			close(LOG);
-		}
-
-		if($res->is_success){
-  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-	  		return \$res->as_string;
-		}elsif ($res->code == 401){
- 	 		my ($token,$refreshToken) = $self->refreshToken();
-			$self->setToken($token,$refreshToken);
-			$retryCount++;
-		}elsif ($res->code >= 500 and $res->code <= 505){
-			print STDOUT $res->as_string;
-			$retryCount++;
-		}else{
-			print STDOUT $res->as_string;
-			return '';
-		}
-
-	}
 
 }
 
@@ -214,38 +154,8 @@ sub getFileMeta(*$){
 	my $URL =  API_URL . 'files/'.$fileID.'?fields=kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum';
 
 
-	my $retryCount = 0;
-	while ($self->backoffDelay($retryCount)){
-		my $req = HTTP::Request->new(GET => $URL);
+	return $self->generalGETdata($URL);
 
-		$req->protocol('HTTP/1.1');
-		$req->header('Authorization' => 'Bearer '.$self->{_token});
-		my $res = $self->{_ua}->request($req);
-
-		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  			print LOG $req->as_string;
-  			print LOG $res->as_string;
-  			close(LOG);
-		}
-
-		if($res->is_success){
-  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-	  		return \$res->as_string;
-		}elsif ($res->code == 401){
- 	 		my ($token,$refreshToken) = $self->refreshToken();
-			$self->setToken($token,$refreshToken);
-			$retryCount++;
-		}elsif ($res->code >= 500 and $res->code <= 505){
-			print STDOUT $res->as_string;
-			$retryCount++;
-		}else{
-			print STDOUT $res->as_string;
-			return '';
-		}
-
-	}
-	return '-1';
 
 }
 
@@ -367,38 +277,8 @@ sub getChanges(*$){
 		$URL =  API_URL . 'changes?includeSubscribed=false&includeDeleted=false&maxResults=400';
 	}
 
-	my $retryCount = 0;
-	while ($self->backoffDelay($retryCount)){
-		my $req = HTTP::Request->new(GET => $URL);
+	return $self->generalGETdata($URL);
 
-		$req->protocol('HTTP/1.1');
-		$req->header('Authorization' => 'Bearer '.$self->{_token});
-		my $res = $self->{_ua}->request($req);
-
-		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  			print LOG $req->as_string;
-  			print LOG $res->as_string;
-  			close(LOG);
-		}
-
-		if($res->is_success){
-  			print STDOUT "success --> $URL\n\n"  if (pDrive::Config->DEBUG);
-
-		}elsif ($res->code == 401){
- 	 		my ($token,$refreshToken) = $self->refreshToken();
-			$self->setToken($token,$refreshToken);
-			$retryCount++;
-		}elsif ($res->code >= 500 and $res->code <= 505){
-			print STDOUT $res->as_string;
-			$retryCount++;
-		}else{
-			print STDOUT $res->as_string;
-			$retryCount++;
-			return '';
-		}
-  		return \$res->as_string;
-	}
 
 }
 
@@ -414,6 +294,14 @@ sub getSubFolderID(*$){
 	my $folderName = shift;
 
 	my $URL =  API_URL . 'files?q=\''. $folderName.'\'+in+parents';
+
+	return $self->generalGETdata($URL);
+
+}
+
+sub generalGETdata(*$){
+	my $self = shift;
+	my $URL = shift;
 
 	my $retryCount = 0;
 	while ($self->backoffDelay($retryCount)){
@@ -447,6 +335,7 @@ sub getSubFolderID(*$){
 
 		}
 	}
+
 
 }
 
@@ -464,37 +353,7 @@ sub getSubFolderIDList(*$$){
 	}
 	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
 
-	my $retryCount = 0;
-	while ($self->backoffDelay($retryCount)){
-		my $req = HTTP::Request->new(GET => $URL);
-
-		$req->protocol('HTTP/1.1');
-		$req->header('Authorization' => 'Bearer '.$self->{_token});
-		my $res = $self->{_ua}->request($req);
-
-		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  			print LOG $req->as_string;
-  			print LOG $res->as_string;
-  			close(LOG);
-		}
-
-		if($res->is_success){
-  			return \$res->as_string;
-
-		}elsif ($res->code == 401){
- 	 		my ($token,$refreshToken) = $self->refreshToken();
-			$self->setToken($token,$refreshToken);
-			$retryCount++;
-		}elsif ($res->code >= 500 and $res->code <= 505){
-			print STDOUT $res->as_string;
-			$retryCount++;
-		}else{
-			print STDOUT $res->as_string;
-			$retryCount++;
-			return '';
-		}
-	}
+	return $self->generalGETdata($URL);
 
 }
 
@@ -513,36 +372,7 @@ sub getFolderList(*$$){
 	}
 	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
 
-	my $retryCount = 0;
-	while ($self->backoffDelay($retryCount)){
-		my $req = HTTP::Request->new(GET => $URL);
-
-		$req->protocol('HTTP/1.1');
-		$req->header('Authorization' => 'Bearer '.$self->{_token});
-		my $res = $self->{_ua}->request($req);
-
-		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
-  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  			print LOG $req->as_string;
-  			print LOG $res->as_string;
-  			close(LOG);
-		}
-
-		if($res->is_success){
-  			return \$res->as_string;
-
-		}elsif ($res->code == 401){
- 	 		my ($token,$refreshToken) = $self->refreshToken();
-			$self->setToken($token,$refreshToken);
-			$retryCount++;
-		}elsif ($res->code >= 500 and $res->code <= 505){
-			print STDOUT $res->as_string;
-			$retryCount++;
-		}else{
-			print STDOUT $res->as_string;
-			return '';
-		}
-	}
+	return $self->generalGETdata($URL);
 
 }
 
@@ -1119,7 +949,6 @@ sub trashFile(*$){
   		return;
 
 	}else{
-		print STDOUT $req->as_string;
 		print STDOUT $res->as_string;
 		return;}
 

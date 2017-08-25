@@ -8,6 +8,101 @@ sub test(*){
 
 }
 
+
+#
+# getTokens
+##
+sub getToken(*$){
+	my $self = shift;
+	my $code = shift;
+
+	my  $URL = OAUTH2_TOKEN . '/token';
+
+
+	my $req = HTTP::Request->new(POST => $URL);
+	$req->content_type("application/x-www-form-urlencoded");
+	$req->protocol('HTTP/1.1');
+	$req->content('code='.$code.'&client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&grant_type=authorization_code'.OAUTH2_AUTH_OTHER);
+	my $res = $self->{_ua}->request($req);
+
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+ 	 	open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+ 	 	print LOG $req->as_string;
+ 	 	print LOG $res->as_string;
+ 	 	close(LOG);
+	}
+
+	my $token;
+	my $refreshToken;
+	if($res->is_success){
+  		print STDOUT "success --> $URL\n\n";
+
+	  	my $block = $res->as_string;
+
+		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
+		($refreshToken) = $block =~ m%\"refresh_token\"\:\s?\"([^\"]+)\"%;
+
+	}else{
+		#print STDOUT $res->as_string;
+		die ($res->as_string."error in loading page");}
+
+	$self->{_token} = $token;
+	$self->{_refreshToken} = $refreshToken;
+	return ($self->{_token},$self->{_refreshToken});
+
+}
+
+#
+# refreshToken
+##
+sub refreshToken(*){
+	my $self = shift;
+
+	my  $URL =  OAUTH2_URL .'/token';
+
+	my $retryCount = 2;
+	while ($retryCount){
+		my $req = HTTP::Request->new(POST => $URL);
+
+		$req->content_type("application/x-www-form-urlencoded");
+		$req->protocol('HTTP/1.1');
+		$req->content('client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
+		my $res = $self->{_ua}->request($req);
+
+
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+ 	 		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+ 	 		print LOG $req->as_string;
+ 	 		print LOG $res->as_string;
+ 	 		close(LOG);
+		}
+
+		my $token;
+		if($res->is_success){
+  			print STDOUT "success --> $URL\n\n";
+
+	  		my $block = $res->as_string;
+
+			($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
+			$retryCount=0;
+
+		}else{
+			print STDOUT $res->as_string;
+			$retryCount--;
+			sleep(10);
+			#die ($res->as_string."error in loading page");}
+		}
+		if ($token ne ''){
+			$self->{_token} = $token;
+		}
+
+		}
+		return ($self->{_token},$self->{_refreshToken});
+
+}
+
+
 ##
 # multiple NIC cards:
 # bind to a specific IP

@@ -17,7 +17,7 @@ use constant FOLDER_SUBFOLDER => 3;
 
 use constant API_URL => 'https://api.box.com/2.0';
 use constant OAUTH2_URL => 'https://api.box.com/oauth2';
-
+use constant OAUTH2_AUTH_OTHER => '';
 use constant API_VER => 1;
 
 
@@ -110,59 +110,6 @@ sub getToken(*$){
 
 }
 
-
-
-
-#
-# refreshToken
-##
-sub refreshToken(*){
-	my $self = shift;
-
-	my  $URL =  OAUTH2_URL .'/token';
-
-#	my  $URL = 'http://dmdsoftware.net/api/gdrive.php';
-
-	my $retryCount = 2;
-	while ($retryCount){
-		my $req = HTTP::Request->new(POST => $URL);
-
-		$req->content_type("application/x-www-form-urlencoded");
-		$req->protocol('HTTP/1.1');
-		$req->content('client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&refresh_token='.$self->{_refreshToken}.'&grant_type=refresh_token');
-		my $res = $self->{_ua}->request($req);
-
-
-		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
- 	 		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
- 	 		print LOG $req->as_string;
- 	 		print LOG $res->as_string;
- 	 		close(LOG);
-		}
-
-		my $token;
-		if($res->is_success){
-  			print STDOUT "success --> $URL\n\n";
-
-	  		my $block = $res->as_string;
-
-			($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
-			$retryCount=0;
-
-		}else{
-			print STDOUT $res->as_string;
-			$retryCount--;
-			sleep(10);
-			#die ($res->as_string."error in loading page");}
-		}
-		if ($token ne ''){
-			$self->{_token} = $token;
-		}
-
-		}
-		return ($self->{_token},$self->{_refreshToken});
-
-}
 
 
 

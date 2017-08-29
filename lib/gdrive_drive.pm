@@ -283,6 +283,7 @@ sub uploadFolder(*$$){
 	my $serverPath = shift;
 	my $parentFolder = shift;
 
+	my %uploaded;
     my ($folder) = $localPath =~ m%\/([^\/]+)$%;
 
 #	if ($serverPath ne ''){
@@ -359,13 +360,16 @@ sub uploadFolder(*$$){
     		untie(%dbase);
 			if ($process){
 				print STDOUT "Upload $fileList[$i]\n";
-		  		my $fileID = $self->uploadFile($fileList[$i], $folderID);
+		  		my ($fileID,$md5, $title) = $self->uploadFile($fileList[$i], $folderID);
+		  		$uploaded{$fileID} = [$md5.$serverPath, $title];
+		  		print "UPPPP $fileID\n";
     		}else{
 				print STDOUT "SKIP $fileList[$i]\n";
 	    	}
     	}
 	  	print STDOUT "\n";
 	}
+	return %uploaded;
 }
 
 
@@ -618,7 +622,8 @@ sub uploadFile(*$$){
     	$retrycount=0;
     	while ($status eq '0' and $retrycount < RETRY_COUNT){
 			$status = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      		print STDOUT "\r"  . $status;
+      		#print STDOUT "\r"  . $status;
+      		print "STATUS = $status\n";
 	      	if ($status eq '0'){
 	       		print STDERR "...retrying\n";
 	       		#some other instance may have updated the tokens already, refresh with the latest

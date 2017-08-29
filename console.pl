@@ -605,6 +605,30 @@ while (my $input = <$userInput>){
 			print STDOUT "service path = $service $pathTarget \n";
 		}
     	syncGoogleFolder('',$folderID,$pathTarget,0,0, @drives);
+  	}elsif($input =~ m%^upload sync list\s+\S+\s+\S+%i){
+    	my ($list) = $input =~ m%^upload sync list\s+(\S+)\s+\S+%i;
+		$input =~ s%^upload sync list\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+		}
+		open (LIST, '<'.$list) or  die ('cannot read file '.$list);
+    	while (my $line = <LIST>){
+			my ($dir,$folder,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;
+      		print STDOUT "folder = $folder, type = $filetype\n";
+
+      		if ($folder eq ''){
+	        	print STDOUT "no files\n";
+        		next;
+      		}
+  	#		$services[$currentService]->uploadFolder($dir . '/'. $folder);
+	    	syncGoogleUploadFolder('',$dir . '/'. $folder,0,0, @drives);
+
+    	}
+    	close(LIST);
   	}elsif($input =~ m%^copy folderid\s+\S+\sinbound\s+\S+%i){
     	my ($folderID, $pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+inbound\s+(\S+)%i;
 		$input =~ s%^copy folderid\s+\S+\s+inbound\s+\S+%%;
@@ -1361,6 +1385,7 @@ sub downloadFolder($){
 
 
 }
+
 ##
 # Sync a folder (and all subfolders) from one Google service to one or more other Google services (using API copy command)
 # params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
@@ -1487,6 +1512,107 @@ sub syncGoogleFolder($){
 
 }
 
+##
+# Sync a folder (and all subfolders) from one Google service to one or more other Google services (using API copy command)
+# params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
+##
+sub syncGoogleUploadFolder($){
+	my ($folder, $folderPath, $isMock, $isInbound, @drives) = @_;
+	my @dbase;
+	 print STDERR "folder = $folder\n";
+	for(my $i=1; $i <= $#drives; $i++){
+			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
+			$dbase[$drives[$i]][1] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
+	}
+	my %dbaseTMP;
+
+	my $nextURL = '';
+
+		my $path;
+		my @mypath;
+		my %uploads = $services[$drives[0]]->uploadFolder($folderPath);
+  		foreach my $resourceID (keys %{uploads}){
+			my $auditline = '' if $AUDIT;
+			my $doDownload=0;
+
+				for(my $j=1; $j <= $#drives; $j++){
+
+				#Google Drive -> Google Drive
+	  			###
+	  			#Google Drive (MD5 comparision) already exists; skip
+  				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive')
+  				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
+  				and  ((defined($dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_0'}) and  $dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_'}) and  $dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_'} ne ''))){
+
+  				}else{
+  					$doDownload=1;
+  				}
+				}
+
+#				my $path;
+				if ($doDownload){
+
+					for(my $j=1; $j <= $#drives; $j++){
+						#Google Drive -> Google Drive
+	  					###
+			  			#	Google Drive (MD5 comparision) already exists; skip
+  						if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' )
+  						and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
+  						and  ( (defined($dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_0'})
+				  				and  $dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_0'} ne '')
+								or (defined($dbaseTMP{$uploads{$resourceID}[0].'_0'}) and  $dbaseTMP{$uploads{$resourceID}[0].'_0'} ne '')
+  								or (defined($dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_'})
+  								and  $dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_'} ne ''))){
+							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
+							$auditline .= ',skip' if $AUDIT;
+
+  						}else{
+							$path = $uploads{$resourceID}[1];
+
+  							#for inbound, remove Inbound from path when creating on target
+							$path =~ s%\/[^\/]+%% if ($isInbound);
+								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+
+							print STDOUT  "copy to service $drives[$j] \n";
+
+							print STDOUT "$resourceID, $mypath[$j] $uploads{$resourceID}[0], $uploads{$resourceID}[1], $uploads{$resourceID}[2]\n";
+							my $result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $uploads{$resourceID}[2]) if !($isMock);
+							if ($AUDIT and $result == 0){
+								$auditline .= ',fail' if $AUDIT;
+							}elsif($AUDIT and $result == 1){
+								$auditline .= ',success' if $AUDIT;
+							}
+							#$dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} = $resourceID;
+
+  						}
+					}
+
+  				}else{
+ 					 print STDOUT "SKIP " . $uploads{$resourceID}[2] . "\n";
+ 					 $auditline .= ',SKIP' if $AUDIT;
+
+  				}
+
+
+
+
+			pDrive::auditLog($auditline) if $AUDIT;
+
+
+	  	}
+
+		$nextURL = $services[$drives[0]]->{_nextURL};
+		print STDOUT "next url " . $nextURL. "\n";
+  		last if  $nextURL eq '';
+
+	for(my $i=0; $i < $#drives; $i++){
+		$dbm->closeDBM($dbase[$drives[$i]][0]);
+		$dbm->closeDBM($dbase[$drives[$i]][1]);
+
+	}
+
+
+}
 
 ##
 # Sync a folder (and all subfolders) from one Google service to one or more other Google services (using API copy command)

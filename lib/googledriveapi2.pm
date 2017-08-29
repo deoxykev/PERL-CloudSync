@@ -495,16 +495,24 @@ sub uploadFile(*$$$$){
 		if($res->is_success or $res->code == 308){
 
   			my $block = $res->as_string;
-			my ($resourceType,$resourceID);
+			my ($resourceType,$resourceID,$md5,$title);
+
 			while (my ($line) = $block =~ m%([^\n]*)\n%){
 				$block =~ s%[^\n]*\n%%;
 
 		    	if ($line =~ m%\"id\"%){
-		    		my ($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
-	      			return $resourceID;
+		    		($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
+
+	      			#return $resourceID;
+	    		}elsif ($line =~ m%\"md5Checksum\"%){
+	    			($md5) = $line =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;
+	    		}elsif ($line =~ m%\"title\"%){
+	    			($title) = $line =~ m%\"title\"\:\s?\"([^\"]+)\"%;
+
 	    		}
 
 			}
+			return [$resourceID,$md5,$title];
 
 			return $resourceID;
 		}elsif ($res->code == 401){

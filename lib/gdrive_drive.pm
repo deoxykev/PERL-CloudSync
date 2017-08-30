@@ -360,9 +360,9 @@ sub uploadFolder(*$$){
     		untie(%dbase);
 			if ($process){
 				print STDOUT "Upload $fileList[$i]\n";
-		  		my ($fileID,$md5, $title) = $self->uploadFile($fileList[$i], $folderID);
-		  		$uploaded{$fileID} = [$md5.$serverPath, $title];
-		  		print "UPPPP $fileID\n";
+		  		my @results = $self->uploadFile($fileList[$i], $folderID);
+		  		$uploaded{$results[0]} = [$results[1],$serverPath, $results[2]];
+		  		print "UPPPP $results[0]\n";
     		}else{
 				print STDOUT "SKIP $fileList[$i]\n";
 	    	}
@@ -606,7 +606,7 @@ sub uploadFile(*$$){
 
   	binmode(INPUT);
 
-  	my $fileID=0;
+  	my @results;
   	my $retrycount=0;
 
   	for (my $i=0; $i < $chunkNumbers; $i++){
@@ -618,13 +618,13 @@ sub uploadFile(*$$){
 
     	sysread INPUT, $chunk, pDrive::Config->CHUNKSIZE;
     	print STDERR "\r".$i . '/'.$chunkNumbers;
-    	my $status=0;
+    	my @results;
     	$retrycount=0;
-    	while ($status eq '0' and $retrycount < RETRY_COUNT){
-			$status = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-      		#print STDOUT "\r"  . $status;
-      		print "STATUS = $status\n";
-	      	if ($status eq '0'){
+    	while ($resourceID eq '0' and $retrycount < RETRY_COUNT){
+			@results = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+      		#print STDOUT "\r"  . $resourceID;
+      		print "STATUS = $resourceID\n";
+	      	if ($results[0] eq '0'){
 	       		print STDERR "...retrying\n";
 	       		#some other instance may have updated the tokens already, refresh with the latest
 	       		if ($retrycount == 0){
@@ -648,13 +648,13 @@ sub uploadFile(*$$){
     		last;
 		}
 
-    	$fileID=$status;
 		$pointerInFile += $chunkSize;
   	}
   	if ($retrycount < RETRY_COUNT){
 		print STDOUT "\r" . $file . "'...success - $file\n";
   	}
   	close(INPUT);
+  	return @results;
 }
 
 

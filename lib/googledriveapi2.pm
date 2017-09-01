@@ -491,7 +491,6 @@ sub uploadFile(*$$$$){
 		$req->content($$chunk);
 		my $res = $self->{_ua}->request($req);
 
-
 		if($res->is_success or $res->code == 308){
 
   			my $block = $res->as_string;
@@ -512,8 +511,9 @@ sub uploadFile(*$$$$){
 	    		}
 
 			}
-			return [$resourceID,$md5,$title];
-
+			my @results =  [$resourceID,$md5,$title];
+			print STDOUT "xxxxy $results[0] $resourceID\n";
+			return \@results;
 			return $resourceID;
 		}elsif ($res->code == 401){
  			my ($token,$refreshToken) = $self->refreshToken();

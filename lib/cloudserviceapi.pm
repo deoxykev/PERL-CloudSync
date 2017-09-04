@@ -22,7 +22,7 @@ sub getToken(*$){
 	my $req = HTTP::Request->new(POST => $URL);
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
-	$req->content('code='.$code.'&client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&grant_type=authorization_code'.OAUTH2_AUTH_OTHER);
+	$req->content('code='.$code.'&client_id='.$self->{_clientID}.'&client_secret='.$self->{_clientSecret}.'&grant_type=authorization_code'.$self->{_oauthOTHER});
 	my $res = $self->{_ua}->request($req);
 
 

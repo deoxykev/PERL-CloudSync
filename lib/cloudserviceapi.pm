@@ -16,7 +16,7 @@ sub getToken(*$){
 	my $self = shift;
 	my $code = shift;
 
-	my  $URL = OAUTH2_TOKEN . '/token';
+	my  $URL = $self->{_oauthURL} . '/token';
 
 
 	my $req = HTTP::Request->new(POST => $URL);

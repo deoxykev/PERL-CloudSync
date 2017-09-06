@@ -615,6 +615,7 @@ while (my $input = <$userInput>){
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
 		}
+
 		open (LIST, '<'.$list) or  die ('cannot read file '.$list);
     	while (my $line = <LIST>){
 			my ($dir,$folder,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;

@@ -12,7 +12,7 @@ Amazon Cloud Drive -
 
 requires:
 apt-get install libio-compress-perl
-apt-get install aria2
+apt-get install aria2 [optional]
 
 what works:
 - OAUTH2 auhentication

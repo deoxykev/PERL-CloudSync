@@ -511,8 +511,7 @@ sub uploadFile(*$$$$){
 	    		}
 
 			}
-			my @results =  [$resourceID,$md5,$title];
-			print STDOUT "xxxxy $results[0] $resourceID\n";
+			my @results =  ($resourceID,$md5,$title);
 			return \@results;
 			return $resourceID;
 		}elsif ($res->code == 401){

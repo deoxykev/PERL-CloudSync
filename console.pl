@@ -1532,7 +1532,9 @@ sub syncGoogleUploadFolder($){
 		my $path;
 		my @mypath;
 		my %uploads = $services[$drives[0]]->uploadFolder($folderPath);
+		print STDERR "xxxxx ".%uploads . "\n";
   		foreach my $resourceID (keys %{uploads}){
+  			print STDERR "xyxy $resourceID\n";
 			my $auditline = '' if $AUDIT;
 			my $doDownload=0;
 

@@ -361,9 +361,7 @@ sub uploadFolder(*$$){
 			if ($process){
 				print STDOUT "Upload $fileList[$i]\n";
 		  		my $results = $self->uploadFile($fileList[$i], $folderID);
-		  		$uploaded{$$results[0]} = [$$results[1],$serverPath, $$results[2]];
-		  		print "UPPPP $$results[0]\n";
-		  		exit(0);
+		  		$uploaded{$$results[0]} = ($$results[1],$serverPath, $$results[2]);
     		}else{
 				print STDOUT "SKIP $fileList[$i]\n";
 	    	}
@@ -607,7 +605,7 @@ sub uploadFile(*$$){
 
   	binmode(INPUT);
 
-  	my @results;
+  	my $results;
   	my $retrycount=0;
 
   	for (my $i=0; $i < $chunkNumbers; $i++){
@@ -619,18 +617,16 @@ sub uploadFile(*$$){
 
     	sysread INPUT, $chunk, pDrive::Config->CHUNKSIZE;
     	print STDERR "\r".$i . '/'.$chunkNumbers;
-    	my $results;
+    	#smy $results;
     	$retrycount=0;
 		my $resourceID = 0;
 
-print STDOUT "xxxxxxx\n";
     	while ($resourceID eq '0' and $retrycount < RETRY_COUNT){
 
 			$results = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-
+			$resourceID = $$results[0];
       		#print STDOUT "\r"  . $resourceID;
-      		print STDOUT "STATUS = $resourceID\n";
-	      	if ($results[0] eq '0'){
+	      	if ($resourceID eq '0'){
 	       		print STDERR "...retrying\n";
 	       		#some other instance may have updated the tokens already, refresh with the latest
 	       		if ($retrycount == 0){
@@ -660,8 +656,7 @@ print STDOUT "xxxxxxx\n";
 		print STDOUT "\r" . $file . "'...success - $file\n";
   	}
   	close(INPUT);
-  	print STDOUT "xxxx $results[0]\n";
-  	return @results;
+  	return $results;
 }
 
 

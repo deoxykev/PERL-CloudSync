@@ -1531,9 +1531,9 @@ sub syncGoogleUploadFolder($){
 
 		my $path;
 		my @mypath;
-		my %uploads = $services[$drives[0]]->uploadFolder($folderPath);
-  		foreach my $resourceID (keys %{uploads}){
-  			print STDERR "xuxu ".$uploads{$resourceID} ."$uploads{$resourceID}[1]\n";
+		my $uploads = $services[$drives[0]]->uploadFolder($folderPath);
+  		foreach my $resourceID (keys %{$uploads}){
+  			print STDERR "xuxu ".$$uploads{$resourceID} ."$$uploads{$resourceID}[1]\n";
 
 			my $auditline = '' if $AUDIT;
 			my $doDownload=0;
@@ -1545,7 +1545,7 @@ sub syncGoogleUploadFolder($){
 	  			#Google Drive (MD5 comparision) already exists; skip
   				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive')
   				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
-  				and  ((defined($dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_0'}) and  $dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_'}) and  $dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_'} ne ''))){
+  				and  ((defined($dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_0'}) and  $dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_'}) and  $dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_'} ne ''))){
 
   				}else{
   					$doDownload=1;
@@ -1561,16 +1561,16 @@ sub syncGoogleUploadFolder($){
 			  			#	Google Drive (MD5 comparision) already exists; skip
   						if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' )
   						and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
-  						and  ( (defined($dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_0'})
-				  				and  $dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_0'} ne '')
-								or (defined($dbaseTMP{$uploads{$resourceID}[0].'_0'}) and  $dbaseTMP{$uploads{$resourceID}[0].'_0'} ne '')
-  								or (defined($dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_'})
-  								and  $dbase[$drives[$j]][0]{$uploads{$resourceID}[0].'_'} ne ''))){
+  						and  ( (defined($dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_0'})
+				  				and  $dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_0'} ne '')
+								or (defined($dbaseTMP{$$uploads{$resourceID}[0].'_0'}) and  $dbaseTMP{$$uploads{$resourceID}[0].'_0'} ne '')
+  								or (defined($dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_'})
+  								and  $dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_'} ne ''))){
 							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
 							$auditline .= ',skip' if $AUDIT;
 
   						}else{
-							$path = $uploads{$resourceID}[1];
+							$path = $$uploads{$resourceID}[1];
 
   							#for inbound, remove Inbound from path when creating on target
 							$path =~ s%\/[^\/]+%% if ($isInbound);
@@ -1578,8 +1578,8 @@ sub syncGoogleUploadFolder($){
 
 							print STDOUT  "copy to service $drives[$j] \n";
 
-							print STDOUT "$resourceID, $mypath[$j] $uploads{$resourceID}[0], $uploads{$resourceID}[1], $uploads{$resourceID}[2]\n";
-							my $result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $uploads{$resourceID}[2]) if !($isMock);
+							print STDOUT "$resourceID, $mypath[$j] $$uploads{$resourceID}[0], $$uploads{$resourceID}[1], $$uploads{$resourceID}[2]\n";
+							my $result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$uploads{$resourceID}[2]) if !($isMock);
 							if ($AUDIT and $result == 0){
 								$auditline .= ',fail' if $AUDIT;
 							}elsif($AUDIT and $result == 1){
@@ -1591,7 +1591,7 @@ sub syncGoogleUploadFolder($){
 					}
 
   				}else{
- 					 print STDOUT "SKIP " . $uploads{$resourceID}[2] . "\n";
+ 					 print STDOUT "SKIP " . $$uploads{$resourceID}[2] . "\n";
  					 $auditline .= ',SKIP' if $AUDIT;
 
   				}

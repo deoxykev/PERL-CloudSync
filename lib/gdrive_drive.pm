@@ -368,7 +368,7 @@ sub uploadFolder(*$$){
     	}
 	  	print STDOUT "\n";
 	}
-	return %uploaded;
+	return \%uploaded;
 }
 
 

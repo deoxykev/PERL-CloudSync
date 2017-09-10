@@ -622,6 +622,7 @@ sub uploadFile(*$$){
     	my $results;
     	$retrycount=0;
 		my $resourceID = 0;
+
 print STDOUT "xxxxxxx\n";
     	while ($resourceID eq '0' and $retrycount < RETRY_COUNT){
 

@@ -361,7 +361,6 @@ sub uploadFolder(*$$){
 			if ($process){
 				print STDOUT "Upload $fileList[$i]\n";
 		  		my $results = $self->uploadFile($fileList[$i], $folderID);
-		  		print STDOUT "results = $$results[0]\n";
 		  		@{$uploaded{$$results[0]}} = ($$results[1],$serverPath, $$results[2]);
 		  		print STDOUT "yyyy". $uploaded{$$results[0]}[1]. " " .$$results[0] .$serverPath. "\n";
     		}else{

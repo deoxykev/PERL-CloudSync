@@ -498,10 +498,10 @@ sub uploadFile(*$$$$){
 
 			while (my ($line) = $block =~ m%([^\n]*)\n%){
 				$block =~ s%[^\n]*\n%%;
-
 		    	if ($line =~ m%\"id\"%){
 		    		($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
-
+					my $x = $self->getFileMeta($resourceID);
+	      			print STDOUT "xoxo" . $resourceID . $x;exit;
 	      			#return $resourceID;
 	    		}elsif ($line =~ m%\"md5Checksum\"%){
 	    			($md5) = $line =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;

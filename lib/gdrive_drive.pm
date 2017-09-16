@@ -282,8 +282,10 @@ sub uploadFolder(*$$){
 	my $localPath = shift;
 	my $serverPath = shift;
 	my $parentFolder = shift;
+	my $uploaded = shift;
 
-	my %uploaded;
+
+	#my %uploaded;
     my ($folder) = $localPath =~ m%\/([^\/]+)$%;
 
 #	if ($serverPath ne ''){
@@ -328,8 +330,8 @@ sub uploadFolder(*$$){
 			next;
     	#folder
     	}elsif (-d $fileList[$i]){
-	  		my %uploaded2 = $self->uploadFolder($fileList[$i], $serverPath, $folderID);
-	  		%uploaded = (%uploaded,%uploaded2);
+	  		$self->uploadFolder($fileList[$i], $serverPath, $folderID,$uploaded);
+	  		#%uploaded = (%uploaded,%uploaded2);
     	# file
     	}else{
     		my $process = 1;

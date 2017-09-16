@@ -361,8 +361,13 @@ sub uploadFolder(*$$){
 			if ($process){
 				print STDOUT "Upload $fileList[$i]\n";
 		  		my $results = $self->uploadFile($fileList[$i], $folderID);
-		  		@{$uploaded{$$results[0]}} = ($$results[1],$serverPath, $$results[2]);
-		  		print STDOUT "yyyy". $uploaded{$$results[0]}[1]. " " .$$results[0] .$serverPath. "\n";
+		  		 my $newDocuments = $self->getFileMeta($$results[0]);
+		  		   		foreach my $resourceID (keys %{$newDocuments}){
+		  		   			my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
+					  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+
+		  		   		}
+
     		}else{
 				print STDOUT "SKIP $fileList[$i]\n";
 	    	}

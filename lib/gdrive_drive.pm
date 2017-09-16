@@ -357,7 +357,7 @@ sub uploadFolder(*$$){
 			  		   		}
 
 				    	#pDrive::masterLog("skipped file (checksum $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
-    					last;
+    					#last;
 	    			}
     				untie(%dbase);
     			}
@@ -397,7 +397,7 @@ sub uploadFolder(*$$){
 
     		}else{
 				print STDOUT "SKIP $fileList[$i]\n";
-				return \%uploaded;
+				#return \%uploaded;
 	    	}
     	}
 	  	print STDOUT "\n";
@@ -622,7 +622,6 @@ sub uploadFile(*$$){
 		($fileName) = $file =~ m%\/([^\/]+)$%;
 	}
 
-	print STDOUT $file . "\n";
 
   	my $fileSize =  -s $file;
   	return 0 if $fileSize == 0;
@@ -744,7 +743,6 @@ sub getFileMeta(*$$$$){
 	my $self = shift;
 	my $fileID = shift;
 
-	print STDOUT $fileID . "\n";
 
 #			$status =  $self->{_serviceapi}->getFileMeta($fileID);
 			my $driveListings = $self->{_serviceapi}->getFileMeta($fileID);

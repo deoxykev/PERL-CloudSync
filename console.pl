@@ -1533,7 +1533,6 @@ sub syncGoogleUploadFolder($){
 		my @mypath;
 		my $uploads = $services[$drives[0]]->uploadFolder($folderPath);
   		foreach my $resourceID (keys %{$uploads}){
-  			print STDERR "xuxu ".$$uploads{$resourceID} ."$$uploads{$resourceID}[0]".$uploads."\n";
 
 			my $auditline = '' if $AUDIT;
 			my $doDownload=0;
@@ -1546,7 +1545,6 @@ sub syncGoogleUploadFolder($){
   				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive')
   				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
   				and  ((defined($dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_0'}) and  $dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_'}) and  $dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_'} ne ''))){
-
   				}else{
   					$doDownload=1;
   				}

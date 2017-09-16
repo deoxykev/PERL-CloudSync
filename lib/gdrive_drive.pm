@@ -332,6 +332,7 @@ sub uploadFolder(*$$){
     	# file
     	}else{
     		my $process = 1;
+
     		#look for md5 file
     		for (my $j=0; $j <= $#fileList; $j++){
     			my $value = $fileList[$i];
@@ -342,6 +343,19 @@ sub uploadFolder(*$$){
     				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY|O_CREAT, 0666) or die "can't open md5: $!";
     				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
     					$process = 0;
+    				my $resourceID;
+    				if ($dbase{$md5.'_'} ne ''){
+    					$resourceID =  $dbase{$md5.'_'};
+    				}elsif($dbase{$md5.'_0'} ne ''){
+    					$resourceID = $dbase{$md5.'_0'};
+    				}
+			  		 my $newDocuments = $self->getFileMeta($resourceID);
+			  		   		foreach my $resourceID (keys %{$newDocuments}){
+			  		   			my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
+						  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+
+			  		   		}
+
 				    	#pDrive::masterLog("skipped file (checksum $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
     					last;
 	    			}
@@ -355,6 +369,19 @@ sub uploadFolder(*$$){
     		tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDONLY|O_CREAT, 0666) or die "can't open fisi: $!";
     		if (  (defined $dbase{$fisi.'_'} and $dbase{$fisi.'_'} ne '') or (defined $dbase{$fisi.'_0'} and $dbase{$fisi.'_0'} ne '')){
     					$process = 0;
+    				my $resourceID;
+    				if ($dbase{$fisi.'_'} ne ''){
+    					$resourceID =  $dbase{$fisi.'_'};
+    				}elsif($dbase{$fisi.'_0'} ne ''){
+    					$resourceID = $dbase{$fisi.'_0'};
+    				}
+			  		 my $newDocuments = $self->getFileMeta($resourceID);
+			  		   		foreach my $resourceID (keys %{$newDocuments}){
+			  		   			my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
+						  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+
+			  		   		}
+
 				    	#pDrive::masterLog("skipped file (fisi $fisi exists ".$dbase{$fisi.'_0'}.") - $fileList[$i]\n");
 	    	}
     		untie(%dbase);
@@ -370,6 +397,7 @@ sub uploadFolder(*$$){
 
     		}else{
 				print STDOUT "SKIP $fileList[$i]\n";
+				return \%uploaded;
 	    	}
     	}
 	  	print STDOUT "\n";

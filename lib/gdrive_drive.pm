@@ -355,7 +355,7 @@ sub uploadFolder(*$$){
 			  		 my $newDocuments = $self->getFileMeta($resourceID);
 			  		   		foreach my $resourceID (keys %{$newDocuments}){
 			  		   			my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
-						  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+						  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$fileList[$i] );
 
 			  		   		}
 
@@ -381,7 +381,7 @@ sub uploadFolder(*$$){
 			  		 my $newDocuments = $self->getFileMeta($resourceID);
 			  		   		foreach my $resourceID (keys %{$newDocuments}){
 			  		   			my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
-						  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+						  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$fileList[$i] );
 
 			  		   		}
 
@@ -394,7 +394,7 @@ sub uploadFolder(*$$){
 		  		 my $newDocuments = $self->getFileMeta($$results[0]);
 		  		   		foreach my $resourceID (keys %{$newDocuments}){
 		  		   			my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
-					  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+					  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$fileList[$i] );
 
 		  		   		}
 

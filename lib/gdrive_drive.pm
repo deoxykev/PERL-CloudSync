@@ -289,7 +289,7 @@ sub uploadFolder(*$$){
     my ($folder) = $localPath =~ m%\/([^\/]+)$%;
 
 #	if ($serverPath ne ''){
-		$serverPath .= $folder;
+		$serverPath .= '/'.$folder;
 #	}
   	print STDOUT "path = $localPath\n";
    	my @fileList = pDrive::FileIO::getFilesDir($localPath);

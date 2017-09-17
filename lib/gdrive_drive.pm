@@ -726,8 +726,9 @@ sub copyFile(*$$$$){
 	       		}
         		sleep (10);
         		$retrycount++;
+	      	}elsif ($status eq '-1'){
+				return -1;
 	      	}
-
 			if ($retrycount >= RETRY_COUNT){
 				print STDERR "\r" . $fileID . "'...retry failed - $fileID\n";
 

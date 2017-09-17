@@ -665,6 +665,10 @@ sub copyFile(*$$$){
 	 	 	my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
 			$retryCount++;
+		#daily limit exceeded
+		}elsif ($res->code == 403){
+			print STDOUT "Daily limit exceeded\n";
+			return -1;
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			$retryCount++;

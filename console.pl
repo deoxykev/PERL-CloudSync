@@ -1602,6 +1602,12 @@ sub syncGoogleUploadFolder($){
 
 							print STDOUT "$resourceID, $mypath[$j] $$uploads{$resourceID}[0], $$uploads{$resourceID}[1], $$uploads{$resourceID}[2]\n";
 							my $result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$uploads{$resourceID}[2]) if !($isMock);
+
+							#user limited exceeed in copy?  manually upload
+							if ($result == -1){
+								$services[$drives[$j]]->uploadFile( $$uploads{$resourceID}[3], $mypath[$j], $$uploads{$resourceID}[2]);
+
+							}
 							if ($AUDIT and $result == 0){
 								$auditline .= ',fail' if $AUDIT;
 							}elsif($AUDIT and $result == 1){

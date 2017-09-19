@@ -500,13 +500,6 @@ sub uploadFile(*$$$$){
 				$block =~ s%[^\n]*\n%%;
 		    	if ($line =~ m%\"id\"%){
 		    		($resourceID) = $line =~ m%\"id\"\:\s?\"([^\"]+)\"%;
-					my $x = $self->getFileMeta($resourceID);
-	      			print STDOUT "xoxo" . $resourceID . $x;exit;
-	      			#return $resourceID;
-	    		}elsif ($line =~ m%\"md5Checksum\"%){
-	    			($md5) = $line =~ m%\"md5Checksum\"\:\s?\"([^\"]+)\"%;
-	    		}elsif ($line =~ m%\"title\"%){
-	    			($title) = $line =~ m%\"title\"\:\s?\"([^\"]+)\"%;
 
 	    		}
 
@@ -672,6 +665,10 @@ sub copyFile(*$$$){
 	 	 	my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
 			$retryCount++;
+		#daily limit exceeded
+		}elsif ($res->code == 403){
+			print STDOUT "Daily limit exceeded\n";
+			return -1;
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			$retryCount++;

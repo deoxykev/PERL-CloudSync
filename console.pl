@@ -605,6 +605,31 @@ while (my $input = <$userInput>){
 			print STDOUT "service path = $service $pathTarget \n";
 		}
     	syncGoogleFolder('',$folderID,$pathTarget,0,0, @drives);
+  	}elsif($input =~ m%^upload sync-delete list\s+\S+\s+\S+%i){
+    	my ($list) = $input =~ m%^upload sync-delete list\s+(\S+)\s+\S+%i;
+		$input =~ s%^upload sync-delete list\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+		}
+
+		open (LIST, '<'.$list) or  die ('cannot read file '.$list);
+    	while (my $line = <LIST>){
+			my ($dir,$folder,$filetype) = $line =~ m%([^\t]+)\t([^\t]+)\t([^\n]+)\n%;
+      		print STDOUT "folder = $folder, type = $filetype\n";
+
+      		if ($folder eq ''){
+	        	print STDOUT "no files\n";
+        		next;
+      		}
+  	#		$services[$currentService]->uploadFolder($dir . '/'. $folder);
+	    	syncGoogleUploadFolder('',$dir . '/'. $folder,0,1, @drives);
+
+    	}
+    	close(LIST);
   	}elsif($input =~ m%^upload sync list\s+\S+\s+\S+%i){
     	my ($list) = $input =~ m%^upload sync list\s+(\S+)\s+\S+%i;
 		$input =~ s%^upload sync list\s+\S+%%;
@@ -1518,7 +1543,7 @@ sub syncGoogleFolder($){
 # params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
 ##
 sub syncGoogleUploadFolder($){
-	my ($folder, $folderPath, $isMock, $isInbound, @drives) = @_;
+	my ($folder, $folderPath, $isMock, $isDeleteLocal, @drives) = @_;
 	my @dbase;
 	 print STDERR "folder = $folder\n";
 	for(my $i=1; $i <= $#drives; $i++){
@@ -1533,7 +1558,6 @@ sub syncGoogleUploadFolder($){
 		my @mypath;
 		my $uploads = $services[$drives[0]]->uploadFolder($folderPath);
   		foreach my $resourceID (keys %{$uploads}){
-  			print STDERR "xuxu ".$$uploads{$resourceID} ."$$uploads{$resourceID}[0]".$uploads."\n";
 
 			my $auditline = '' if $AUDIT;
 			my $doDownload=0;
@@ -1546,7 +1570,6 @@ sub syncGoogleUploadFolder($){
   				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive')
   				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
   				and  ((defined($dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_0'}) and  $dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_'}) and  $dbase[$drives[$j]][0]{$$uploads{$resourceID}[0].'_'} ne ''))){
-
   				}else{
   					$doDownload=1;
   				}
@@ -1573,13 +1596,18 @@ sub syncGoogleUploadFolder($){
 							$path = $$uploads{$resourceID}[1];
 
   							#for inbound, remove Inbound from path when creating on target
-							$path =~ s%\/[^\/]+%% if ($isInbound);
 								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
 
 							print STDOUT  "copy to service $drives[$j] \n";
 
 							print STDOUT "$resourceID, $mypath[$j] $$uploads{$resourceID}[0], $$uploads{$resourceID}[1], $$uploads{$resourceID}[2]\n";
 							my $result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$uploads{$resourceID}[2]) if !($isMock);
+
+							#user limited exceeed in copy?  manually upload
+							if ($result == -1){
+								$services[$drives[$j]]->uploadFile( $$uploads{$resourceID}[3], $mypath[$j], $$uploads{$resourceID}[2]);
+
+							}
 							if ($AUDIT and $result == 0){
 								$auditline .= ',fail' if $AUDIT;
 							}elsif($AUDIT and $result == 1){
@@ -1593,7 +1621,10 @@ sub syncGoogleUploadFolder($){
   				}else{
  					 print STDOUT "SKIP " . $$uploads{$resourceID}[2] . "\n";
  					 $auditline .= ',SKIP' if $AUDIT;
-
+ 					 if ($isDeleteLocal){
+ 					 	print STDOUT "DELETE from local ".$$uploads{$resourceID}[3] . "\n";
+ 					 	unlink($$uploads{$resourceID}[3]);
+ 					 }
   				}
 
 

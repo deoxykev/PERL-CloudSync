@@ -282,12 +282,14 @@ sub uploadFolder(*$$){
 	my $localPath = shift;
 	my $serverPath = shift;
 	my $parentFolder = shift;
+	my $uploaded = shift;
 
-	my %uploaded;
+
+	#my %uploaded;
     my ($folder) = $localPath =~ m%\/([^\/]+)$%;
 
 #	if ($serverPath ne ''){
-		$serverPath .= $folder;
+		$serverPath .= '/'.$folder;
 #	}
   	print STDOUT "path = $localPath\n";
    	my @fileList = pDrive::FileIO::getFilesDir($localPath);
@@ -328,10 +330,12 @@ sub uploadFolder(*$$){
 			next;
     	#folder
     	}elsif (-d $fileList[$i]){
-	  		my $fileID = $self->uploadFolder($fileList[$i], $serverPath, $folderID);
+	  		$self->uploadFolder($fileList[$i], $serverPath, $folderID,$uploaded);
+	  		#%uploaded = (%uploaded,%uploaded2);
     	# file
     	}else{
     		my $process = 1;
+
     		#look for md5 file
     		for (my $j=0; $j <= $#fileList; $j++){
     			my $value = $fileList[$i];
@@ -342,8 +346,21 @@ sub uploadFolder(*$$){
     				tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY|O_CREAT, 0666) or die "can't open md5: $!";
     				if (  (defined $dbase{$md5.'_'} and $dbase{$md5.'_'} ne '') or (defined $dbase{$md5.'_0'} and $dbase{$md5.'_0'} ne '')){
     					$process = 0;
+    				my $resourceID;
+    				if ($dbase{$md5.'_'} ne ''){
+    					$resourceID =  $dbase{$md5.'_'};
+    				}elsif($dbase{$md5.'_0'} ne ''){
+    					$resourceID = $dbase{$md5.'_0'};
+    				}
+			  		 my $newDocuments = $self->getFileMeta($resourceID);
+			  		   		foreach my $resourceID (keys %{$newDocuments}){
+			  		   			my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
+						  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$fileList[$i] );
+
+			  		   		}
+
 				    	#pDrive::masterLog("skipped file (checksum $md5 exists ".$dbase{$md5.'_0'}.") - $fileList[$i]\n");
-    					last;
+    					#last;
 	    			}
     				untie(%dbase);
     			}
@@ -355,16 +372,35 @@ sub uploadFolder(*$$){
     		tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_fisi} ,O_RDONLY|O_CREAT, 0666) or die "can't open fisi: $!";
     		if (  (defined $dbase{$fisi.'_'} and $dbase{$fisi.'_'} ne '') or (defined $dbase{$fisi.'_0'} and $dbase{$fisi.'_0'} ne '')){
     					$process = 0;
+    				my $resourceID;
+    				if ($dbase{$fisi.'_'} ne ''){
+    					$resourceID =  $dbase{$fisi.'_'};
+    				}elsif($dbase{$fisi.'_0'} ne ''){
+    					$resourceID = $dbase{$fisi.'_0'};
+    				}
+			  		 my $newDocuments = $self->getFileMeta($resourceID);
+			  		   		foreach my $resourceID (keys %{$newDocuments}){
+			  		   			my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
+						  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$fileList[$i] );
+
+			  		   		}
+
 				    	#pDrive::masterLog("skipped file (fisi $fisi exists ".$dbase{$fisi.'_0'}.") - $fileList[$i]\n");
 	    	}
     		untie(%dbase);
 			if ($process){
 				print STDOUT "Upload $fileList[$i]\n";
 		  		my $results = $self->uploadFile($fileList[$i], $folderID);
-		  		@{$uploaded{$$results[0]}} = ($$results[1],$serverPath, $$results[2]);
-		  		print STDOUT "yyyy". $uploaded{$$results[0]}[1]. " " .$$results[0] .$serverPath. "\n";
+		  		 my $newDocuments = $self->getFileMeta($$results[0]);
+		  		   		foreach my $resourceID (keys %{$newDocuments}){
+		  		   			my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
+					  		@{$uploaded{$resourceID}} = ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}],$serverPath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$fileList[$i] );
+
+		  		   		}
+
     		}else{
 				print STDOUT "SKIP $fileList[$i]\n";
+				#return \%uploaded;
 	    	}
     	}
 	  	print STDOUT "\n";
@@ -589,7 +625,6 @@ sub uploadFile(*$$){
 		($fileName) = $file =~ m%\/([^\/]+)$%;
 	}
 
-	print STDOUT $file . "\n";
 
   	my $fileSize =  -s $file;
   	return 0 if $fileSize == 0;
@@ -691,8 +726,9 @@ sub copyFile(*$$$$){
 	       		}
         		sleep (10);
         		$retrycount++;
+	      	}elsif ($status eq '-1'){
+				return -1;
 	      	}
-
 			if ($retrycount >= RETRY_COUNT){
 				print STDERR "\r" . $fileID . "'...retry failed - $fileID\n";
 
@@ -711,7 +747,6 @@ sub getFileMeta(*$$$$){
 	my $self = shift;
 	my $fileID = shift;
 
-	print STDOUT $fileID . "\n";
 
 #			$status =  $self->{_serviceapi}->getFileMeta($fileID);
 			my $driveListings = $self->{_serviceapi}->getFileMeta($fileID);

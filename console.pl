@@ -1472,6 +1472,7 @@ sub syncGoogleFolder($){
 #				my $path;
 				if ($doDownload){
 
+					my $downloaded = 0;
 					for(my $j=1; $j <= $#drives; $j++){
 						#Google Drive -> Google Drive
 	  					###
@@ -1499,6 +1500,17 @@ sub syncGoogleFolder($){
 					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
 
 							my $result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+							#user limited exceeed in copy, or fle not accessible?  manually upload
+							if ($result == -1){
+								if (!($downloaded)){
+								unlink pDrive::Config->LOCAL_PATH.'/'.$$;
+					    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
+								$downloaded=1;}
+								$result = $services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+
+							}
+
+
 							if ($AUDIT and $result == 0){
 								$auditline .= ',fail' if $AUDIT;
 							}elsif($AUDIT and $result == 1){

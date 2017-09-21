@@ -669,6 +669,10 @@ sub copyFile(*$$$){
 		}elsif ($res->code == 403){
 			print STDOUT "Daily limit exceeded\n";
 			return -1;
+		#not accessible to user
+		}elsif ($res->code == 404){
+			print STDOUT "Not accessibble to user, download-upload instead of copy\n";
+			return -2;
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			$retryCount++;

@@ -726,7 +726,7 @@ sub copyFile(*$$$$){
 	       		}
         		sleep (10);
         		$retrycount++;
-	      	}elsif ($status eq '-1'){
+	      	}elsif ($status eq '-1' or $status eq '-2'){
 				return -1;
 	      	}
 			if ($retrycount >= RETRY_COUNT){

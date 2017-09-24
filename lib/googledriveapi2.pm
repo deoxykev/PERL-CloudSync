@@ -264,13 +264,20 @@ sub getListRoot(*$){
 # * for checksum tracking *
 # get the list of changes
 ##
-sub getChanges(*$){
+sub getChanges(*$$$){
 
 	my $self = shift;
 	my $URL = shift;
 	my $changeID = shift;
+	my $teamdrive = shift;
 
-	if ($URL eq '' and $changeID ne ''){
+
+	if ($teamdrive ne '' and $changeID ne ''){
+		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true&teamDriveId='.$teamdrive.'&includeSubscribed=false&includeDeleted=false&maxResults=400&startChangeId='.$changeID;
+	}elsif ($teamdrive ne ''){
+		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true&teamDriveId='.$teamdrive.'&includeSubscribed=false&includeDeleted=false&maxResults=400';
+
+	}elsif ($URL eq '' and $changeID ne ''){
 		$URL =  API_URL . 'changes?includeSubscribed=false&includeDeleted=false&maxResults=400&startChangeId='.$changeID;
 
 	}elsif ($URL eq ''){

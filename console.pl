@@ -511,8 +511,14 @@ while (my $input = <$userInput>){
     	$services[$currentService]->getMetaData($path,$fileName);
 
 	# load MD5 with all changes
+  	}elsif($input =~ m%^get changes teamdrive%i){
+    	my ($teamdrive) = $input =~ m%^get changes teamdrive\s+(\S+)%i;
+
+    	my ($driveListings) = $services[$currentService]->getChangesTeamDrive($teamdrive);
+
   	}elsif($input =~ m%^get changes%i){
     	my ($driveListings) = $services[$currentService]->getChangesAll();
+
 
 	# load MD5 with all changes
   	}elsif($input =~ m%^get md5\s+\"[^\"]+\"\s+\d+%i){

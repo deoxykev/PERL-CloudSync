@@ -166,7 +166,7 @@ sub setService(*$){
 
 
 
-sub teamdriveDB(*$){
+sub overrideChecksum(*$){
 
 	my ($self,$dbname) = @_;
 	$self->{_db_checksum} = 'gd.'.$dbname . '.md5.db';

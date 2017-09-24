@@ -166,6 +166,15 @@ sub setService(*$){
 
 
 
+sub teamdriveDB(*$){
+
+	my ($self,$dbname) = @_;
+	$self->{_db_checksum} = 'gd.'.$dbname . '.md5.db';
+	$self->{_db_fisi} = 'gd.'.$dbname . '.fisi.db';
+
+}
+
+
 sub downloadFile(*$$$){
 
       my ($self,$path,$link,$updated) = @_;

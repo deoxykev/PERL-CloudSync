@@ -267,6 +267,10 @@ while (my $input = <$userInput>){
 
 			}
 		}
+  	}elsif($input =~ m%^load gdtd\s([^\s]+)%i){
+    	my ($dbname) = $input =~ m%^load gdtd\s([^\s]+)%i;
+		$services[$currentService]->teamdriveDB($dbname);
+		print "service $currentService set with checksum for $dbname\n";
   	}elsif($input =~ m%^load bx\s\d+\s([^\s]+)%i){
     	my ($account,$login) = $input =~ m%^load bx\s(\d+)\s([^\s]+)%i;
 		#my ($dbase,$folders) = $dbm->readHash();

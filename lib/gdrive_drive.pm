@@ -192,7 +192,7 @@ sub createFolder(*$$){
 	my $folder = shift;
 	my $parentFolder = shift;
 
-	return $self->{_serviceapi}->createFolder('https://www.googleapis.com/drive/v2/files?fields=id',$folder, $parentFolder);
+	return $self->{_serviceapi}->createFolder('https://www.googleapis.com/drive/v2/files?includeTeamDriveItems=true&supportsTeamDrives=true&fields=id',$folder, $parentFolder);
 
 }
 
@@ -213,7 +213,7 @@ sub getSubFolderID(*$$){
 	my $folderName = shift;
 	my $parentID = shift;
 
-	my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $parentID.'\'+in+parents+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+	my $URL = 'https://www.googleapis.com/drive/v2/files?includeTeamDriveItems=true&supportsTeamDrives=true&q=\''. $parentID.'\'+in+parents+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 
 	while ($URL ne ''){
 
@@ -241,7 +241,7 @@ sub getSubFolderIDList(*$$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cmd5Checksum%2Cparents/parentLink)';
+		$URL = 'https://www.googleapis.com/drive/v2/files?includeTeamDriveItems=true&supportsTeamDrives=true&q=\''. $folderName.'\'+in+parents+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cmd5Checksum%2Cparents/parentLink)';
 	}
 
 
@@ -262,7 +262,7 @@ sub getSubFolderIDListWithMedia(*$$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents+and+trashed%3Dfalse&fields=nextLink%2Citems(videoMediaMetadata%2Ckind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cmd5Checksum%2Cparents/parentLink)';
+		$URL = 'https://www.googleapis.com/drive/v2/files?includeTeamDriveItems=true&supportsTeamDrives=true&q=\''. $folderName.'\'+in+parents+and+trashed%3Dfalse&fields=nextLink%2Citems(videoMediaMetadata%2Ckind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cmd5Checksum%2Cparents/parentLink)';
 	}
 
 
@@ -631,7 +631,7 @@ sub uploadFile(*$$){
   	my $filetype = 'application/octet-stream';
   	print STDOUT "file size for $file ($fileName)  is $fileSize to folder $folder\n" if (pDrive::Config->DEBUG);
 
-  	my $uploadURL = $self->{_serviceapi}->createFile('https://www.googleapis.com/upload/drive/v2/files?fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
+  	my $uploadURL = $self->{_serviceapi}->createFile('https://www.googleapis.com/upload/drive/v2/files?includeTeamDriveItems=true&supportsTeamDrives=true&fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
 
 
   	my $chunkNumbers = int($fileSize/(pDrive::Config->CHUNKSIZE))+1;

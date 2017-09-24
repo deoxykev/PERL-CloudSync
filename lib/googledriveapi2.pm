@@ -115,7 +115,7 @@ sub getList(*$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL =  API_URL . 'files?maxResults=400&q=\'me\'+in+owners+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+		$URL =  API_URL . 'files?includeTeamDriveItems=true&supportsTeamDrives=true&maxResults=400&q=\'me\'+in+owners+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 
 
@@ -134,7 +134,7 @@ sub getTrash(*$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL =  API_URL . 'files?maxResults=400&q=trashed%3Dtrue&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+		$URL =  API_URL . 'files?includeTeamDriveItems=true&supportsTeamDrives=true&maxResults=400&q=trashed%3Dtrue&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 
 
@@ -151,7 +151,7 @@ sub getFileMeta(*$){
 	my $self = shift;
 	my $fileID = shift;
 
-	my $URL =  API_URL . 'files/'.$fileID.'?fields=kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum';
+	my $URL =  API_URL . 'files/'.$fileID.'?includeTeamDriveItems=true&supportsTeamDrives=true&fields=kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum';
 
 
 	return $self->generalGETdata($URL);
@@ -167,7 +167,7 @@ sub getFolderInfo(*$){
 	my $self = shift;
 	my $fileID = shift;
 
-	my $URL =  API_URL . 'files/'.$fileID.'?fields=title%2Cparents';
+	my $URL =  API_URL . 'files/'.$fileID.'?includeTeamDriveItems=true&supportsTeamDrives=true&fields=title%2Cparents';
 
 	my $retryCount = 0;
 	while ($self->backoffDelay($retryCount)){
@@ -293,7 +293,7 @@ sub getSubFolderID(*$){
 	my $parentID = shift;
 	my $folderName = shift;
 
-	my $URL =  API_URL . 'files?q=\''. $folderName.'\'+in+parents';
+	my $URL =  API_URL . 'files?includeTeamDriveItems=true&supportsTeamDrives=true&q=\''. $folderName.'\'+in+parents';
 
 	return $self->generalGETdata($URL);
 
@@ -349,7 +349,7 @@ sub getSubFolderIDList(*$$){
 	my $folderName = shift;
 
 	if ($URL eq ''){
-		$URL =  API_URL .'files?q=\''. $folderName.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+		$URL =  API_URL .'files?includeTeamDriveItems=true&supportsTeamDrives=true&q=\''. $folderName.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
 
@@ -368,7 +368,7 @@ sub getFolderList(*$$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL =  API_URL .'files?q=\''. $folderID.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
+		$URL =  API_URL .'files?includeTeamDriveItems=true&supportsTeamDrives=true&q=\''. $folderID.'\'+in+parents&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
 	}
 	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
 
@@ -609,7 +609,7 @@ sub copyFile(*$$$){
 	my $self = shift;
   	my $fileID = shift;
 
-	my $URL = API_URL  . 'files/' . $fileID . '/copy';
+	my $URL = API_URL  . 'files/' . $fileID . '/copy?includeTeamDriveItems=true&supportsTeamDrives=true';
 
   	#optional
   	my $fileName = shift;
@@ -693,7 +693,7 @@ sub renameFile(*$$){
 	my $self = shift;
   	my $fileID = shift;
 
-	my $URL = API_URL  . 'files/' . $fileID;
+	my $URL = API_URL  . 'files/' . $fileID. '?includeTeamDriveItems=true&supportsTeamDrives=true';
 
   	my $fileName = shift;
 
@@ -833,7 +833,7 @@ sub moveFile(*$$$){
   	my $toFolder = shift;
   	my $fromFolder = shift;
 
-	my $URL = API_URL . 'files/'.$file . '?';
+	my $URL = API_URL . 'files/'.$file . '?includeTeamDriveItems=true&supportsTeamDrives=true&';
 
 	$URL .=  'addParents=' . $toFolder;
 
@@ -898,7 +898,7 @@ sub deleteFile(*$){
 	my $self = shift;
   	my $resourceID = shift;
 
-	my $URL = API_URL . 'files/'.$resourceID;
+	my $URL = API_URL . 'files/'.$resourceID.'?includeTeamDriveItems=true&supportsTeamDrives=true';
 	my $req = HTTP::Request->new(DELETE => $URL);
 
 	$req->protocol('HTTP/1.1');
@@ -933,7 +933,7 @@ sub trashFile(*$){
 	my $self = shift;
   	my $resourceID = shift;
 
-	my $URL = API_URL . 'files/'.$resourceID. '/trash';
+	my $URL = API_URL . 'files/'.$resourceID. '/trash?includeTeamDriveItems=true&supportsTeamDrives=true';
 	my $req = HTTP::Request->new(POST => $URL);
 
 	$req->protocol('HTTP/1.1');
@@ -971,7 +971,7 @@ sub untrashFile(*$){
 	my $self = shift;
   	my $resourceID = shift;
 
-	my $URL = API_URL . 'files/'.$resourceID. '/untrash';
+	my $URL = API_URL . 'files/'.$resourceID. '/untrash?includeTeamDriveItems=true&supportsTeamDrives=true';
 	my $req = HTTP::Request->new(POST => $URL);
 
 	$req->protocol('HTTP/1.1');

@@ -614,7 +614,7 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 			print STDOUT "service path = $service $pathTarget \n";
 		}
-    	syncGoogleFolder('',$folderID,$pathTarget,0,0, '',@drives);
+    	syncGoogleFolder('',$folderID,$pathTarget,0,0, '', 0,@drives);
   	}elsif($input =~ m%^copy folderid\s+\S+\s+folderid\s+\S+%i){
     	my ($folderID, $pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)%i;
 		$input =~ s%^copy folderid\s+\S+\s+folderid\s+\S+%%;
@@ -626,7 +626,20 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 			print STDOUT "service path = $service $pathTarget \n";
 		}
-    	syncGoogleFolder('',$folderID,'',0,0, $pathTarget,@drives);
+    	syncGoogleFolder('',$folderID,'',0,0, $pathTarget,0,@drives);
+  	}elsif($input =~ m%^move folderid\s+\S+\s+folderid\s+\S+%i){
+    	my ($folderID, $pathTarget) = $input =~ m%^move folderid\s+(\S+)\s+folderid\s+(\S+)%i;
+		$input =~ s%^move folderid\s+\S+\s+folderid\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+			print STDOUT "service path = $service $pathTarget \n";
+		}
+    	syncGoogleFolder('',$folderID,'',0,0, $pathTarget,1,@drives);
+
   	}elsif($input =~ m%^upload sync-delete list\s+\S+\s+\S+%i){
     	my ($list) = $input =~ m%^upload sync-delete list\s+(\S+)\s+\S+%i;
 		$input =~ s%^upload sync-delete list\s+\S+%%;
@@ -688,7 +701,7 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 			print STDOUT "service path = $service $pathTarget \n";
 		}
-    	syncGoogleFolder('',$folderID,$pathTarget,0,1, '',@drives);
+    	syncGoogleFolder('',$folderID,$pathTarget,0,1, '',0,@drives);
   	}elsif($input =~ m%^copy folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^copy folderid\s+(\S+)%i;
 		$input =~ s%^copy folderid\s+\S+%%;
@@ -700,7 +713,7 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 			print STDOUT "service = $service\n";
 		}
-    	syncGoogleFolder('',$folderID, '',0,0, '',@drives);
+    	syncGoogleFolder('',$folderID, '',0,0, '',0,@drives);
 
   	}elsif($input =~ m%^navigate folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^navigate folderid\s+(\S+)%i;
@@ -1439,7 +1452,7 @@ sub downloadFolder($){
 # params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
 ##
 sub syncGoogleFolder($){
-	my ($folder, $folderID, $pathTarget, $isMock, $isInbound, $destinationRoot, @drives) = @_;
+	my ($folder, $folderID, $pathTarget, $isMock, $isInbound, $destinationRoot, $trashDuplicates, @drives) = @_;
 	my @dbase;
 	 print STDERR "folder = $folder\n";
 	for(my $i=1; $i <= $#drives; $i++){
@@ -1507,6 +1520,10 @@ sub syncGoogleFolder($){
   								or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
   								and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
+							if ($trashDuplicates){
+								print STDOUT "TRASH file\n";
+								$services[$drives[0]]->trashFile($resourceID);
+							}
 							$auditline .= ',skip' if $AUDIT;
 
   						}else{

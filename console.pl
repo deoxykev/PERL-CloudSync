@@ -1520,10 +1520,6 @@ sub syncGoogleFolder($){
   								or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
   								and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 							print STDOUT  "skip to service $drives[$j] (duplicate MD5)\n";
-							if ($trashDuplicates){
-								print STDOUT "TRASH file\n";
-								$services[$drives[0]]->trashFile($resourceID);
-							}
 							$auditline .= ',skip' if $AUDIT;
 
   						}else{
@@ -1562,6 +1558,11 @@ sub syncGoogleFolder($){
 
   				}else{
  					 print STDOUT "SKIP " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
+					if ($trashDuplicates){
+						print STDOUT "TRASH file\n";
+						$services[$drives[0]]->trashFile($resourceID);
+					}
+
  					 $auditline .= ',SKIP' if $AUDIT;
 
   				}

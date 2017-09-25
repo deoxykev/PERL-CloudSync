@@ -1184,6 +1184,7 @@ sub getFolderIDByPath(*$$){
 	my $self = shift;
 	my $path = shift;
 	my $doCreate = shift;
+	my $rootID = shift;
 
 	my $parentFolder= '';
 	my $folderID;
@@ -1208,7 +1209,11 @@ sub getFolderIDByPath(*$$){
 			if ($parentFolder eq ''){
 				#look at the root
 				#	get root's children, look for folder as child
-				$folderID = $self->getSubFolderID($folder,'root');
+				if ($rootID ne ''){
+					$folderID = $self->getSubFolderID($folder,$rootID);
+				}else{
+					$folderID = $self->getSubFolderID($folder,'root');
+				}
 				$parentFolder =$folderID if ($folderID ne '');
 			}else{
 				#look at the parent
@@ -1221,7 +1226,12 @@ sub getFolderIDByPath(*$$){
 				$folderID = $self->createFolder($folder, $parentFolder)  if $doCreate;
 				$parentFolder =$folderID if ($folderID ne '');
 			}elsif ($folderID eq '' and  $parentFolder eq ''){
-				$folderID = $self->createFolder($folder, 'root')  if $doCreate;
+				if ($rootID ne ''){
+					$folderID = $self->createFolder($folder,$rootID)  if $doCreate;
+				}else{
+					$folderID = $self->createFolder($folder, 'root')  if $doCreate;
+
+				}
 				$parentFolder =$folderID if ($folderID ne '');
 			}
 #			$self->{_login_dbm}->addFolder($self->{_folders_dbm}, $serverPath, $folderID) if ($folderID ne '');

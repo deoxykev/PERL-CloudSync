@@ -272,9 +272,9 @@ sub getChanges(*$$$){
 	my $teamdrive = shift;
 
 
-	if ($teamdrive ne '' and $changeID ne ''){
+	if ($URL eq '' and $teamdrive ne '' and $changeID ne ''){
 		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true&teamDriveId='.$teamdrive.'&includeSubscribed=false&includeDeleted=false&maxResults=400&startChangeId='.$changeID;
-	}elsif ($teamdrive ne ''){
+	}elsif ($URL eq '' and $teamdrive ne ''){
 		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true&teamDriveId='.$teamdrive.'&includeSubscribed=false&includeDeleted=false&maxResults=400';
 
 	}elsif ($URL eq '' and $changeID ne ''){

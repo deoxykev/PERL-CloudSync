@@ -1988,7 +1988,7 @@ sub sendSnapshot(*$$){
 		#this is the parent?
 		#look at the root
 		#get root's children, look for folder as child
-		$folderID = $$service->getSubFolderID($folder,'root');
+		$folderID = $service->getSubFolderID($folder,'root');
 
 		if ($folderID eq ''){
 			$folderID = $service->createFolder($folder, 'root');

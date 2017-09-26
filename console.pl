@@ -989,9 +989,9 @@ while (my $input = <$userInput>){
     	close(LIST);
 
     #upload a snapshot of directory
-	}elsif($input =~ m%^send snapshot dir-rc %i){
-		my ($dir) = $input =~ m%^send snapshot dir-rc \s([^\n]+)\n%;
-  		sendSnapshot($dir, $services[$currentService]);
+	}elsif($input =~ m%^send snapshot dir%i){
+		my ($dir) = $input =~ m%^send snapshot dir\s([^\n]+)\n%;
+  		sendSnapshot($dir, 0, $services[$currentService]);
 
 	}elsif($input =~ m%^upload ftpfolder\s+\S+\s+\S+\s%i){
 		my ($serverpath,$serverfolderid, $localfolder) = $input =~ m%^upload ftpfolder\s+(\S+)\s+(\S+)\s([^\n]+)\n%;

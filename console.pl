@@ -1971,7 +1971,7 @@ sub sendSnapshot(*$$){
 	my $service = shift;
 
 	#my %uploaded;
-    my ($folder) = $localPath =~ m%\/([^\/]+)$/?%;
+    my ($folder) = $localPath =~ m%\/([^\/]+)/?$%;
 
 	my $dateFolder = pDrive::Time::getTimestamp(time, 'YYYYMMDD');
 

@@ -836,8 +836,8 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 		}
     	syncFolder('DOWNLOAD',$folderID,0,0,@drives);
-  	}elsif($input =~ m%^download folderid\s\S+\s+\S+%i){
-    	my ($folderID, $path) = $input =~ m%^download folderid\s+(\S+)\s+(\S+)%i;
+  	}elsif($input =~ m%^download folderid\s\S++%i){
+    	my ($folderID, $path) = $input =~ m%^download folderid\s+(\S+)\s+path\s+(\S+)%i;
     	downloadFolder($folderID,$path,$services[$currentService]);
   	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
     	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;

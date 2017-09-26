@@ -989,7 +989,7 @@ while (my $input = <$userInput>){
     	close(LIST);
 
     #upload a snapshot of directory
-	}elsif($input =~ m%^send snapshot dir%i){
+	}elsif($input =~ m%^send snapshot dir %i){
 		my ($dir) = $input =~ m%^send snapshot dir\s([^\n]+)\n%;
   		sendSnapshot($dir, 0, $services[$currentService]);
 
@@ -1971,7 +1971,7 @@ sub sendSnapshot(*$$){
 	my $service = shift;
 
 	#my %uploaded;
-    my ($folder) = $localPath =~ m%\/([^\/]+)$%;
+    my ($folder) = $localPath =~ m%\/([^\/]+)$/?%;
 
 	my $dateFolder = pDrive::Time::getTimestamp(time, 'YYYYMMDD');
 

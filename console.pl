@@ -987,6 +987,12 @@ while (my $input = <$userInput>){
   			$services[$currentService]->uploadFolder($dir . '/'. $folder);
     	}
     	close(LIST);
+
+    #upload a snapshot of directory
+	}elsif($input =~ m%^send snapshot dir-rc %i){
+		my ($dir) = $input =~ m%^send snapshot dir-rc \s([^\n]+)\n%;
+  		sendSnapshot($dir, $services[$currentService]);
+
 	}elsif($input =~ m%^upload ftpfolder\s+\S+\s+\S+\s%i){
 		my ($serverpath,$serverfolderid, $localfolder) = $input =~ m%^upload ftpfolder\s+(\S+)\s+(\S+)\s([^\n]+)\n%;
   		$services[$currentService]->uploadFTPFolder($localfolder, $serverpath, $serverfolderid);
@@ -1957,6 +1963,64 @@ sub catalogNFO($){
 
 
 }
+
+
+sub sendSnapshot(*$$){
+	my $localPath = shift;
+	my $isRecursive = shift;
+	my $service = shift;
+
+	#my %uploaded;
+    my ($folder) = $localPath =~ m%\/([^\/]+)$%;
+
+	my $dateFolder = pDrive::Time::getTimestamp(time, 'YYYYMMDD');
+
+  	print STDOUT "path = $localPath\n";
+   	my @fileList = pDrive::FileIO::getFilesDir($localPath);
+
+	print STDOUT "folder = $folder\n";
+
+	#check server-cache for folder
+	my $folderID = '';#$self->{_login_dbm}->findFolder($self->{_folders_dbm}, $serverPath);
+	#folder doesn't exist, create it
+	if ($folderID eq ''){
+		#*** validate it truly doesn't exist on the server before creating
+		#this is the parent?
+		#look at the root
+		#get root's children, look for folder as child
+		$folderID = $$service->getSubFolderID($folder,'root');
+
+		if ($folderID eq ''){
+			$folderID = $service->createFolder($folder, 'root');
+			$folderID = $service->createFolder($dateFolder, $folderID);
+		}else{
+			$folderID = $service->createFolder($dateFolder, $folderID);
+		}
+	}
+
+
+
+	print "resource ID = " . $folderID . "\n";
+
+    for (my $i=0; $i <= $#fileList; $i++){
+
+    	#empty file; skip
+    	if (-z $fileList[$i]){
+			next;
+    	#folder
+    	#}elsif (-d $fileList[$i]){
+	  	#	$self->uploadFolder($fileList[$i], $serverPath, $folderID,$uploaded);
+	  	#	#%uploaded = (%uploaded,%uploaded2);
+    	# file
+    	}else{
+			print STDOUT "Upload $fileList[$i]\n";
+	  		my $results = $service->uploadFile($fileList[$i], $folderID);
+
+    	}
+	  	print STDOUT "\n";
+	}
+}
+
 
 
 __END__

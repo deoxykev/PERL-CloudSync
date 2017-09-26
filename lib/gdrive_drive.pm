@@ -179,7 +179,12 @@ sub downloadFile(*$$$){
 
       my ($self,$path,$link,$updated) = @_;
       my $returnStatus;
-      my $finalPath = pDrive::Config->LOCAL_PATH."/$path";
+      my $finalPath;
+      if ($path > 0){
+      	$finalPath = pDrive::Config->LOCAL_PATH."/$path";
+      }else{
+      	$finalPath = $path;
+      }
 
       pDrive::FileIO::traverseMKDIR($finalPath);
       print STDOUT "downloading $finalPath...";

@@ -836,17 +836,9 @@ while (my $input = <$userInput>){
 			$drives[$count++] = $service;
 		}
     	syncFolder('DOWNLOAD',$folderID,0,0,@drives);
-  	}elsif($input =~ m%^download folderid\s\S+%i){
-    	my ($folderID) = $input =~ m%^download folderid\s+(\S+)%i;
-		$input =~ s%^download folderid\s+\S+%%;
-		my @drives;
-		my $count=0;
-		while ($input =~ m%^\s+\S+%){
-			my ($service) = $input =~ m%^\s+(\S+)%;
-			$input =~ s%^\s+\S+%%;
-			$drives[$count++] = $service;
-		}
-    	downloadFolder($folderID,0,0,$services[$currentService]);
+  	}elsif($input =~ m%^download folderid\s\S+\s+\S+%i){
+    	my ($folderID, $path) = $input =~ m%^download folderid\s+(\S+)\s+(\S+)%i;
+    	downloadFolder($folderID,$path,$services[$currentService]);
   	}elsif($input =~ m%^compare fisi\s+\d+\s+\d+%i){
     	my ($service1, $service2) = $input =~ m%^compare fisi\s+(\d+)\s+(\d+)%i;
 		my $dbase1 = $dbm->openDBM($services[$service1]->{_db_fisi});
@@ -1392,8 +1384,8 @@ sub spreadsheetCleanup($){
 # Sync a folder (and all subfolders) from one service to one or more other services
 # params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
 ##
-sub downloadFolder($){
-	my ($folderID, $isMock, $isInbound, $service) = @_;
+sub downloadFolder($$$){
+	my ($folderID, $localpath, $service) = @_;
 	my @dbase;
 
 	my $nextURL = '';
@@ -1419,11 +1411,11 @@ sub downloadFolder($){
 
 				my $path;
   					$path = $service->getFolderInfo($$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
-					print STDOUT "DOWNLOAD $path " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ' ' . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]. "\n";
-					unlink pDrive::Config->LOCAL_PATH.'/'.$$;
-		    		$service->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
+					#pDrive::FileIO::traverseMKDIR($localpath);
 
-					unlink pDrive::Config->LOCAL_PATH.'/'.$$;
+					print STDOUT "DOWNLOAD $path " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ' ' . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]. "\n";
+		    		$service->downloadFile($localpath . '/'.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]);
+
 
 			}
 

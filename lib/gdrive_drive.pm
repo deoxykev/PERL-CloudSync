@@ -30,7 +30,9 @@ sub new(*$) {
   			  _db_checksum => undef,
   			  _dbm => undef,
   			  _audit => 0,
-  			  _db_fisi => undef};
+  			  _paths => undef,
+  			  _db_fisi => undef,
+  			  _proxy_accounts => undef};
 
   	my $class = shift;
   	bless $self, $class;
@@ -38,7 +40,8 @@ sub new(*$) {
 	$self->{_db_checksum} = 'gd.'.$self->{_username} . '.md5.db';
 	$self->{_db_fisi} = 'gd.'.$self->{_username} . '.fisi.db';
 	$self->{_dbm} = pDrive::DBM->new();
-
+	$self->{_paths} = {};
+	$self->{_proxy_accounts} = [];
 
   	# initialize web connections
   	$self->{_serviceapi} = pDrive::GoogleDriveAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
@@ -740,8 +743,12 @@ sub copyFile(*$$$$){
 	       		}
         		sleep (10);
         		$retrycount++;
-	      	}elsif ($status eq '-1' or $status eq '-2'){
+        	#cannot copy, user limit exceeded
+	      	}elsif ($status eq '-1'){
 				return -1;
+			#cannot copy, no access
+	      	}elsif ($status eq '-2'){
+				return -2;
 	      	}
 			if ($retrycount >= RETRY_COUNT){
 				print STDERR "\r" . $fileID . "'...retry failed - $fileID\n";
@@ -1484,6 +1491,22 @@ sub findEmpyFolders(*$){
 
 	}
 
+
+}
+
+sub addProxyAccount(*$){
+
+	my $self = shift;
+	my $service = shift;
+	push(@{$self->{_proxy_accounts}},\$service);
+	print STDOUT "added proxy " . ${$self->{_proxy_accounts}[0]}->{_username} . "\n";
+
+}
+
+sub pullProxyAccount(*){
+
+	my $self = shift;
+	return (@{$self->{_proxy_accounts}});
 
 }
 

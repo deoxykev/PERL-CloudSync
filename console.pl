@@ -267,6 +267,13 @@ while (my $input = <$userInput>){
 
 			}
 		}
+  	}elsif($input =~ m%^load gdpx\s([^\s]+)%i){
+    	my ($login) = $input =~ m%^load gdpx\s([^\s]+)%i;
+		#my ($dbase,$folders) = $dbm->readHash();
+		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login));
+
+
+
   	}elsif($input =~ m%^override checksum\s([^\s]+)%i){
     	my ($dbname) = $input =~ m%^override checksum\s([^\s]+)%i;
 		$services[$currentService]->overrideChecksum($dbname);
@@ -1452,7 +1459,8 @@ sub syncGoogleFolder($){
 		$folderID =  $services[$drives[0]]->getSubFolderID($folder,'root');
 	}
 	push(@subfolders, $folderID);
-
+	my @useProxy;
+	my @proxyAccount;
 	for (my $i=0; $i <= $#subfolders;$i++){
 		$folderID = $subfolders[$i];
 	while (1){
@@ -1517,9 +1525,24 @@ sub syncGoogleFolder($){
 							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
 
-							my $result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
-							#user limited exceeed in copy, or fle not accessible?  manually upload
-							if ($result == -1){
+							my $retry=1;
+							my $result;
+							while($retry){
+								if ($useProxy[$j]){
+									$result = $proxyAccount[$j]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+								}else{
+									$result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+								}
+								$retry=0;
+								#user limited exceeed in copy, try proxy then download and manually upload
+								# OR fle not accessible?  manually upload
+								if ($result == -1 ){
+									$proxyAccount[$j] = $services[$drives[$j]]->pullProxyAccount();
+									$useProxy[$j]=1;
+									$retry=1;
+								}
+							}
+							if ($result == -1 or $result == -2){
 								if (!($downloaded)){
 								unlink pDrive::Config->LOCAL_PATH.'/'.$$;
 					    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);

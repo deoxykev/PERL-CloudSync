@@ -2023,6 +2023,70 @@ sub sendSnapshot(*$$){
 
 
 
+sub duplicateFolderStructure(*$$){
+	my $sourceFolderID = shift;
+	my $destinationFolderID = shift;
+	my $service = shift;
+
+	my @subfolders;
+	my $folderID;
+	my $nextURL;
+
+	push(@subfolders, $sourceFolderID);
+	for (my $i=0; $i <= $#subfolders;$i++){
+		$folderID = $subfolders[$i];
+	while (1){
+
+		my $newDocuments =  $service->getSubFolderIDList($folderID, $nextURL);
+  		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
+
+		my $path;
+		my $path2;
+
+  		foreach my $resourceID (keys %{$newDocuments}){
+			my $auditline = '' if $AUDIT;
+			my $doDownload=0;
+  			#folder
+  			#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
+  			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+				push(@subfolders, $resourceID);
+  			 }else{
+
+
+				$path = $service->getFolderInfo($folderID) if $path eq '';
+
+				if ($path2 eq ''){
+					$path2 = $service->getFolderIDByPath($path, 1, $destinationFolderID) if ($path ne '' and $path ne  '/');
+				}
+
+				my $result;
+				$result = $service->copyFile( $resourceID, $path2, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]);
+				if ($result == -1 ){
+					;
+				}elsif ($result == -1 or $result == -2){
+					;
+
+				}
+
+
+
+
+
+			}
+
+
+	  	}
+
+		$nextURL = $service->{_nextURL};
+		print STDOUT "next url " . $nextURL. "\n";
+  		last if  $nextURL eq '';
+
+	}
+	}
+
+}
+
+
 __END__
 
 =head1 AUTHORS

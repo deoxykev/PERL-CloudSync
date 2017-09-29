@@ -1,5 +1,7 @@
 package pDrive::AmazonAPI;
-;
+
+our @ISA = qw(pDrive::CloudServiceAPI);
+
 use LWP::UserAgent;
 use LWP;
 use strict;

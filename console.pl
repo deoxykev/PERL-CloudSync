@@ -2048,7 +2048,8 @@ sub duplicateFolderStructure(*$$){
   			#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
   			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
 				my $resultingFolderID = $service->createFolder( $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $destinationFolderID);
-				duplicateFolderStructure($resourceID,$resultingFolderID, $service);
+				print STDERR "resulting = $resultingFolderID\n";
+				#duplicateFolderStructure($resourceID,$resultingFolderID, $service);
 
 			}
 

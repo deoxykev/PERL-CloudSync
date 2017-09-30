@@ -16,6 +16,8 @@ use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
 
 use constant API_URL => 'https://drive.amazonaws.com/drive/v1/';
+use constant OAUTH2_URL => 'https://api.amazon.com/auth/o2/';
+use constant OAUTH2_AUTH_OTHER => '&redirect_uri=urn:ietf:wg:oauth:2.0:oob';
 use constant API_VER => 2;
 
 sub new() {
@@ -142,13 +144,13 @@ sub refreshToken(*){
   		print STDOUT "success --> $URL\n\n";
 
 	  	my $block = $res->as_string;
-
 		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
-		$retryCount=0;
+
+		$retryCount=-1;
 	}elsif ($res->code >= 500 and $res->code <= 505){
 		$retryCount++;
 		print STDOUT "backoff retry " . $retryCount . "\n";
-
+		$retryCount++;
 	}else{
 		print STDOUT $res->as_string;
 		return '';
@@ -159,6 +161,7 @@ sub refreshToken(*){
 	}
 
 	}
+
 		return ($self->{_token},$self->{_refreshToken});
 
 

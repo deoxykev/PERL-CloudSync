@@ -2062,7 +2062,7 @@ sub duplicateFolderStructure(*$$){
 				}
 
 				my $result;
-				$result = $service->createFolder( $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $resourceID);
+				$result = $service->createFolder( $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $path2);
 				if ($result == -1 ){
 					;
 				}elsif ($result == -1 or $result == -2){

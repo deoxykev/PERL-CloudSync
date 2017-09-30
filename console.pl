@@ -2031,61 +2031,32 @@ sub duplicateFolderStructure(*$$){
 	my $destinationFolderID = shift;
 	my $service = shift;
 
-	my @subfolders;
-	my $folderID;
 	my $nextURL;
 
-	push(@subfolders, $sourceFolderID);
-	for (my $i=0; $i <= $#subfolders;$i++){
-		$folderID = $subfolders[$i];
 	while (1){
 
-		my $newDocuments =  $service->getSubFolderIDList($folderID, $nextURL);
+		my $newDocuments =  $service->getSubFolderIDList($sourceFolderID, $nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
 
 		my $path;
 		my $path2;
+		$nextURL = $service->{_nextURL};
+		print STDOUT "next url " . $nextURL. "\n";
 
   		foreach my $resourceID (keys %{$newDocuments}){
-			my $auditline = '' if $AUDIT;
   			#folder
   			#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
   			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-				push(@subfolders, $resourceID);
-  			 }else{
-
-
-				$path = $service->getFolderInfo($folderID) if $path eq '';
-
-				if ($path2 eq ''){
-					$path2 = $service->getFolderIDByPath($path, 1, $destinationFolderID) if ($path ne '' and $path ne  '/');
-				}
-
-				my $result;
-				print STDERR "PATH2 = $path2, PATH = $path\n";exit;
-				$result = $service->createFolder( $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $path2);
-
-				if ($result == -1 ){
-					;
-				}elsif ($result == -1 or $result == -2){
-					;
-
-				}
-
-
-
-
+				my $resultingFolderID = $service->createFolder( $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $destinationFolderID);
+				duplicateFolderStructure($resourceID,$resultingFolderID);
 
 			}
 
 
 	  	}
 
-		$nextURL = $service->{_nextURL};
-		print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';
 
-	}
 	}
 
 }

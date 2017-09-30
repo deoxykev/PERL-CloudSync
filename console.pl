@@ -747,6 +747,9 @@ while (my $input = <$userInput>){
 		$services[$currentService]->mergeDuplicateFolder($folderID, $level);
 
 
+  	}elsif($input =~ m%^duplicate folders folderid\s+\S+\s+folderid\s+(\S+)%i){
+    	my ($sourceFolderID,$targetFolderID) = $input =~ m%^duplicate folders folderid\s+(\S+)\s+folderid\s+(\S+)%i;
+		duplicateFolderStructure($sourceFolderID, $targetFolderID, $services[$currentService]);
 
 	## folder manipulations
 	# move folders into alpha folders

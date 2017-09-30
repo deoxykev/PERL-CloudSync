@@ -1178,9 +1178,9 @@ sub syncFolder($){
 	my @dbase;
 
 	my $maxSize=100000000000;
-	if (defined pDrive::Config->MAXSIZE){
-		$maxSize = pDrive::Config->MAXSIZE;
-	}
+#	if (defined pDrive::Config->MAXSIZE){
+#		$maxSize = pDrive::Config->MAXSIZE;
+#	}
 
 	 print STDERR "folder = $folder\n";
 	for(my $i=1; $i <= $#drives; $i++){

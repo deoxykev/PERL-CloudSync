@@ -635,17 +635,8 @@ while (my $input = <$userInput>){
 		}
     	syncGoogleFolder('',$folderID,'',0,0, $pathTarget,0,@drives);
   	}elsif($input =~ m%^move folderid\s+\S+\s+folderid\s+\S+%i){
-    	my ($folderID, $pathTarget) = $input =~ m%^move folderid\s+(\S+)\s+folderid\s+(\S+)%i;
-		$input =~ s%^move folderid\s+\S+\s+folderid\s+\S+%%;
-		my @drives;
-		my $count=0;
-		while ($input =~ m%^\s+\S+%){
-			my ($service) = $input =~ m%^\s+(\S+)%;
-			$input =~ s%^\s+\S+%%;
-			$drives[$count++] = $service;
-			print STDOUT "service path = $service $pathTarget \n";
-		}
-    	syncGoogleFolder('',$folderID,'',0,0, $pathTarget,1,@drives);
+    	my ($sourceID, $targetID) = $input =~ m%^move folderid\s+(\S+)\s+folderid\s+(\S+)%i;
+    	fullMoveFolderStructure($sourceID, $targetID, $services[$currentService]);
 
   	}elsif($input =~ m%^upload sync-delete list\s+\S+\s+\S+%i){
     	my ($list) = $input =~ m%^upload sync-delete list\s+(\S+)\s+\S+%i;
@@ -2048,8 +2039,9 @@ sub duplicateFolderStructure(*$$){
   			#if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] eq ''){
   			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
 				my $resultingFolderID = $service->createFolder( $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $destinationFolderID);
+
 				print STDERR "resulting = $resultingFolderID\n";
-				#duplicateFolderStructure($resourceID,$resultingFolderID, $service);
+				duplicateFolderStructure($resourceID,$resultingFolderID, $service);
 
 			}
 
@@ -2061,6 +2053,44 @@ sub duplicateFolderStructure(*$$){
 	}
 
 }
+
+sub fullMoveFolderStructure(*$$){
+	my $sourceFolderID = shift;
+	my $destinationFolderID = shift;
+	my $service = shift;
+
+	my $nextURL;
+
+	while (1){
+
+		my $newDocuments =  $service->getSubFolderIDList($sourceFolderID, $nextURL);
+  		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
+		$nextURL = $service->{_nextURL};
+		print STDOUT "next url " . $nextURL. "\n";
+
+  		foreach my $resourceID (keys %{$newDocuments}){
+  			#folder - fetch existing in destination (or create) and recursive into directory on source
+  			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+				my $resultingFolderID = $service->getFolderIDByParentID($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $destinationFolderID, 1);
+
+				print STDERR "resulting = $resultingFolderID\n";
+				fullMoveFolderStructure($resourceID,$resultingFolderID, $service);
+
+			#file - move all files from source to destination
+			}else{
+				$service->moveFile($resourceID, $destinationFolderID,$sourceFolderID);
+
+			}
+
+
+	  	}
+
+  		last if  $nextURL eq '';
+
+	}
+
+}
+
 
 
 __END__

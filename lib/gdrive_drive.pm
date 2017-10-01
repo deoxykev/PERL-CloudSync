@@ -1256,6 +1256,27 @@ sub getFolderIDByPath(*$$){
 
 
 
+sub getFolderIDByParentID(*$$$){
+
+	my $self = shift;
+	my $folderName = shift;
+	my $parentID = shift;
+	my $doCreate = shift;
+
+	my $folderID;
+
+	#look at the parent
+	#get parent's children, look for folder as child
+	$folderID = $self->getSubFolderID($folderName,$parentID);
+
+	if ($folderID eq ''){
+		$folderID = $self->createFolder($folderName, $parentID)  if $doCreate;
+	}
+	return $folderID;
+
+}
+
+
 sub renameFileList(*$){
 	my $self = shift;
 	my $fileList = shift;

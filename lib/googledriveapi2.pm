@@ -841,7 +841,7 @@ sub moveFile(*$$$){
   	my $toFolder = shift;
   	my $fromFolder = shift;
 
-	my $URL = API_URL . 'files/'.$file . '?includeTeamDriveItems=true&supportsTeamDrives=true&';
+	my $URL = API_URL . 'files/'.$file . '?includeTeamDriveItems=true&supportsTeamDrives=true&modifiedDateBehavior=noChange&';
 
 	$URL .=  'addParents=' . $toFolder;
 

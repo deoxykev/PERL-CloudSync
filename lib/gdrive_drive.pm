@@ -1537,7 +1537,7 @@ sub pullProxyAccount(*){
 sub hasProxyAccount(*){
 
 	my $self = shift;
-	if ($#{$self->{_proxy_accounts}} > 0){
+	if ($self->{_proxy_current} < $#{$self->{_proxy_accounts}}){
 		return 1;
 	}else{
 		return 0;

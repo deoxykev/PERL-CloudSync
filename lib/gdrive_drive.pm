@@ -1527,7 +1527,18 @@ sub addProxyAccount(*$){
 sub pullProxyAccount(*){
 
 	my $self = shift;
-	return (@{$self->{_proxy_accounts}});
+	return pop(@{$self->{_proxy_accounts}});
+
+}
+
+sub hasProxyAccount(*){
+
+	my $self = shift;
+	if ($#{$self->{_proxy_accounts}} > 0){
+		return 1;
+	}else{
+		return 0;
+	}
 
 }
 

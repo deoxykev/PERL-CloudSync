@@ -1530,7 +1530,7 @@ sub syncGoogleFolder($){
 								$retry=0;
 								#user limited exceeed in copy, try proxy then download and manually upload
 								# OR fle not accessible?  manually upload
-								if ($result == -1 ){
+								if ($result == -1 and $services[$drives[$j]]->hasProxyAccount()){
 									$proxyAccount[$j] = $services[$drives[$j]]->pullProxyAccount();
 									$useProxy[$j]=1;
 									$retry=1;

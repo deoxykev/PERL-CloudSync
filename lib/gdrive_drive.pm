@@ -1521,7 +1521,7 @@ sub addProxyAccount(*$){
 	my $self = shift;
 	my $service = shift;
 	push(@{$self->{_proxy_accounts}},\$service);
-	print STDOUT "added proxy " . ${$self->{_proxy_accounts}[0]}->{_username} . "\n";
+	print STDOUT "added proxy " . ${$self->{_proxy_accounts}[$#{$self->{_proxy_accounts}}]}->{_username} . "\n";
 
 }
 

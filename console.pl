@@ -1536,6 +1536,7 @@ sub syncGoogleFolder($){
 									$retry=1;
 								}
 							}
+							#copy limit reached and proxy list exhausted, download-and-upload
 							if ($result == -1 or $result == -2){
 								if (!($downloaded)){
 								unlink pDrive::Config->LOCAL_PATH.'/'.$$;

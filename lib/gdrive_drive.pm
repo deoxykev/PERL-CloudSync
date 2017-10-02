@@ -32,7 +32,8 @@ sub new(*$) {
   			  _audit => 0,
   			  _paths => undef,
   			  _db_fisi => undef,
-  			  _proxy_accounts => undef};
+  			  _proxy_accounts => undef,
+  			  _proxy_current => 0};
 
   	my $class = shift;
   	bless $self, $class;
@@ -1527,7 +1528,9 @@ sub addProxyAccount(*$){
 sub pullProxyAccount(*){
 
 	my $self = shift;
-	return pop(@{$self->{_proxy_accounts}});
+
+	#$self->{_proxy_current}++;
+	return ${$self->{_proxy_accounts}[$self->{_proxy_current}++]};#pop(@{$self->{_proxy_accounts}});
 
 }
 

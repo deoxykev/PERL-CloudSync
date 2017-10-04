@@ -637,6 +637,9 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^move folderid\s+\S+\s+folderid\s+\S+%i){
     	my ($sourceID, $targetID) = $input =~ m%^move folderid\s+(\S+)\s+folderid\s+(\S+)%i;
     	fullMoveFolderStructure($sourceID, $targetID, $services[$currentService]);
+  	}elsif($input =~ m%^move all\s+folderid\s+\S+%i){
+    	my ($targetID) = $input =~ m%^move all\s+folderid\s+(\S+)%i;
+    	moveAll($targetID, $services[$currentService]);
 
   	}elsif($input =~ m%^upload sync-delete list\s+\S+\s+\S+%i){
     	my ($list) = $input =~ m%^upload sync-delete list\s+(\S+)\s+\S+%i;
@@ -2093,6 +2096,38 @@ sub fullMoveFolderStructure(*$$){
 }
 
 
+
+sub moveAll($*){
+	my $destinationFolderID = shift;
+	my $service = shift;
+
+	my $nextURL;
+
+	while (1){
+
+		my $newDocuments =  $service->getList();
+  		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
+		$nextURL = $service->{_nextURL};
+		print STDOUT "next url " . $nextURL. "\n";
+
+  		foreach my $resourceID (keys %{$newDocuments}){
+  			#folder - fetch existing in destination (or create) and recursive into directory on source
+  			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+;
+			#file - move all files from source to destination
+			}else{
+				$service->moveFile($resourceID, $destinationFolderID,$$newDocuments{$resourceID}[pDrive::DBM->D->{'parent'}]);
+
+			}
+
+
+	  	}
+
+  		last if  $nextURL eq '';
+
+	}
+
+}
 
 __END__
 

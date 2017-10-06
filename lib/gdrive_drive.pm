@@ -1568,10 +1568,12 @@ sub trashEmptyFolders(*$$){
 				$nextURL = $self->{_nextURL};
 
 	  			foreach my $resourceID (keys %{$newDocuments}){
-		  			#	folder
+		  			# a folder is found, recurse into it
 	  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-						$self->trashEmptyFolders($resourceID, $recusiveLevel-1) if $recusiveLevel > 0;
-						$fileFolderCount++;
+	  				 	my $count = 1;
+	  				 	# if the subfolder is empty, or becomes empty, we don't want to count this folder against our fileFolderCount
+						$count = $self->trashEmptyFolders($resourceID, $recusiveLevel-1) if $recusiveLevel > 0;
+						$fileFolderCount += $count;
 
 	  			 	}else{
 						$fileFolderCount++;
@@ -1584,6 +1586,7 @@ sub trashEmptyFolders(*$$){
 	  			last if  $nextURL eq '';
 
 	  	}
+	  	#if there is nothing in the folder, trash it.
 	  	if ($fileFolderCount == 0){
 	  		print STDOUT "trashing empty folder - ". $folderID . "\n";
 	  		$self->trashFile($folderID);
@@ -1591,6 +1594,8 @@ sub trashEmptyFolders(*$$){
 	  	}
 
 	#}
+	# return the number of items in the folder
+	return $fileFolderCount;
 
 
 

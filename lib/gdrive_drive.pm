@@ -721,6 +721,7 @@ sub copyFile(*$$$$){
 	my $fileID = shift;
 	my $folder = shift;
 	my $fileName = shift;
+	my $createDate = shift;
 
 	$fileID =~ s%\s%%g; #remove spaces
   	my $retrycount=0;
@@ -728,7 +729,7 @@ sub copyFile(*$$$$){
   	my $status=0;
    	$retrycount=0;
    	while ($status eq '0' and $retrycount < RETRY_COUNT){
-			$status =  $self->{_serviceapi}->copyFile($fileID,$fileName, $folder);
+			$status =  $self->{_serviceapi}->copyFile($fileID,$fileName, $folder,$createDate);
       		print STDOUT "\r"  . $status;
 	      	if ($status eq '0'){
 	       		print STDERR "...retrying\n";

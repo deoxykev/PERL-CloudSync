@@ -1526,9 +1526,9 @@ sub syncGoogleFolder($){
 							my $result;
 							while($retry){
 								if ($useProxy[$j]){
-									$result = $proxyAccount[$j]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+									$result = $proxyAccount[$j]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
 								}else{
-									$result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+									$result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
 								}
 								$retry=0;
 								#user limited exceeed in copy, try proxy then download and manually upload

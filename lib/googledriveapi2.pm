@@ -623,11 +623,22 @@ sub copyFile(*$$$){
   	#optional
   	my $fileName = shift;
 	my $folder = shift;
+	my $createDate = shift;
 
 	my $content = '';
 
 	#copying a file with directory and filename
-	if ($folder ne '' and $fileName ne ''){
+	if ($folder ne '' and $fileName ne '' and $createDate ne ''){
+  		$content = '{
+  			"title": "'.$fileName. '",
+  			"modifiedDate": "'.$createDate.'",
+  			"parents": [{
+    		"kind": "drive#fileLink",
+    		"id": "'.$folder.'"
+  			}]
+			}'."\n\n";
+	#copying a file with directory but no filename
+	}elsif ($folder ne '' and $fileName ne ''){
   		$content = '{
   			"title": "'.$fileName. '",
   			"parents": [{
@@ -636,6 +647,13 @@ sub copyFile(*$$$){
   			}]
 			}'."\n\n";
 	#copying a file with directory but no filename
+	}elsif ($folder ne ''){
+  		$content = '{
+  			"parents": [{
+    		"kind": "drive#fileLink",
+    		"id": "'.$folder.'"
+  			}]
+			}'."\n\n";
 	}elsif ($folder ne ''){
   		$content = '{
   			"parents": [{

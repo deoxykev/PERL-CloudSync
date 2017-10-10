@@ -818,6 +818,7 @@ while (my $input = <$userInput>){
 			print STDOUT "service = $service\n";
 		}
     	syncFolder('',$folderID,0,1, @drives);
+
   	}elsif($input =~ m%^mock sync folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^mock sync folderid\s+(\S+)%i;
 		$input =~ s%^mock sync folderid\s+\S+%%;

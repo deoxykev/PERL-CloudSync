@@ -796,9 +796,8 @@ while (my $input = <$userInput>){
 
   	}elsif($input =~ m%^get folder size folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^get folder size folderid\s+(\S+)%i;
-
-    	my $folderSize = $services[$currentService]->getFolderSize($folderID);
-    	print "folder size for $folderID = " . $folderSize . "\n";
+    	my ($folderSize, $fileCount) = $services[$currentService]->getFolderSize($folderID);
+    	print "folder size for $folderID = " . $folderSize . ", file and folder count = $fileCount\n";
   	}elsif($input =~ m%^dump folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^dump folderid\s+(\S+)%i;
 

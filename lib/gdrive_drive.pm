@@ -1051,6 +1051,7 @@ sub getFolderSize(*$){
 	#last run failed to finish, attempt to continue where left
 	my $driveListings;
 	my $folderSize = 0;
+	my $fileCount = 0;
 	while (1){
 		$driveListings = $self->{_serviceapi}->getFolderList($folderID, $nextURL);
   		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
@@ -1060,16 +1061,19 @@ sub getFolderSize(*$){
   		foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-  				 	$folderSize += $self->getFolderSize($resourceID);
+  				 	($size, $count) = $self->getFolderSize($resourceID);
+  				 	$folderSize += $size;
+  				 	$fileCount += $count + 1;
   			 	}else{
   				 	$folderSize +=  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}];
+  				 	$fileCount++;
   				}
 
   		}
 		print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
 	}
-	return $folderSize;
+	return ($folderSize,$fileCount);
 }
 
 

@@ -818,7 +818,8 @@ sub cleanNames(*$){
 
   		}
 			$nextURL = $self->{_nextURL};
-			print STDOUT "next url " . $nextURL. "\n";
+	  		print STDOUT '.';
+			#print STDOUT "next url " . $nextURL. "\n";
   			last if  $nextURL eq '';
 	}
 
@@ -921,7 +922,8 @@ sub getListAllOLD(*){
   		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
   		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
 		$self->updateMD5Hash($newDocuments);
-		print STDOUT "next url " . $nextURL . "\n";
+  		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
 	}
 
@@ -960,8 +962,9 @@ sub getChangesAll(*){
 
 		#$changeID = $self->{_serviceapi}->getChangeID($driveListings);
 		#$self->updateChange($changeID);
+  		print STDOUT '.';
 
-		print STDOUT "next url " . $nextURL . "\n";
+		#print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
   		$lastURL = $nextURL if $nextURL ne '';
 	}
@@ -996,8 +999,8 @@ sub getChangesTeamDrive(*$){
 
 		#$changeID = $self->{_serviceapi}->getChangeID($driveListings);
 		#$self->updateChange($changeID);
-
-		print STDOUT "next url " . $nextURL . "\n";
+  		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
   		$lastURL = $nextURL if $nextURL ne '';
 	}
@@ -1034,7 +1037,8 @@ sub getTrash(*){
   				}
 
   		}
-		print STDOUT "next url " . $nextURL . "\n";
+   		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
 	}
 
@@ -1070,7 +1074,8 @@ sub getFolderSize(*$){
   				}
 
   		}
-		print STDOUT "next url " . $nextURL . "\n";
+   		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
 	}
 	return ($folderSize,$fileCount);
@@ -1107,7 +1112,8 @@ sub restoreTrash(*){
   				}
 
   		}
-		print STDOUT "next url " . $nextURL . "\n";
+  		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
 	}
 
@@ -1127,8 +1133,8 @@ sub getListAll(*){
 		$driveListings = $self->{_serviceapi}->getList($nextURL);
   		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
   		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
-
-		print STDOUT "next url " . $nextURL . "\n";
+  		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
   		$lastURL = $nextURL if $nextURL ne '';
 	}
@@ -1470,6 +1476,8 @@ sub _catalogMedia(*$$%){
 		close(TV);
 		close(MOVIES);
 
+  		print STDOUT '.';
+
 		#$nextURL = $self->{_nextURL};
 		#print STDOUT "next url " . $nextURL. "\n";
 	  	last if  $nextURL eq '';
@@ -1510,6 +1518,7 @@ sub findEmpyFolders(*$){
 			}
 			$nextURL = $self->{_nextURL};
 			#print STDOUT "next url " . $nextURL. "\n";
+	  		print STDOUT '.';
   			last if  $nextURL eq '';
 
 	  	}
@@ -1586,6 +1595,7 @@ sub trashEmptyFolders(*$$){
 				}
 
 
+		  		print STDOUT '.';
 				#print STDOUT "next url " . $nextURL. "\n";
 	  			last if  $nextURL eq '';
 

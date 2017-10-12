@@ -1154,7 +1154,8 @@ sub syncDrive($){
 	  	}
 	  	#
 
-		print STDOUT "next url " . $services[0]->{_nextURL} . "\n";
+		print STDOUT ".";
+		#print STDOUT "next url " . $services[0]->{_nextURL} . "\n";
   		last if  $services[0]->{_nextURL} eq '';
 
 	}
@@ -1339,7 +1340,8 @@ sub syncFolder($){
 
 	  	}
 		$nextURL = $services[$drives[0]]->{_nextURL};
-		print STDOUT "next url " . $nextURL. "\n";
+		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';
 
 	}
@@ -1425,7 +1427,8 @@ sub downloadFolder($$$){
 
 	  	}
 		$nextURL = $service->{_nextURL};
-		print STDOUT "next url " . $nextURL. "\n";
+		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';
 
 	}
@@ -1580,7 +1583,8 @@ sub syncGoogleFolder($){
 	  	}
 
 		$nextURL = $services[$drives[0]]->{_nextURL};
-		print STDOUT "next url " . $nextURL. "\n";
+		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';
 
 	}
@@ -1692,7 +1696,8 @@ sub syncGoogleUploadFolder($){
 	  	}
 
 		$nextURL = $services[$drives[0]]->{_nextURL};
-		print STDOUT "next url " . $nextURL. "\n";
+		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';
 
 	for(my $i=0; $i < $#drives; $i++){
@@ -1814,7 +1819,8 @@ sub navigateFolder($$$){
 
 			}
 			$nextURL = $service->{_nextURL};
-			print STDOUT "next url " . $nextURL. "\n";
+			print STDOUT '.';
+			#print STDOUT "next url " . $nextURL. "\n";
   			last if  $nextURL eq '';
 
 	  	}
@@ -1891,7 +1897,8 @@ sub catalogFolderID($$$){
 
 			}
 			$nextURL = $service->{_nextURL};
-			print STDOUT "next url " . $nextURL. "\n";
+			print STDOUT '.';
+			#print STDOUT "next url " . $nextURL. "\n";
   			last if  $nextURL eq '';
 
 	  	}
@@ -2036,7 +2043,8 @@ sub duplicateFolderStructure(*$$){
 		my $path;
 		my $path2;
 		$nextURL = $service->{_nextURL};
-		print STDOUT "next url " . $nextURL. "\n";
+		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL. "\n";
 
   		foreach my $resourceID (keys %{$newDocuments}){
   			#folder
@@ -2044,7 +2052,7 @@ sub duplicateFolderStructure(*$$){
   			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
 				my $resultingFolderID = $service->createFolder( $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $destinationFolderID);
 
-				print STDERR "resulting = $resultingFolderID\n";
+				print STDOUT '/';
 				duplicateFolderStructure($resourceID,$resultingFolderID, $service);
 
 			}
@@ -2070,7 +2078,8 @@ sub fullMoveFolderStructure(*$$){
 		my $newDocuments =  $service->getSubFolderIDList($sourceFolderID, $nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
 		$nextURL = $service->{_nextURL};
-		print STDOUT "next url " . $nextURL. "\n";
+		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL. "\n";
 
   		foreach my $resourceID (keys %{$newDocuments}){
   			#folder - fetch existing in destination (or create) and recursive into directory on source
@@ -2108,7 +2117,8 @@ sub moveAll($*){
 		my $newDocuments =  $service->getList();
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
 		$nextURL = $service->{_nextURL};
-		print STDOUT "next url " . $nextURL. "\n";
+		print STDOUT '.';
+		#print STDOUT "next url " . $nextURL. "\n";
 
   		foreach my $resourceID (keys %{$newDocuments}){
   			#folder - fetch existing in destination (or create) and recursive into directory on source

@@ -1084,10 +1084,12 @@ sub getFolderSize(*$$){
 	  			#	folder
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
 			    	print STDERR "." if $self->{_realtime_updates};
-  				 	($size, $count, $duplicateSize, $duplicateCount) = $self->getFolderSize($resourceID, $tempDBM);
+  				 	($size, $count, $dSize, $dCount) = $self->getFolderSize($resourceID, $tempDBM);
 			    	print STDERR "\b \b" if $self->{_realtime_updates};
   				 	$folderSize += $size;
   				 	$fileCount += $count + 1;
+  				 	$duplicateSize += $dSize;
+  				 	$duplicateCount += $dCount;
   			 	}else{
   			 		if ($$tempDBM{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]} >= 1){
 	  				 	$duplicateSize +=  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}];

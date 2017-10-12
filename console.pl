@@ -1629,8 +1629,8 @@ sub compareFolders($){
 	}
 	my %dbaseTMP;
 
-	my $folder1Hash = 
-	
+	my $folder1Hash = 3;
+
 
 
 }

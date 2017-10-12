@@ -1058,12 +1058,6 @@ sub getFolderSize(*$$){
 	my $self = shift;
 	my $folderID = shift;
 	my $tempDBM = shift;
-#	if (undef $tempDBM){
-#
-#	    my %paramhash = {};
-##
-#		$tempDBM
-#	}
 
 	my $nextURL='';
 

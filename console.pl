@@ -821,6 +821,19 @@ while (my $input = <$userInput>){
 		}
     	syncFolder('',$folderID,0,1, @drives);
 
+  	}elsif($input =~ m%^compare folders folderid\s+\S+\s+folderid\s+\S+%i){
+    	my ($folderID1, $folderID2) = $input =~ m%^compare folders folderid\s+(\S+)\s+folderid\s+(\S+)%i;
+		$input =~ s%^compare folders folderid\s+\S+\s+folderid\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+			print STDOUT "service = $service\n";
+		}
+    	compareFolders($folderID1, $folderID2,@drives);
+
   	}elsif($input =~ m%^mock sync folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^mock sync folderid\s+(\S+)%i;
 		$input =~ s%^mock sync folderid\s+\S+%%;
@@ -1597,6 +1610,27 @@ sub syncGoogleFolder($){
 		$dbm->closeDBM($dbase[$drives[$i]][1]);
 
 	}
+
+
+}
+
+
+##
+# Sync a folder (and all subfolders) from one Google service to one or more other Google services (using API copy command)
+# params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
+##
+sub compareFolders($){
+	my ($folderID1, $folderID2, @drives) = @_;
+	my @dbase;
+	 print STDERR "folder1 = $folderID1, folder2 = $folderID2\n";
+	for(my $i=1; $i <= $#drives; $i++){
+			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
+			$dbase[$drives[$i]][1] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
+	}
+	my %dbaseTMP;
+
+	my $folder1Hash = 
+	
 
 
 }

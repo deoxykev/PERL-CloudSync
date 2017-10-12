@@ -804,7 +804,7 @@ while (my $input = <$userInput>){
     	$services[$currentService]->dumpFolder('',$folderID,  $services[$currentService]);
   	}elsif($input =~ m%^set realtime updates\s\S+%i){
     	$services[$currentService]->setRealTimeUpdates();
-
+		print STDOUT "realtime updates set\n";
 
   	}elsif($input =~ m%^sync inboundid\s\S+%i){
     	my ($folderID) = $input =~ m%^sync inboundid\s+(\S+)%i;

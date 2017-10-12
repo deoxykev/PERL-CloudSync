@@ -796,13 +796,14 @@ while (my $input = <$userInput>){
 
   	}elsif($input =~ m%^get folder size folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^get folder size folderid\s+(\S+)%i;
+    	print STDOUT 'Navigating into folders' . "\n";
     	my ($folderSize, $fileCount) = $services[$currentService]->getFolderSize($folderID);
-    	print "folder size for $folderID = " . $folderSize . ", file and folder count = $fileCount\n";
+    	print STDOUT "folder size for $folderID = " . $folderSize . ", file and folder count = $fileCount\n";
   	}elsif($input =~ m%^dump folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^dump folderid\s+(\S+)%i;
 
     	$services[$currentService]->dumpFolder('',$folderID,  $services[$currentService]);
-  	}elsif($input =~ m%^set realtime updates\s\S+%i){
+  	}elsif($input =~ m%^set realtime updates%i){
     	$services[$currentService]->setRealTimeUpdates();
 		print STDOUT "realtime updates set\n";
 

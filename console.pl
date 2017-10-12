@@ -622,6 +622,18 @@ while (my $input = <$userInput>){
 			print STDOUT "service path = $service $pathTarget \n";
 		}
     	syncGoogleFolder('',$folderID,$pathTarget,0,0, '', 0,@drives);
+  	}elsif($input =~ m%^copy folderid\s+\S+\s+folderid\s+\S+\s+path\s+\S+%i){
+    	my ($folderID, $destinationRoot,$pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)\s+path\s+(\S+)%i;
+		$input =~ s%^copy folderid\s+\S+\s+folderid\s+\S+\s+path\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+			print STDOUT "service path = $service $pathTarget \n";
+		}
+    	syncGoogleFolder('',$folderID,$pathTarget,0,0, $destinationRoot,0,@drives);
   	}elsif($input =~ m%^copy folderid\s+\S+\s+folderid\s+\S+%i){
     	my ($folderID, $pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)%i;
 		$input =~ s%^copy folderid\s+\S+\s+folderid\s+\S+%%;
@@ -1534,8 +1546,10 @@ sub syncGoogleFolder($){
 
   							#for inbound, remove Inbound from path when creating on target
 							$path =~ s%\/[^\/]+%% if ($isInbound);
-							$path = $pathTarget . '/' . $path if ($pathTarget ne '');
-							if ($mypath[$j] eq ''){
+							$path = $pathTarget . '/' . $path if ($pathTarget ne '' and $destinationRoot ne '');
+							if ($mypath[$j] eq '' and $j > 1){
+								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1, $$pathTarget) if ($path ne '' and $path ne  '/' and !($isMock));
+							}elsif ($mypath[$j] eq ''){
 								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1, $destinationRoot) if ($path ne '' and $path ne  '/' and !($isMock));
 							}
 							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";

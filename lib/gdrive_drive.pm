@@ -1075,7 +1075,7 @@ sub getFolderSize(*$){
   				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
 			    	print STDERR "." if $self->{_realtime_updates};
   				 	($size, $count) = $self->getFolderSize($resourceID);
-			    	print STDERR "\r" if $self->{_realtime_updates};
+			    	print STDERR "\b \b" if $self->{_realtime_updates};
   				 	$folderSize += $size;
   				 	$fileCount += $count + 1;
   			 	}else{

@@ -802,7 +802,8 @@ while (my $input = <$userInput>){
     	my ($folderID) = $input =~ m%^dump folderid\s+(\S+)%i;
 
     	$services[$currentService]->dumpFolder('',$folderID,  $services[$currentService]);
-
+  	}elsif($input =~ m%^set realtime updates\s\S+%i){
+    	$services[$currentService]->setRealTimeUpdates();
 
 
   	}elsif($input =~ m%^sync inboundid\s\S+%i){
@@ -1340,7 +1341,7 @@ sub syncFolder($){
 
 	  	}
 		$nextURL = $services[$drives[0]]->{_nextURL};
-		print STDOUT '.';
+
 		#print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';
 
@@ -1427,7 +1428,7 @@ sub downloadFolder($$$){
 
 	  	}
 		$nextURL = $service->{_nextURL};
-		print STDOUT '.';
+
 		#print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';
 
@@ -1583,7 +1584,7 @@ sub syncGoogleFolder($){
 	  	}
 
 		$nextURL = $services[$drives[0]]->{_nextURL};
-		print STDOUT '.';
+
 		#print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';
 
@@ -1696,7 +1697,7 @@ sub syncGoogleUploadFolder($){
 	  	}
 
 		$nextURL = $services[$drives[0]]->{_nextURL};
-		print STDOUT '.';
+
 		#print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';
 
@@ -1819,7 +1820,7 @@ sub navigateFolder($$$){
 
 			}
 			$nextURL = $service->{_nextURL};
-			print STDOUT '.';
+
 			#print STDOUT "next url " . $nextURL. "\n";
   			last if  $nextURL eq '';
 
@@ -1897,7 +1898,7 @@ sub catalogFolderID($$$){
 
 			}
 			$nextURL = $service->{_nextURL};
-			print STDOUT '.';
+
 			#print STDOUT "next url " . $nextURL. "\n";
   			last if  $nextURL eq '';
 
@@ -2043,7 +2044,7 @@ sub duplicateFolderStructure(*$$){
 		my $path;
 		my $path2;
 		$nextURL = $service->{_nextURL};
-		print STDOUT '.';
+
 		#print STDOUT "next url " . $nextURL. "\n";
 
   		foreach my $resourceID (keys %{$newDocuments}){
@@ -2078,7 +2079,7 @@ sub fullMoveFolderStructure(*$$){
 		my $newDocuments =  $service->getSubFolderIDList($sourceFolderID, $nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
 		$nextURL = $service->{_nextURL};
-		print STDOUT '.';
+
 		#print STDOUT "next url " . $nextURL. "\n";
 
   		foreach my $resourceID (keys %{$newDocuments}){
@@ -2117,7 +2118,7 @@ sub moveAll($*){
 		my $newDocuments =  $service->getList();
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
 		$nextURL = $service->{_nextURL};
-		print STDOUT '.';
+
 		#print STDOUT "next url " . $nextURL. "\n";
 
   		foreach my $resourceID (keys %{$newDocuments}){

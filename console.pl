@@ -1548,7 +1548,7 @@ sub syncGoogleFolder($){
 							$path =~ s%\/[^\/]+%% if ($isInbound);
 							$path = $pathTarget . '/' . $path if ($pathTarget ne '' and $destinationRoot ne '');
 							if ($mypath[$j] eq '' and $j > 1){
-								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1, $$pathTarget) if ($path ne '' and $path ne  '/' and !($isMock));
+								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1, $pathTarget) if ($path ne '' and $path ne  '/' and !($isMock));
 							}elsif ($mypath[$j] eq ''){
 								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1, $destinationRoot) if ($path ne '' and $path ne  '/' and !($isMock));
 							}

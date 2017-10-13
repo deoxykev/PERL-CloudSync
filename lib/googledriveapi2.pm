@@ -507,8 +507,8 @@ sub uploadFile(*$$$$){
 
 		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
   			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
-  			print LOG $req->as_string;
-  			print LOG $res->headers_as_string;
+  			print LOG $req->headers_as_string;
+  			print LOG $res->as_string;
   			close(LOG);
 		}
 

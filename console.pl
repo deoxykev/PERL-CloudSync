@@ -1203,10 +1203,7 @@ sub syncFolder($){
 	my ($folder, $folderID, $isMock, $isInbound, @drives) = @_;
 	my @dbase;
 
-	my $maxSize=100000000000;
-#	if (defined pDrive::Config->MAXSIZE){
-#		$maxSize = pDrive::Config->MAXSIZE;
-#	}
+	my $maxSize = pDrive::Config->MAXSIZE;
 
 	 print STDERR "folder = $folder\n";
 	for(my $i=1; $i <= $#drives; $i++){
@@ -1472,6 +1469,9 @@ sub downloadFolder($$$){
 sub syncGoogleFolder($){
 	my ($folder, $folderID, $pathTarget, $isMock, $isInbound, $destinationRoot, $trashDuplicates, @drives) = @_;
 	my @dbase;
+
+	my $maxSize = pDrive::Config->MAXSIZE;
+
 	 print STDERR "folder = $folder\n";
 	for(my $i=1; $i <= $#drives; $i++){
 			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
@@ -1574,7 +1574,9 @@ sub syncGoogleFolder($){
 							}
 							#copy limit reached and proxy list exhausted, download-and-upload
 							if ($result == -1 or $result == -2){
-								if (!($downloaded)){
+								if ($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > $maxSize){
+ 					 				print STDOUT "SKIP (size > maxsize) " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . "\n";
+								}elsif (!($downloaded)){
 								unlink pDrive::Config->LOCAL_PATH.'/'.$$;
 					    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
 								$downloaded=1;}

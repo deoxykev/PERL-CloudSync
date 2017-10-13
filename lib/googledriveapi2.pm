@@ -524,13 +524,16 @@ sub uploadFile(*$$$$){
  			my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
 			$retryCount++;
+		}elsif ($res->code == 403){
+			print STDOUT "Daily limit exceeded\n";
+			return -1;
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			$retryCount++;
 		}else{
   			print STDERR "error";
   			print STDOUT $req->headers_as_string;
-	  		return 0;
+  			return -1;
 		}
 	}
 

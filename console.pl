@@ -1578,10 +1578,21 @@ sub syncGoogleFolder($){
 								unlink pDrive::Config->LOCAL_PATH.'/'.$$;
 					    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
 								$downloaded=1;}
-								if ($useProxy[$j]){
-									$result = $proxyAccount[$j]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
-								}else{
-									$result = $services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+
+								$retry = 1;
+								while($retry){
+									if ($useProxy[$j]){
+										$result = $proxyAccount[$j]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+									}else{
+										$result = $services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+									}
+									$retry=0;
+									if ($result == -1 and $services[$drives[$j]]->hasProxyAccount()){
+										$proxyAccount[$j] = $services[$drives[$j]]->pullProxyAccount();
+										$useProxy[$j]=1;
+										$retry=1;
+									}
+
 								}
 
 							}

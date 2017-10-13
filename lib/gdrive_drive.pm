@@ -680,43 +680,17 @@ sub uploadFile(*$$){
     	sysread INPUT, $chunk, pDrive::Config->CHUNKSIZE;
     	print STDERR "\r".$i . '/'.$chunkNumbers;
     	#smy $results;
-    	$retrycount=0;
-		my $resourceID = 0;
 
-    	while ($resourceID eq '0' and $retrycount < RETRY_COUNT){
-
-			$results = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
-			$resourceID = $$results[0];
-      		#print STDOUT "\r"  . $resourceID;
-	      	if ($resourceID eq '0'){
-	       		print STDERR "...retrying\n";
-	       		#some other instance may have updated the tokens already, refresh with the latest
-	       		if ($retrycount == 0){
-	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($self->{_username});
-	       			$self->{_serviceapi}->setToken($token,$refreshToken);
-	       		#multiple failures, force-fech a new token
-	       		}else{
- 	 				my ($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
-	  				$self->{_login_dbm}->writeLogin( $self->{_username},$token,$refreshToken);
-	       			$self->{_serviceapi}->setToken($token,$refreshToken);
-	       		}
-        		sleep (10);
-        		$retrycount++;
-	      	}
-
-    	}
-		if ($retrycount >= RETRY_COUNT){
-			print STDERR "\r" . $file . "'...retry failed - $file\n";
-
-    		pDrive::masterLog("failed chunk $pointerInFile (all attempts failed) - $file\n");
-    		last;
+		$results = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
+		if ($results eq '-1'){
+			return -1;
 		}
+
 
 		$pointerInFile += $chunkSize;
   	}
-  	if ($retrycount < RETRY_COUNT){
-		print STDOUT "\r" . $file . "'...success - $file\n";
-  	}
+	print STDOUT "\r" . $file . "'...success - $file\n";
+
   	close(INPUT);
   	return $results;
 }

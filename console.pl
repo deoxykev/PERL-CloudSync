@@ -1578,7 +1578,11 @@ sub syncGoogleFolder($){
 								unlink pDrive::Config->LOCAL_PATH.'/'.$$;
 					    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
 								$downloaded=1;}
-								$result = $services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+								if ($useProxy[$j]){
+									$result = $proxyAccount[$j]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+								}else{
+									$result = $services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
+								}
 
 							}
 

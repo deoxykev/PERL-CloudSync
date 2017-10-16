@@ -1662,6 +1662,9 @@ sub compareFolders($){
 
 	my $folder1Hash = 3;
 
+	#scan through first account (similar folder size)
+	
+	#scan through second account, compare to hash created in first account scan
 
 
 }

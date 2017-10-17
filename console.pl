@@ -1286,6 +1286,8 @@ sub syncFolder($){
 					print STDOUT "DOWNLOAD $path " . $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] . ' ' . $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}]. "\n";
 					$auditline .= ',' . $path if $AUDIT;
 
+
+
 					unlink pDrive::Config->LOCAL_PATH.'/'.$$;
 		    		$services[$drives[0]]->downloadFile($$,$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_link'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
 			    	#	print STDERR "parent = ". $$newDocsyncFoluments{$resourceID}[pDrive::DBM->D->{'parent'}] . "\n";
@@ -1663,7 +1665,7 @@ sub compareFolders($){
 	my $folder1Hash = 3;
 
 	#scan through first account (similar folder size)
-	
+
 	#scan through second account, compare to hash created in first account scan
 
 

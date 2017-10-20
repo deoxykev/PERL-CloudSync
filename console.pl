@@ -270,7 +270,7 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^load gdpx\s([^\s]+)%i){
     	my ($login) = $input =~ m%^load gdpx\s([^\s]+)%i;
 		#my ($dbase,$folders) = $dbm->readHash();
-		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login));
+		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login,1));
 
 
 

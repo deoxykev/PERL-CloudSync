@@ -19,7 +19,7 @@ use constant RETRY_COUNT => 3;
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 #my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};
 
-sub new(*$) {
+sub new(*$$) {
 
   	my $self = {_serviceapi => undef,
                _login_dbm => undef,
@@ -39,6 +39,7 @@ sub new(*$) {
   	my $class = shift;
   	bless $self, $class;
 	$self->{_username} = shift;
+	my $skipTest = shift;
 	$self->{_db_checksum} = 'gd.'.$self->{_username} . '.md5.db';
 	$self->{_db_fisi} = 'gd.'.$self->{_username} . '.fisi.db';
 	$self->{_dbm} = pDrive::DBM->new();
@@ -74,7 +75,7 @@ sub new(*$) {
 	}
 
 	# token expired?
-	if (!($self->{_serviceapi}->testAccess())){
+	if (!($skipTest) and !($self->{_serviceapi}->testAccess())){
 		# refresh token
  	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
 		$self->{_serviceapi}->setToken($token,$refreshToken);
@@ -1541,6 +1542,7 @@ sub pullProxyAccount(*){
 	my $self = shift;
 
 	#$self->{_proxy_current}++;
+	print STDOUT "pull proxy account " . ${$self->{_proxy_accounts}[$self->{_proxy_current}++]}->{_username} . "\n";
 	return ${$self->{_proxy_accounts}[$self->{_proxy_current}++]};#pop(@{$self->{_proxy_accounts}});
 
 }

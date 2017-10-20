@@ -338,6 +338,9 @@ sub generalGETdata(*$){
  	 		my ($token,$refreshToken) = $self->refreshToken();
 			$self->setToken($token,$refreshToken);
 			$retryCount++;
+		}elsif ($res->code == 403){
+			sleep(10);
+			$retryCount++;
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			$retryCount++;

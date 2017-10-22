@@ -1542,7 +1542,7 @@ sub pullProxyAccount(*){
 	my $self = shift;
 
 	#$self->{_proxy_current}++;
-	print STDOUT "pull proxy account " . ${$self->{_proxy_accounts}[$self->{_proxy_current}++]}->{_username} . "\n";
+	print STDOUT "pull proxy account " . ${$self->{_proxy_accounts}[$self->{_proxy_current}]}->{_username} . "\n";
 	return ${$self->{_proxy_accounts}[$self->{_proxy_current}++]};#pop(@{$self->{_proxy_accounts}});
 
 }

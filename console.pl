@@ -273,7 +273,6 @@ while (my $input = <$userInput>){
 		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login,1));
 
 
-
   	}elsif($input =~ m%^override checksum\s([^\s]+)%i){
     	my ($dbname) = $input =~ m%^override checksum\s([^\s]+)%i;
 		$services[$currentService]->overrideChecksum($dbname);

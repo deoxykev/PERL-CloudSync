@@ -995,6 +995,12 @@ while (my $input = <$userInput>){
 		my $statusURL = $services[$currentService]->uploadRemoteFile($URL,'',$filename);
 		print STDOUT $statusURL . "\n";
 
+
+	}elsif($input =~ m%^upload local\s+\"[^\"]+\"\s+server\s+\"[^\"]+\"%i){
+		my ($folder,$path) = $input =~ m%^upload local\s+\"([^\"]+)\"\s+server\s+\"([^\"]+)\"%;
+
+  		$services[$currentService]->uploadFolder($folder,'',$path);
+
 	}elsif($input =~ m%^upload dir list%i){
 		my ($list) = $input =~ m%^upload dir list\s([^\n]+)\n%;
 

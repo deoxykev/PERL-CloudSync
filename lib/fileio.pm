@@ -99,6 +99,21 @@ closedir(IMD);
 sub getFilesDir($){
 
 my $directory = shift;
+
+use File::Find;
+
+my @fileList;
+my $count=0;
+find(sub {$fileList[$count] = $File::Find::name; }, $directory);
+return @fileList;
+}
+
+#
+# Return a list of files in the directory provided (don't recursively scan / don't tranverse)
+#
+sub getFilesDirOld($){
+
+my $directory = shift;
 opendir(IMD, $directory) || die("Cannot open directory" . $directory);
 my @dirContents = readdir(IMD);
 my @fileList;
@@ -124,6 +139,7 @@ foreach my $item (@dirContents)
 closedir(IMD);
 return @fileList;
 }
+
 
 1;
 

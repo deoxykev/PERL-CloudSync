@@ -312,7 +312,7 @@ sub uploadFolder(*$$){
 	my $uploaded = shift;
 
 	#for windows
-	$localPath =~ s%\\%\/%g;
+	$localPath =~ s%\\\\%\/%g;
     my ($folder) = $localPath =~ m%\/([^\/]+)$%;
 
 #	if ($serverPath ne ''){
@@ -352,8 +352,8 @@ sub uploadFolder(*$$){
 
     for (my $i=0; $i <= $#fileList; $i++){
 
-    	#empty file; skip
-    	if (-z $fileList[$i]){
+    	#empty file; skip (for windows, there are zero byte directories, so don't check if directory)
+    	if (!(-d $fileList[$i]) and -z $fileList[$i]){
 			next;
     	#folder
     	}elsif (-d $fileList[$i]){

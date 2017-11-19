@@ -96,7 +96,7 @@ closedir(IMD);
 #
 # Return a list of files in the directory provided (don't recursively scan / don't tranverse)
 #
-sub getFilesDir($){
+sub getFilesDirDNU($){
 
 my $directory = shift;
 
@@ -111,7 +111,7 @@ return @fileList;
 #
 # Return a list of files in the directory provided (don't recursively scan / don't tranverse)
 #
-sub getFilesDirOld($){
+sub getFilesDir($){
 
 my $directory = shift;
 opendir(IMD, $directory) || die("Cannot open directory" . $directory);

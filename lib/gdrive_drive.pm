@@ -311,8 +311,8 @@ sub uploadFolder(*$$){
 	my $parentFolder = shift;
 	my $uploaded = shift;
 
-
-	#my %uploaded;
+	#for windows
+	$localPath =~ s%\\%\/%g;
     my ($folder) = $localPath =~ m%\/([^\/]+)$%;
 
 #	if ($serverPath ne ''){

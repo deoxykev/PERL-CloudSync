@@ -266,28 +266,36 @@ sub getListRoot(*$){
 # * for checksum tracking *
 # get the list of changes
 ##
-sub getChanges(*$$$){
+sub getChanges(*$$$$){
 
 	my $self = shift;
 	my $URL = shift;
 	my $changeID = shift;
 	my $teamdrive = shift;
+	my $includeSubscribed = shift;
 
+	if ($includeSubscribed){
+		$includeSubscribed = '&includeSubscribed=true';
+
+	}else{
+		$includeSubscribed = '&includeSubscribed=false';
+
+	}
 
 	if ($URL eq '' and $teamdrive ne '' and $teamdrive ne 'all' and $changeID ne ''){
-		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true&teamDriveId='.$teamdrive.'&includeSubscribed=false&includeDeleted=false&maxResults=400&startChangeId='.$changeID;
+		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true&teamDriveId='.$teamdrive.$includeSubscribed.'&includeDeleted=false&maxResults=400&startChangeId='.$changeID;
 	}elsif ($URL eq '' and $teamdrive ne ''  and $teamdrive ne 'all'){
-		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true&teamDriveId='.$teamdrive.'&includeSubscribed=false&includeDeleted=false&maxResults=400';
+		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true&teamDriveId='.$teamdrive.$includeSubscribed.'&includeDeleted=false&maxResults=400';
 	}elsif ($URL eq '' and $teamdrive ne '' and $changeID ne ''){
-		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true&includeSubscribed=false&includeDeleted=false&maxResults=400&startChangeId='.$changeID;
+		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true'.$includeSubscribed.'&includeDeleted=false&maxResults=400&startChangeId='.$changeID;
 	}elsif ($URL eq '' and $teamdrive ne ''){
-		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true&includeSubscribed=false&includeDeleted=false&maxResults=400';
+		$URL =  API_URL . 'changes?includeTeamDriveItems=true&supportsTeamDrives=true'.$includeSubscribed.'&includeDeleted=false&maxResults=400';
 
 	}elsif ($URL eq '' and $changeID ne ''){
-		$URL =  API_URL . 'changes?includeSubscribed=false&includeDeleted=false&maxResults=400&startChangeId='.$changeID;
+		$URL =  API_URL . 'changes?includeDeleted=false'.$includeSubscribed.'&maxResults=400&startChangeId='.$changeID;
 
 	}elsif ($URL eq ''){
-		$URL =  API_URL . 'changes?includeSubscribed=false&includeDeleted=false&maxResults=400';
+		$URL =  API_URL . 'changes?includeDeleted=false'.$includeSubscribed.'&maxResults=400';
 	}
 
 	return $self->generalGETdata($URL);

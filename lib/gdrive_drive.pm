@@ -975,7 +975,7 @@ sub getChangesTeamDrive(*$){
 	my $driveListings;
 	my $lastURL;
 	while (1){
-		$driveListings = $self->{_serviceapi}->getChanges($nextURL, $changeID, $teamdrive);
+		$driveListings = $self->{_serviceapi}->getChanges($nextURL, $changeID, $teamdrive, 1);
   		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
   		my $newDocuments = $self->{_serviceapi}->readChangeListings($driveListings);
 		$self->updateMD5Hash($newDocuments);

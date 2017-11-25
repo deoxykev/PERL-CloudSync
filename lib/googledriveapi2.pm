@@ -202,10 +202,12 @@ sub getFolderInfo(*$){
 			$retryCount++;
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying (5xx error)...\n";
 			$retryCount++;
 		}else{
-			print STDOUT "...retrying...\n";
+			print STDOUT $res->as_string;
+
+			print STDOUT "...retrying (condition unknown)...\n";
 			$retryCount++;
 
 			#		print STDOUT $res->as_string;

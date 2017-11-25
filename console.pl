@@ -22,7 +22,9 @@ if (!(-e './config.cfg')){
   print CONFIG <<EOF;
 package pDrive::Config;
 
+
 # must change these
+use constant RETRY_COUNT => 5
 use constant LOCAL_PATH => '.'; #where to download / upload from
 use constant USERNAME => '';
 use constant PASSWORD => '';

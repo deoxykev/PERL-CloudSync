@@ -192,6 +192,8 @@ sub backoffDelay(*$){
 		sleep(4);
 	}elsif ($retryCount == 5){
 		sleep(8);
+	}elsif ($retryCount < pDrive::Config->RETRY_COUNT){
+		sleep(8);
 	}elsif ($retryCount == -1){
 		return 0;
 	}else{

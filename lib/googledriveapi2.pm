@@ -190,7 +190,7 @@ sub getFolderInfo(*$){
   			my ($title) = $res->as_string =~ m%\"title\"\:\s?\"([^\"]+)\"%;
 			my ($resourceID) = $res->as_string =~ m%\"parentLink\"\:\s?\"[^\"]+\/([^\"]+)\"%;
 			my ($isRoot) = $res->as_string =~ m%\"isRoot\"\:\s?([^\s]+)%;
-			if ($isRoot eq 'true' or ($title eq "Team Drive" and $resourceID eq '')){
+			if ($isRoot eq 'true' or ($title ne '' and $resourceID eq '')){
 				return (0,$title,$resourceID);
 			}else{
 				return (1,$title,$resourceID);

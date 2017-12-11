@@ -200,6 +200,9 @@ sub getFolderInfo(*$){
 			$self->setToken($token,$refreshToken);
 			print STDOUT "...refresh token and retrying...\n";
 			$retryCount++;
+		}elsif ($res->code == 404){
+			print STDOUT "...file not found, skipping...\n";
+			return (0, '','');
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			print STDOUT "...retrying (5xx error)...\n";
@@ -253,6 +256,10 @@ sub getListRoot(*$){
 			$self->setToken($token,$refreshToken);
 			print STDOUT "...refresh token and retrying...\n";
 			$retryCount++;
+		}elsif ($res->code == 404){
+			print STDOUT "...file not found, skipping...\n";
+			return 0;
+
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			print STDOUT "...retrying...\n";
@@ -358,6 +365,10 @@ sub generalGETdata(*$){
 			sleep(10);
 			print STDOUT "...retrying...\n";
 			$retryCount++;
+		}elsif ($res->code == 404){
+			print STDOUT "...file not found, skipping...\n";
+			return
+
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			print STDOUT "...retrying...\n";
@@ -465,6 +476,10 @@ sub downloadFile(*$$$){
 			$self->setToken($token,$refreshToken);
 			print STDOUT "...refresh token and retrying...\n";
 			$retryCount++;
+		}elsif ($res->code == 404){
+			print STDOUT "...file not found, skipping...\n";
+			return 1;
+
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			print STDOUT "...retrying...\n";
@@ -557,12 +572,16 @@ sub uploadFile(*$$$$){
 		}elsif ($res->code == 403){
 			print STDOUT "Daily limit exceeded\n";
 			return -1;
+		}elsif ($res->code == 404){
+			print STDOUT "...file not found, skipping...\n";
+			return -1;
+
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			print STDOUT "...retrying...\n";
 			$retryCount++;
 		}else{
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying... ($res->code)\n";
 			$retryCount++;
 		}
 	}
@@ -633,6 +652,10 @@ sub createFile(*$$$$$){
 			$self->setToken($token,$refreshToken);
 			print STDOUT "...refresh token and retrying...\n";
 			$retryCount++;
+		}elsif ($res->code == 404){
+			print STDOUT "...file not found, skipping...\n";
+			return '';
+
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			print STDOUT "...retrying...\n";
@@ -740,6 +763,10 @@ sub copyFile(*$$$){
 		}elsif ($res->code == 404){
 			print STDOUT "Not accessibble to user, download-upload instead of copy\n";
 			return -2;
+		}elsif ($res->code == 404){
+			print STDOUT "...file not found, skipping...\n";
+			return -2;
+
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			print STDOUT "...retrying...\n";
@@ -799,6 +826,10 @@ sub renameFile(*$$){
 			$self->setToken($token,$refreshToken);
 			print STDOUT "...refresh token and retrying...\n";
 			$retryCount++;
+		}elsif ($res->code == 404){
+			print STDOUT "...file not found, skipping...\n";
+			return 1;
+
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			print STDOUT "...retrying...\n";
@@ -868,6 +899,10 @@ sub createFolder(*$$$){
 			$self->setToken($token,$refreshToken);
 			print STDOUT "...refresh token and retrying...\n";
 			$retryCount++;
+		}elsif ($res->code == 404){
+			print STDOUT "...file not found, skipping...\n";
+			return 0;
+
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			print STDOUT "...retrying...\n";
@@ -945,6 +980,10 @@ sub moveFile(*$$$){
 				$self->setToken($token,$refreshToken);
 				print STDOUT "...refresh token and retrying...\n";
 				$retryCount++;
+			}elsif ($res->code == 404){
+				print STDOUT "...file not found, skipping...\n";
+				return 0;
+
 			}elsif ($res->code >= 500 and $res->code <= 505){
 				print STDOUT $res->as_string;
 				print STDOUT "...retrying...\n";

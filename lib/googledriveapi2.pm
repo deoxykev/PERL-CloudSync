@@ -581,7 +581,7 @@ sub uploadFile(*$$$$){
 			print STDOUT "...retrying...\n";
 			$retryCount++;
 		}else{
-			print STDOUT "...retrying... ($res->code)\n";
+			print STDOUT "...retrying...\n";
 			$retryCount++;
 		}
 	}
@@ -655,7 +655,9 @@ sub createFile(*$$$$$){
 		}elsif ($res->code == 404){
 			print STDOUT "...file not found, skipping...\n";
 			return '';
-
+		}elsif ($res->code == 403){
+			print STDOUT "Daily limit exceeded\n";
+			return -1;
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
 			print STDOUT "...retrying...\n";

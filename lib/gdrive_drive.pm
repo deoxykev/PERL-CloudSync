@@ -659,7 +659,9 @@ sub uploadFile(*$$){
   	print STDOUT "file size for $file ($fileName)  is $fileSize to folder $folder\n" if (pDrive::Config->DEBUG);
 
   	my $uploadURL = $self->{_serviceapi}->createFile('https://www.googleapis.com/upload/drive/v2/files?includeTeamDriveItems=true&supportsTeamDrives=true&fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
-
+	if ($uploadURL eq '-1'){
+		return -1;
+	}
 
   	my $chunkNumbers = int($fileSize/(pDrive::Config->CHUNKSIZE))+1;
 	my $pointerInFile=0;

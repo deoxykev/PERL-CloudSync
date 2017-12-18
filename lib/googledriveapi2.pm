@@ -262,7 +262,7 @@ sub getListRoot(*$){
 
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
 
 		}else{
@@ -371,7 +371,7 @@ sub generalGETdata(*$){
 
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
 		}else{
 			print STDOUT "...retrying...\n";
@@ -482,7 +482,7 @@ sub downloadFile(*$$$){
 
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
   		}  else {
 			print STDOUT "...retrying...\n";
@@ -578,7 +578,7 @@ sub uploadFile(*$$$$){
 
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
 		}else{
 			print STDOUT "...retrying...\n";
@@ -660,7 +660,7 @@ sub createFile(*$$$$$){
 			return -1;
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying... [50x error]\n";
 			$retryCount++;
 		}else{
 			print STDOUT "...retrying...\n";
@@ -771,7 +771,7 @@ sub copyFile(*$$$){
 
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying......[50x error]\n";
 			$retryCount++;
 		}else{
 			print STDOUT "...retrying...\n";
@@ -834,7 +834,7 @@ sub renameFile(*$$){
 
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
 		}else{
 			print STDOUT "...retrying...\n";
@@ -907,7 +907,7 @@ sub createFolder(*$$$){
 
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
 		}else{
 			print STDOUT "...retrying...\n";
@@ -988,7 +988,7 @@ sub moveFile(*$$$){
 
 			}elsif ($res->code >= 500 and $res->code <= 505){
 				print STDOUT $res->as_string;
-				print STDOUT "...retrying...\n";
+				print STDOUT "...retrying...[50x error]\n";
 				$retryCount++;
 			}else{
 				print STDOUT "...retrying...\n";

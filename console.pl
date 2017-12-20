@@ -647,7 +647,7 @@ while (my $input = <$userInput>){
 			print STDOUT "service path = $service $pathTarget \n";
 		}
     	syncGoogleFolder('',$folderID,'',0,0, $pathTarget,0,@drives);
-  	}elsif($input =~ m%^move folderid\s+\S+\s+folderid\s+\S+%i){
+  	}elsif($input =~ m%^	 folderid\s+\S+\s+folderid\s+\S+%i){
     	my ($sourceID, $targetID) = $input =~ m%^move folderid\s+(\S+)\s+folderid\s+(\S+)%i;
     	fullMoveFolderStructure($sourceID, $targetID, $services[$currentService]);
   	}elsif($input =~ m%^move all\s+folderid\s+\S+%i){
@@ -1032,7 +1032,7 @@ while (my $input = <$userInput>){
   		$services[$currentService]->uploadFTPFolder($localfolder);
 
 	}elsif($input =~ m%^upload folder%i){
-		my ($folder) = $input =~ m%^upload folder\s([^\n]+)\n%;
+		my ($folder) = $input =~ m%^upload folder\s([^\S]+)\n%;
   		$services[$currentService]->uploadFolder($folder);
 
 
@@ -1519,17 +1519,17 @@ sub syncGoogleFolder($){
 				$auditline .= $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ','.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].','.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ','. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] if $AUDIT;
 				for(my $j=1; $j <= $#drives; $j++){
 
-				#Google Drive -> Google Drive
-	  			###
-	  			#Google Drive (MD5 comparision) already exists; skip
-  				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive')
-  				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
-#  				and (defined($dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
-  				and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+					#Google Drive -> Google Drive
+		  			###
+		  			#Google Drive (MD5 comparision) already exists; skip
+	  				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive')
+	  				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive')
+	#  				and (defined($dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbaseTMP{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
+	  				and  ((defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 
-  				}else{
-  					$doDownload=1;
-  				}
+	  				}else{
+	  					$doDownload=1;
+	  				}
 				}
 
 #				my $path;
@@ -1695,6 +1695,7 @@ sub syncGoogleUploadFolder($){
 	my $nextURL = '';
 
 		my $path;
+		my @previousPath;
 		my @mypath;
 		my $uploads = $services[$drives[0]]->uploadFolder($folderPath);
   		foreach my $resourceID (keys %{$uploads}){
@@ -1716,6 +1717,7 @@ sub syncGoogleUploadFolder($){
 				}
 
 #				my $path;
+
 				if ($doDownload){
 
 					for(my $j=1; $j <= $#drives; $j++){
@@ -1735,8 +1737,11 @@ sub syncGoogleUploadFolder($){
   						}else{
 							$path = $$uploads{$resourceID}[1];
 
-  							#for inbound, remove Inbound from path when creating on target
+							#if we have already used this path, reuse
+							if ($path ne $previousPath[$j] or $mypath[$j] eq ''){
 								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
+								$previousPath[$j] = $path;
+							}
 
 							print STDOUT  "copy to service $drives[$j] \n";
 

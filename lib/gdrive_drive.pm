@@ -313,7 +313,7 @@ sub uploadFolder(*$$){
 
 	#for windows
 	$localPath =~ s%\\\\%\/%g;
-    my ($folder) = $localPath =~ m%\/([^\/]+)$%;
+    my ($folder) = $localPath =~ m%\/([^\/]+)/?$%;
 
 #	if ($serverPath ne ''){
 		$serverPath .= '/'.$folder;

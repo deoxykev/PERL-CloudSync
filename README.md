@@ -62,7 +62,7 @@ what works:
 - constructing a memory hash of files using md5 and fisi against file id (for purposes of syncing)
 - multiple accounts
 
-Hive.IM -
+Hive.IM (retired)-
 ----------------
 what works:
 - email auhentication
@@ -93,7 +93,7 @@ being worked on:
 - track local files vs server files (dropbox sync ability)
 
 
-Google Docs API 3 -
+Google Docs API 3 (retired)-
 -------------------------------
 *obsolete, no longer being developed
 what works:

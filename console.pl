@@ -1512,6 +1512,7 @@ sub syncGoogleFolder($){
 
 		my $newDocuments =  $services[$drives[0]]->getSubFolderIDList($folderID, $nextURL);
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
+		$nextURL = $services[$drives[0]]->{_nextURL};
 
 		my $path;
 		my @mypath;
@@ -1646,7 +1647,7 @@ sub syncGoogleFolder($){
 
 	  	}
 
-		$nextURL = $services[$drives[0]]->{_nextURL};
+		#$nextURL = $services[$drives[0]]->{_nextURL};
 
 		#print STDOUT "next url " . $nextURL. "\n";
   		last if  $nextURL eq '';

@@ -111,7 +111,7 @@ sub bindIP(*$){
 
 	my $self = shift;
   	my $IP = shift;
-
+	$self->{_IP} = $IP;
   	$self->{_ua}->local_address($IP);
 
 }

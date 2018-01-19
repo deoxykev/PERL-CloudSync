@@ -648,7 +648,7 @@ while (my $input = <$userInput>){
 			print STDOUT "service path = $service $pathTarget \n";
 		}
     	syncGoogleFolder('',$folderID,'',0,0, $pathTarget,0,@drives);
-  	}elsif($input =~ m%^	 folderid\s+\S+\s+folderid\s+\S+%i){
+  	}elsif($input =~ m%^move folderid\s+\S+\s+folderid\s+\S+%i){
     	my ($sourceID, $targetID) = $input =~ m%^move folderid\s+(\S+)\s+folderid\s+(\S+)%i;
     	fullMoveFolderStructure($sourceID, $targetID, $services[$currentService]);
   	}elsif($input =~ m%^move all\s+folderid\s+\S+%i){

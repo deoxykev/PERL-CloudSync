@@ -34,6 +34,7 @@ sub new(*$) {
 	$self->{_username} = shift;
 	my $skipTest = shift;
 
+
 	$self->{_db_checksum} = 'acd.'.$self->{_username} . '.md5.db';
 	$self->{_db_fisi} = 'acd.'.$self->{_username} . '.fisi.db';
 

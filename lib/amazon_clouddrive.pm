@@ -33,6 +33,7 @@ sub new(*$) {
   	bless $self, $class;
 	$self->{_username} = shift;
 	my $skipTest = shift;
+	$skipTest = False; #override, we need metaURL, must test access
 
 
 	$self->{_db_checksum} = 'acd.'.$self->{_username} . '.md5.db';

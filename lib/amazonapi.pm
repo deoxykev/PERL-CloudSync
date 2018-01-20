@@ -145,7 +145,6 @@ sub refreshToken(*){
 
 	  	my $block = $res->as_string;
 		($token) = $block =~ m%\"access_token\"\:\s?\"([^\"]+)\"%;
-
 		$retryCount=-1;
 	}elsif ($res->code >= 500 and $res->code <= 505){
 		$retryCount++;
@@ -158,6 +157,7 @@ sub refreshToken(*){
 	}
 	if ($token ne ''){
 		$self->{_token} = $token;
+		last;
 	}
 
 	}
@@ -698,8 +698,8 @@ sub createFolder(*$$){
 
 }
 
- 
- 
+
+
 #
 # Parse the drive listings
 ##

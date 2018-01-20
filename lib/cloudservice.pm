@@ -35,7 +35,6 @@ sub auditON(*){
 
 sub test(*){
 	my $self = shift;
-	print STDERR "in 1\n";
   	$self->{_serviceapi}->test();
 
 }

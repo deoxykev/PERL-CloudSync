@@ -4,7 +4,6 @@ package pDrive::CloudServiceAPI;
 
 sub test(*){
 	my $self = shift;
-	print STDERR "in 2\n";
 
 }
 

@@ -1259,8 +1259,8 @@ sub syncFolder($){
 				#Google Drive / Amazon Cloud -> Google Drive / Amazon Cloud
 	  			###
 	  			#Google Drive (MD5 comparision) already exists; skip
-  				if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' or Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::amazon')
-  				and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive' or Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::amazon')
+  				if 	( ($services[$drives[0]]->SERVICE eq 'Google' or $services[$drives[0]]->SERVICE eq 'Amazon')
+  				and ($services[$drives[$j]]->SERVICE eq 'Google' or $services[$drives[$j]]->SERVICE eq 'Amazon')
   				and  (($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > $maxSize) or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
   				or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 					#$auditline .= ',skip' if $AUDIT;
@@ -1268,7 +1268,7 @@ sub syncFolder($){
 				#Google -> Google Photos
 	  			###
 	  			#Google Drive (MD5 comparision) already exists OR > 1GB; skip
-				}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive::Photos'  and  (($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 1073741824)  or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+				}elsif 	($services[$drives[0]]->SERVICE eq 'Google' and $services[$drives[0]]->SERVICE eq 'GooglePhotos'  and  (($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 1073741824)  or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 					#$auditline .= ',skip' if $AUDIT;
 
 
@@ -1281,7 +1281,7 @@ sub syncFolder($){
 				#Google -> OneDrive
 	  			###
 	  			#OneDrive > 10GB; skip
-				}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::oneDrive'  and  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 10737418240){
+				}elsif 	($services[$drives[0]]->SERVICE eq 'Google' and $services[$drives[0]]->SERVICE eq 'Microsoft'  and  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 10737418240){
 					#$auditline .= ',skip' if $AUDIT;
 
 				#*anything* -> *anything*
@@ -1313,8 +1313,8 @@ sub syncFolder($){
 						#Google Drive / amazon -> Google Drive / amazon
 	  					###
 			  			#	Google Drive (MD5 comparision) already exists; skip
-  						if 	( (Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' or Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::amazon' )
-  						and (Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive'  or Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::amazon' )
+  						if 	( ($services[$drives[0]]->SERVICE eq 'Google' or $services[$drives[0]]->SERVICE eq 'Amazon' )
+  						and ($services[$drives[$j]]->SERVICE eq 'Google'  or $services[$drives[$j]]->SERVICE eq 'Amazon' )
   						and  ( (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'})
   								and $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '')
   								or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'})
@@ -1327,7 +1327,7 @@ sub syncFolder($){
 						#Google Drive -> Google Photos
 	  					###
 			  			#	Google Drive (MD5 comparision) already exists OR > 1GB; skip
-  						}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::gDrive::Photos'  and  (($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 1073741824)  or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
+  						}elsif 	($services[$drives[0]]->SERVICE eq 'Google' and $services[$drives[0]]->SERVICE eq 'GooglePhotos'  and  (($$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 1073741824)  or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_0'} ne '') or (defined($dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'}) and  $dbase[$drives[$j]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}].'_'} ne ''))){
 							print STDOUT  "skip  to service $drives[$j] (duplicate MD5 or >1GB)\n";
 							$auditline .= ',skip' if $AUDIT;
 
@@ -1337,7 +1337,7 @@ sub syncFolder($){
 						#Google Drive -> One Drive
 						###
   						#OneDrive > 10GB; skip
-						}elsif 	(Scalar::Util::blessed($services[$drives[0]]) eq 'pDrive::gDrive' and Scalar::Util::blessed($services[$drives[$j]]) eq 'pDrive::oneDrive'  and  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 10737418240){
+						}elsif 	($services[$drives[0]]->SERVICE eq 'Google' and $services[$drives[0]]->SERVICE eq 'Microsoft'  and  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] > 10737418240){
 								print STDOUT  "skip  to service $drives[$j] (duplicate fisi or >10GB)\n";
 							$auditline .= ',skip' if $AUDIT;
 
@@ -1357,7 +1357,7 @@ sub syncFolder($){
 							}
 
 							print STDOUT  "upload to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
-					    	pDrive::masterLog('upload to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}].' - path '.$path."\n");
+					    	pDrive::masterLog('upload to service '.$services[$drives[$j]]->SERVICE.' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}].' - path '.$path."\n");
 							my $result = $services[$drives[$j]]->uploadFile( pDrive::Config->LOCAL_PATH.'/'.$$, $mypath, $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]) if !($isMock);
 							if ($AUDIT and $result == 0){
 								$auditline .= ',fail' if $AUDIT;

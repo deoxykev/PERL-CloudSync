@@ -13,6 +13,7 @@ use constant FOLDER_TITLE => 0;
 use constant FOLDER_ROOT => 1;
 use constant FOLDER_PARENT => 2;
 use constant FOLDER_SUBFOLDER => 3;
+use constant SERVICE => 'Amazon';
 
 
 my $types = {'document' => ['doc','html'],'drawing' => 'png', 'presentation' => 'ppt', 'spreadsheet' => 'xls'};

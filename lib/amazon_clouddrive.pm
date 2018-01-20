@@ -32,6 +32,8 @@ sub new(*$) {
   	my $class = shift;
   	bless $self, $class;
 	$self->{_username} = shift;
+	my $skipTest = shift;
+
 	$self->{_db_checksum} = 'acd.'.$self->{_username} . '.md5.db';
 	$self->{_db_fisi} = 'acd.'.$self->{_username} . '.fisi.db';
 
@@ -62,7 +64,7 @@ sub new(*$) {
 	}
 
 	# token expired?
-	if (!($self->{_serviceapi}->testAccess())){
+	if (!!($skipTest) and !($self->{_serviceapi}->testAccess())){
 		# refresh token
  	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
 		$self->{_serviceapi}->setToken($token,$refreshToken);

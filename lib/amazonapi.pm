@@ -213,15 +213,15 @@ sub getList(*$$){
 
 	my $self = shift;
 	my $URL = shift;
-	my $nextToken = shift;
+	#my $nextToken = shift;
 
 	if ($URL eq ''){
 		#$URL = API_URL . 'nodes?filters=kind:FOLDER';
 		$URL = $self->{_metaURL}. 'nodes?filters=kind:FOLDER';
 	}
-	if ($nextToken ne ''){
-		$URL = $self->{_metaURL}. 'nodes?filters=kind:FOLDER&startToken='.$nextToken;
-	}
+	#if ($nextToken ne ''){
+#		$URL = $self->{_metaURL}. 'nodes?filters=kind:FOLDER&startToken='.$nextToken;
+#	}
 
 	my $retryCount = 0;
 	while ($self->backoffDelay($retryCount)){

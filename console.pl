@@ -1234,6 +1234,7 @@ sub syncFolder($){
 	}
 	push(@subfolders, $folderID);
 
+	my $count=0;
 	for (my $i=0; $i <= $#subfolders;$i++){
 		$folderID = $subfolders[$i];
 
@@ -1243,6 +1244,19 @@ sub syncFolder($){
   		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
 
   		foreach my $resourceID (keys %{$newDocuments}){
+
+			$count++;
+
+			if ($count %1000 == 0){
+	for(my $i=1; $i <= $#drives; $i++){
+			$dbase[$drives[$i]][0] = $dbm->closeDBM($services[$drives[$i]]->{_db_checksum});
+			$dbase[$drives[$i]][1] = $dbm->closeDBM($services[$drives[$i]]->{_db_fisi});
+			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
+			$dbase[$drives[$i]][1] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
+
+	}
+
+			}
 
 			my $auditline = '' if $AUDIT;
 

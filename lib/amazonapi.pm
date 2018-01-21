@@ -835,7 +835,7 @@ sub readDriveListings(**){
 
       		$updated =~ s%\D+%%g;
       		($updated) = $updated =~ m%^(\d{14})%;
-      		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
+      		##$newDocuments{$resourceID}[pDrive::DBM->D->{'server_updated'}] = pDrive::Time::getEPOC($updated);
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}] = $md5;
       		$newDocuments{$resourceID}[pDrive::DBM->D->{'type'}] = $resourceType;
 

@@ -157,7 +157,7 @@ sub getFolderSize(*$$){
 	my $duplicateCount = 0;
 
 	while (1){
-		$driveListings = $self->{_serviceapi}->getFolderList($folderID, $nextURL);
+		$driveListings = $self->{_serviceapi}->getSubFolderIDList($folderID, $nextURL);
   		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
   		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
 

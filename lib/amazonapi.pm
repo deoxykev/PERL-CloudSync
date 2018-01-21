@@ -206,10 +206,80 @@ sub testAccess(*){
 
 }
 
+
+
+sub generalGETdata(*$){
+	my $self = shift;
+	my $URL = shift;
+
+	my $retryCount = 0;
+	while ($self->backoffDelay($retryCount)){
+		my $req = HTTP::Request->new(GET => $URL);
+
+		$req->protocol('HTTP/1.1');
+		$req->header('Authorization' => 'Bearer '.$self->{_token});
+		my $res = $self->{_ua}->request($req);
+
+		if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  			open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  			print LOG $req->as_string;
+  			print LOG $res->as_string;
+  			close(LOG);
+		}
+
+		if($res->is_success){
+  			return \$res->as_string;
+
+		}elsif ($res->code == 401){
+ 	 		my ($token,$refreshToken) = $self->refreshToken();
+			$self->setToken($token,$refreshToken);
+			print STDOUT "...refresh token and retrying...\n";
+			$retryCount++;
+		}elsif ($res->code == 403){
+			sleep(10);
+			print STDOUT "...retrying...\n";
+			$retryCount++;
+		}elsif ($res->code == 404){
+			print STDOUT "...file not found, skipping...\n";
+			return
+
+		}elsif ($res->code >= 500 and $res->code <= 505){
+			print STDOUT $res->as_string;
+			print STDOUT "...retrying...[50x error]\n";
+			$retryCount++;
+		}else{
+			print STDOUT "...retrying...\n";
+			$retryCount++;
+
+		}
+	}
+
+
+}
+
+
+#
+# get list of the content in the Google Drive
+##
+sub getList(*$){
+
+	my $self = shift;
+	my $URL = shift;
+
+	if ($URL eq ''){
+		$URL = $self->{_metaURL}. 'nodes?filters=kind:FOLDER';
+	}
+
+
+	return $self->generalGETdata($URL);
+
+
+}
+
 #
 # get list of the content
 ##
-sub getList(*$$){
+sub getListOld(*$$){
 
 	my $self = shift;
 	my $URL = shift;

@@ -1508,8 +1508,10 @@ sub syncGoogleFolder($){
 	push(@subfolders, $folderID);
 	my @useProxy;
 	my @proxyAccount;
-	for (my $i=0; $i <= $#subfolders;$i++){
-		$folderID = $subfolders[$i];
+	while(@subfolders){
+	#for (my $i=0; $i <= $#subfolders;$i++){
+	#	$folderID = $subfolders[$i];
+		$folderID = pop @subfolders;
 	while (1){
 
 		my $newDocuments =  $services[$drives[0]]->getSubFolderIDList($folderID, $nextURL);

@@ -1252,6 +1252,7 @@ sub syncFolder($){
   			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
 				push(@subfolders, $resourceID);
   			 }else{
+  			 	print STDERR "size of array = " . $#subfolders . "\n";
 				$auditline .= $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ','.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].','.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ','. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}] if $AUDIT;
 
 				for(my $j=1; $j <= $#drives; $j++){

@@ -154,7 +154,8 @@ sub getSubFolderIDList(*$$){
 
 	my $driveListings = $self->{_serviceapi}->getList($URL);
   	my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
-	###$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
+	#disabled???
+	$self->{_nextURL} =  $self->{_serviceapi}->getNextURL($driveListings);
 	#$self->updateMD5Hash($newDocuments);
 	return $newDocuments;
 

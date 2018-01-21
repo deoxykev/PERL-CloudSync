@@ -506,8 +506,8 @@ sub getSubFolderIDListOLD(*$){
 sub getSubFolderIDList(*$$){
 
 	my $self = shift;
-	my $URL = shift;
 	my $folderName = shift;
+	my $URL = shift;
 
 	if ($URL eq ''){
 		$URL =   $self->{_metaURL};

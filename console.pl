@@ -1254,6 +1254,8 @@ sub syncFolder($){
 			$dbase[$drives[$i]][0] = $dbm->openDBM($services[$drives[$i]]->{_db_checksum});
 			$dbase[$drives[$i]][1] = $dbm->openDBM($services[$drives[$i]]->{_db_fisi});
 			print STDERR "resetting db\n";
+			pDrive::masterLog("resettting db \n");
+
 	}
 
 			}

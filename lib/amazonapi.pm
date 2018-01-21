@@ -780,12 +780,13 @@ sub readDriveListings(**){
 	my %newDocuments;
 
 	my $count=0;
+	my $title;
+
   	$$driveListings =~ s%\n%%g;
 #  	while ($$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\,\s*\{% or $$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\s*\]\s*\}%){
   	while ($$driveListings =~ m%\{\s*\"isRoot\"\:.*?\}\s*\]\,\"count\"% or m%\{\s*\"isRoot\"\:.*?\}\,\s*\{% or m%\{\s*\"eTagResponse\"\:.*?\}\,\s*\{% or $$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\s*\]\,\"nextToken\"% or $$driveListings =~ m%\{\s*\"eTagResponse\"\:.*?\}\s*\]\,\"count\"%){
 
     	my ($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\,\s*\{%;
-		my $title;
 
 		if ($entry eq ''){
     		($entry) = $$driveListings =~ m%\{\s*\"eTagResponse\"\:(.*?)\}\s*\]\,\"nextToken\"%;
@@ -794,7 +795,7 @@ sub readDriveListings(**){
 			if ($entry eq ''){
     			($entry) = $$driveListings =~ m%\{\s*\"isRoot\"\:(.*?)\}\s*\]\,\"count\"%;
 				if ($entry eq ''){
-    				my ($entry) = $$driveListings =~ m%\{\s*\"isRoot\"\:(.*?)\}\,\s*\{%;
+    				($entry) = $$driveListings =~ m%\{\s*\"isRoot\"\:(.*?)\}\,\s*\{%;
     				$$driveListings =~ s%\{\s*\"isRoot\"\:(.*?)\}\,\s*%%;
 #			    	($title) = $entry =~ m%\"name\"\:\s?\"([^\"]+)\"%;
 		    		($title) = 'root';

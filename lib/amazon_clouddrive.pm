@@ -141,6 +141,57 @@ sub getSubFolderID(*$$){
 
 }
 
+sub getFolderSize(*$$){
+
+	my $self = shift;
+	my $folderID = shift;
+	my $tempDBM = shift;
+
+	my $nextURL='';
+
+	#last run failed to finish, attempt to continue where left
+	my $driveListings;
+	my $folderSize = 0;
+	my $fileCount = 0;
+	my $duplicateSize = 0;
+	my $duplicateCount = 0;
+
+	while (1){
+		$driveListings = $self->{_serviceapi}->getFolderList($folderID, $nextURL);
+  		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
+  		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+
+
+  		foreach my $resourceID (keys %{$newDocuments}){
+	  			#	folder
+  				 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+			    	print STDERR "." if $self->{_realtime_updates};
+  				 	($size, $count, $dSize, $dCount) = $self->getFolderSize($resourceID, $tempDBM);
+			    	print STDERR "\b \b" if $self->{_realtime_updates};
+  				 	$folderSize += $size;
+  				 	$fileCount += $count + 1;
+  				 	$duplicateSize += $dSize;
+  				 	$duplicateCount += $dCount;
+  			 	}else{
+  			 		if ($$tempDBM{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]} >= 1){
+	  				 	$duplicateSize +=  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}];
+	  				 	$duplicateCount++;
+	  				 	$$tempDBM{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]}++;
+  			 		}else{
+	  				 	$folderSize +=  $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}];
+	  				 	$fileCount++;
+	  				 	$$tempDBM{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]}++;
+  			 		}
+  				}
+
+  		}
+
+		#print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+	}
+	return ($folderSize,$fileCount, $duplicateSize, $duplicateCount);
+}
+
 sub getSubFolderIDList(*$$){
 
 	my $self = shift;

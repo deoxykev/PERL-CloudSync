@@ -160,7 +160,7 @@ sub alphabetizeFolder(*$){
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#	folder
   				# if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-  				 	my ($folderName) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^(\S)\S+% ;
+  				 	my ($folderName) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^(\S)% ;
   				 	$folderName = lc $folderName;
   				 	if ($folderName ne '' and $folders{$folderName} eq ''){
   				 		my $subfolderID = $self->createFolder($folderName, $folderID);

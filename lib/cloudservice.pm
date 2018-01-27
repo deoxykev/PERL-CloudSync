@@ -171,6 +171,7 @@ sub collapseFolders(*$){
 	my $self = shift;
 	my $folderID = shift;
 	my $pull = shift;
+	my $parentFolderID = shift;
 
 
 	#construct folders (target)
@@ -182,19 +183,12 @@ sub collapseFolders(*$){
   			foreach my $resourceID (keys %{$newDocuments}){
 	  			#folder
 	  			my $folderName;
-  				if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
-  				 	($folderName) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^(\S)\S+% ;
+  				if  ($pull and $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  					$self->moveFolder($resourceID, $folderID, $parentFolderID);
+  				}elsif ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  					$self->collapseFolders($resourceID, 1, $folderID);
   				#file
   				}else{
-  				 	($folderName) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^(\S)% ;
-  				}
-  				$folderName = lc $folderName;
-  				if ($folderName ne '' and $folders{$folderName} eq ''){
-  				 		my $subfolderID = $self->createFolder($folderName, $folderID);
-  				 		$folders{$folderName} = $subfolderID;
-  				 		$self->moveFile($resourceID, $folders{$folderName}, $folderID);
-  				}elsif ($folderName ne '' and $folders{$folderName} ne ''){
-  				 		$self->moveFile($resourceID, $folders{$folderName}, $folderID);
   				}
 
   			}

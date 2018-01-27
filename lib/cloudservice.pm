@@ -144,7 +144,69 @@ sub mergeDuplicateFolder(*$$){
 
 }
 
+sub moveFile(*$$){
 
+	my $self = shift;
+	my $file = shift;
+	my $toFolder = shift;
+	my $fromFolder = shift;
+
+	return $self->{_serviceapi}->moveFile($file, $toFolder, $fromFolder);
+
+}
+
+sub moveFolder(*$$){
+
+	my $self = shift;
+	my $folder = shift;
+	my $toFolder = shift;
+	my $fromFolder = shift;
+
+	return $self->moveFile($folder, $toFolder, $fromFolder);
+
+}
+
+# pull inner folders out by 1
+sub collapseFolders(*$){
+	my $self = shift;
+	my $folderID = shift;
+	my $pull = shift;
+
+
+	#construct folders (target)
+	my %folders;
+	while (1){
+
+			my $newDocuments =  $self->getSubFolderIDList($folderID, $nextURL);
+
+  			foreach my $resourceID (keys %{$newDocuments}){
+	  			#folder
+	  			my $folderName;
+  				if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+  				 	($folderName) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^(\S)\S+% ;
+  				#file
+  				}else{
+  				 	($folderName) = $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}] =~ m%^(\S)% ;
+  				}
+  				$folderName = lc $folderName;
+  				if ($folderName ne '' and $folders{$folderName} eq ''){
+  				 		my $subfolderID = $self->createFolder($folderName, $folderID);
+  				 		$folders{$folderName} = $subfolderID;
+  				 		$self->moveFile($resourceID, $folders{$folderName}, $folderID);
+  				}elsif ($folderName ne '' and $folders{$folderName} ne ''){
+  				 		$self->moveFile($resourceID, $folders{$folderName}, $folderID);
+  				}
+
+  			}
+
+			#}
+			$nextURL = $self->{_nextURL};
+			print STDOUT "next url " . $nextURL. "\n";
+  			last if  $nextURL eq '';
+
+	}
+
+}
 
 sub alphabetizeFolder(*$){
 	my $self = shift;

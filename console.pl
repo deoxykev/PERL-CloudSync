@@ -767,7 +767,7 @@ while (my $input = <$userInput>){
 
   	}elsif($input =~ m%^collapse folderid\s\S+%i){
     	my ($folderID) = $input =~ m%^collapse folderid\s+(\S+)%i;
-		$services[$currentService]->collapseFolder($folderID, 0);
+		$services[$currentService]->collapseFolders($folderID, 0);
 
 
   	}elsif($input =~ m%^catalog folderid\s\S+%i){

@@ -167,6 +167,7 @@ sub moveFolder(*$$){
 }
 
 # pull inner folders out by 1
+##doesn't work
 sub collapseFolders(*$){
 	my $self = shift;
 	my $folderID = shift;

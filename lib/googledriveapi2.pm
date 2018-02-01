@@ -1431,7 +1431,8 @@ sub getServiceToken(*$){
     'RS256',
     { typ => 'JWT' }
 );
-	my $req = new HTTP::Request POST => $URL;
+	my $req = HTTP::Request->new(POST => $URL);
+
 	$req->content_type("application/x-www-form-urlencoded");
 	$req->protocol('HTTP/1.1');
 	$req->content('grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion='.$jwt);

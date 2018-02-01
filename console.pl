@@ -38,6 +38,7 @@ use constant ODCLIENT_SECRET => '';
 # amazon cloud drive OAUTH2
 use constant ACDCLIENT_ID => '';
 use constant ACDCLIENT_SECRET => '';
+use constant ALLOW_SERVICE => 0;
 
 # configuration
 use constant LOGFILE => '/tmp/pDrive.log';

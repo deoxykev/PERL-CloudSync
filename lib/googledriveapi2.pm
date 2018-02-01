@@ -4,7 +4,7 @@ our @ISA = qw(pDrive::CloudServiceAPI);
 
 use LWP::UserAgent;
 use LWP;
-use strict;
+#use strict;
 use IO::Handle;
 
 use constant IS_ROOT => 1;
@@ -1406,8 +1406,9 @@ sub getServiceToken(*$){
 
 	my  $URL = 'https://accounts.google.com/o/oauth2/token';
 
-	use JSON;
-	use JSON::WebToken;
+
+	use if pDrive::Config->ALLOW_SERVICE, JSON;
+	use if pDrive::Config->ALLOW_SERVICE,JSON::WebToken;
 
 
 	my $time = time;

@@ -136,7 +136,7 @@ sub getListTeamDrives(*$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL =  API_URL . 'teamdrives?maxResults=400';
+		$URL =  API_URL . 'teamdrives?maxResults=100';
 	}
 
 

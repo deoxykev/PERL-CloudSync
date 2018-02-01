@@ -494,6 +494,8 @@ while (my $input = <$userInput>){
     	($driveListings) = $services[$currentService]->getListAll();
 
 
+
+
   	}elsif($input =~ m%^get folderid details%i){
     	my ($folderID) = $input =~ m%^get folderid details\s([^\s]+)%i;
 
@@ -554,10 +556,9 @@ while (my $input = <$userInput>){
     	print STDOUT "returned path = $path\n";
 
   	}elsif($input =~ m%^get folderid\s+\S+%i){
-    	my ($path) = $input =~ m%^get folderid\s+(.*)%i;
+    	my ($folderID) = $input =~ m%^get folderid\s+(.*)%i;
 
-		my ($folderID) =  $services[$currentService]->getFolderIDByPath($path);
-    	print STDOUT "returned path = $path, id = $folderID\n";
+		$services[$currentService]->getSubFolderIDList($folderID);
 
 
 

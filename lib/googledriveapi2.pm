@@ -1392,6 +1392,7 @@ sub setServiceToken(*$){
 	my $serviceToken = shift;
 
 	$self->{_serviceToken} = $serviceToken;
+	$self->{_token} = $serviceToken;
 
 }
 

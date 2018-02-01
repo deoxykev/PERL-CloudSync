@@ -520,6 +520,9 @@ while (my $input = <$userInput>){
     	my ($path,$fileName) = $input =~ m%^get meta\s+\"([^\"]+)\"\s+\"([^\"]+)\"%i;
     	$services[$currentService]->getMetaData($path,$fileName);
 
+  	}elsif($input =~ m%^get list of teamdrives%i){
+    	($driveListings) = $services[$currentService]->getListTeamDrives();
+
 	# load MD5 with all changes
   	}elsif($input =~ m%^get changes teamdrive%i){
     	my ($teamdrive) = $input =~ m%^get changes teamdrive\s+(\S+)%i;

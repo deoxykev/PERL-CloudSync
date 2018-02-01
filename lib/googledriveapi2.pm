@@ -127,6 +127,24 @@ sub getList(*$){
 
 }
 
+#
+# get list of the content in the Google Drive
+##
+sub getListTeamDrives(*$){
+
+	my $self = shift;
+	my $URL = shift;
+
+	if ($URL eq ''){
+		$URL =  API_URL . 'teamdrives?maxResults=400';
+	}
+
+
+	return $self->generalGETdata($URL);
+
+
+}
+
 
 
 #

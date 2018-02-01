@@ -1133,6 +1133,28 @@ sub getListAll(*){
 
 }
 
+sub getListTeamDrives(*){
+
+	my $self = shift;
+
+	my $nextURL='';
+
+	#last run failed to finish, attempt to continue where left
+	my $driveListings;
+	my $lastURL;
+	while (1){
+		$driveListings = $self->{_serviceapi}->getListTeamDrives($nextURL);
+  		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
+  		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+
+		#print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+  		$lastURL = $nextURL if $nextURL ne '';
+	}
+	print STDOUT "last url " . $lastURL . "\n";
+
+}
+
 sub updateMD5Hash(**){
 
 	my $self = shift;

@@ -182,6 +182,21 @@ sub getFileMeta(*$){
 }
 
 #
+# empty the trash
+##
+sub emptyTrash(*){
+
+	my $self = shift;
+
+	my $URL =  API_URL . 'files/trash';
+
+
+	return $self->generalGETdata($URL);
+
+
+}
+
+#
 # get list of the content in the Google Drive
 ##
 sub getFolderInfo(*$){

@@ -905,6 +905,14 @@ sub deleteFile(*$){
 
 }
 
+sub emptyTrash(*$){
+
+	my $self = shift;
+
+	return $self->{_serviceapi}->emptyTrash();
+
+}
+
 
 sub trashFile(*$){
 

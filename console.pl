@@ -276,10 +276,14 @@ while (my $input = <$userInput>){
 		#my ($dbase,$folders) = $dbm->readHash();
 		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login,1));
 
+
+
   	}elsif($input =~ m%^load gdsa\s([^\s]+)%i){
     	my ($JSON) = $input =~ m%^load gdsa\s([^\s]+)%i;
 		$services[$currentService]->addProxyService(pDrive::gDrive->new($JSON));
 
+  	}elsif($input =~ m%^empty trash%i){
+		$services[$currentService]->emptyTrash();
 
   	}elsif($input =~ m%^override checksum\s([^\s]+)%i){
     	my ($dbname) = $input =~ m%^override checksum\s([^\s]+)%i;

@@ -34,7 +34,6 @@ sub new(*$$) {
   			  _paths => undef,
   			  _db_fisi => undef,
   			  _proxy_accounts => undef,
-  			  _proxy_services => undef,
   			  _proxy_current => 0,
   			  _realtime_updates => 0};
 
@@ -42,12 +41,16 @@ sub new(*$$) {
   	bless $self, $class;
 	$self->{_username} = shift;
 	my $skipTest = shift;
+	my $key = shift;
+
+
+
 	$self->{_db_checksum} = 'gd.'.$self->{_username} . '.md5.db';
 	$self->{_db_fisi} = 'gd.'.$self->{_username} . '.fisi.db';
 	$self->{_dbm} = pDrive::DBM->new();
 	$self->{_paths} = {};
 	$self->{_proxy_accounts} = [];
-	$self->{_proxy_services} = [];
+
 
   	# initialize web connections
   	$self->{_serviceapi} = pDrive::GoogleDriveAPI2->new(pDrive::Config->CLIENT_ID,pDrive::Config->CLIENT_SECRET);
@@ -85,6 +88,12 @@ sub new(*$$) {
 	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
 	  	$self->{_serviceapi}->testAccess();
 	}
+
+	if ($key ne ''){
+		$self->setService($key);
+		$self->setServiceUsername($self->{_username});
+	}
+
 	return $self;
 
 }
@@ -171,7 +180,7 @@ sub setService(*$){
 
 
 
-sub setUsername(*$){
+sub setServiceUsername(*$){
 	my $self = shift;
 	my $username = shift;
 	if ($username ne 'self'){
@@ -1617,30 +1626,14 @@ sub addProxyAccount(*$){
 
 }
 
-sub addProxyService(*$){
-
-	my $self = shift;
-	my $service = shift;
-	push(@{$self->{_proxy_services}},\$service);
-	print STDOUT "added proxy " . ${$self->{_proxy_services}[$#{$self->{_proxy_services}}]}->{_username} . "\n";
-
-}
-
 
 sub pullProxyAccount(*){
 
 	my $self = shift;
 
-	if ($self->hasProxyService()){
-		#$self->{_proxy_current}++;
-		print STDOUT "pull proxy service " . ${$self->{_proxy_services}[$self->{_proxy_current}]}->{_username} . "\n";
-		return ${$self->{_proxy_services}[$self->{_proxy_current}++]};#pop(@{$self->{_proxy_accounts}});
-
-	}else{
-		#$self->{_proxy_current}++;
-		print STDOUT "pull proxy account " . ${$self->{_proxy_accounts}[$self->{_proxy_current}]}->{_username} . "\n";
-		return ${$self->{_proxy_accounts}[$self->{_proxy_current}++]};#pop(@{$self->{_proxy_accounts}});
-	}
+	#$self->{_proxy_current}++;
+	print STDOUT "pull proxy account " . ${$self->{_proxy_accounts}[$self->{_proxy_current}]}->{_username} . "\n";
+	return ${$self->{_proxy_accounts}[$self->{_proxy_current}++]};#pop(@{$self->{_proxy_accounts}});
 
 }
 
@@ -1648,17 +1641,6 @@ sub hasProxyAccount(*){
 
 	my $self = shift;
 	if ($self->{_proxy_current} < $#{$self->{_proxy_accounts}}){
-		return 1;
-	}else{
-		return 0;
-	}
-
-}
-
-sub hasProxyService(*){
-
-	my $self = shift;
-	if ($self->{_proxy_current} < $#{$self->{_proxy_services}}){
 		return 1;
 	}else{
 		return 0;

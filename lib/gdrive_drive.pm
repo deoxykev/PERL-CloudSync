@@ -153,7 +153,7 @@ sub setService(*$){
 	open(JSON, $JSON) or die ('cannot read file '.$JSON);
 	my $IIS;
 	my $KEY;
-	while(my $line = <>){
+	while(my $line = <JSON>){
 		my ($key,$value) = $line =~ m%\"([^\"]+)\"\: \"([^\"]+)\"%;
 		if ($key eq 'client_email'){
 			print STDOUT "client_email = $value\n" if (pDrive::Config->DEBUG);

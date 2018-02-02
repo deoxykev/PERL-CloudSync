@@ -1133,6 +1133,34 @@ sub getListAll(*){
 
 }
 
+
+sub getFirstTeamDrive(*){
+
+	my $self = shift;
+
+	my $nextURL='';
+
+	#last run failed to finish, attempt to continue where left
+	my $driveListings;
+	my $lastURL;
+	while (1){
+		$driveListings = $self->{_serviceapi}->getListTeamDrives($nextURL);
+  		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
+  		if ($driveListings =~ m%"id": "([^"]+)"%){
+  			($teamID) = $driveListings =~ m%"id": "([^"]+)"%;
+  			print STDOUT "team drive id $teamID\n" if (pDrive::Config->DEBUG);
+  			return;
+  		}
+
+		#print STDOUT "next url " . $nextURL . "\n";
+  		last if $nextURL eq '';
+  		$lastURL = $nextURL if $nextURL ne '';
+	}
+	print STDOUT "last url " . $lastURL . "\n";
+
+}
+
+
 sub getListTeamDrives(*){
 
 	my $self = shift;

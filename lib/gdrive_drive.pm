@@ -1149,7 +1149,7 @@ sub getFirstTeamDrive(*){
   		if ($$driveListings =~ m%\"id\"\: \"[^\"]+\"%){
   			my ($teamID) = $$driveListings =~ m%\"id\"\: \"([^\"]+)\"%;
   			print STDOUT "team drive id $teamID\n" if (pDrive::Config->DEBUG);
-  			return;
+  			return $teamID;
   		}
 
 		#print STDOUT "next url " . $nextURL . "\n";

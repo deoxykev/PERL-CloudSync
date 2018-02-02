@@ -169,11 +169,14 @@ sub setService(*$){
 	$self->{_serviceapi}->setService($IIS,$KEY);
 }
 
+
+
 sub setUsername(*$){
 	my $self = shift;
 	my $username = shift;
-	$self->{_serviceapi}->setUsername($username);
-
+	if ($username ne 'self'){
+		$self->{_serviceapi}->setUsername($username);
+	}
 
   	my ($token) = $self->{_login_dbm}->readServiceLogin($username);
 

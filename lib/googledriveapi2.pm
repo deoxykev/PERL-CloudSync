@@ -1451,6 +1451,8 @@ sub getServiceToken(*$){
 
 	my $time = time;
 
+	my $jwt;
+	if ($username ne 'self'){
 	my $jwt = JSON::WebToken->encode(
     {
         # your service account id here
@@ -1470,6 +1472,26 @@ sub getServiceToken(*$){
     'RS256',
     { typ => 'JWT' }
 );
+	}else{
+			my $jwt = JSON::WebToken->encode(
+    {
+        # your service account id here
+        iss   => $self->{_iss},
+        scope => 'https://www.googleapis.com/auth/drive',
+        aud   => 'https://accounts.google.com/o/oauth2/token',
+        exp   => $time + 3600,
+        iat   => $time,
+        # To access the google admin sdk with a service account
+        # the service account must act on behalf of an account
+        # that has admin privileges on the domain
+        # Otherwise the token will be returned but API calls
+        # will generate a 403
+    },
+    $self->{_key},
+    'RS256',
+    { typ => 'JWT' }
+);
+	}
 	my $req = HTTP::Request->new(POST => $URL);
 
 	$req->content_type("application/x-www-form-urlencoded");

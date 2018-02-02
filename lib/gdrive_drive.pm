@@ -1629,7 +1629,7 @@ sub pullProxyAccount(*){
 	my $self = shift;
 
 	#$self->{_proxy_current}++;
-	print STDOUT "pull proxy account " . ${$self->{_proxy_accounts}[$self->{_proxy_current}]}->{_username} ' ' . ${$self->{_proxy_accounts}[$self->{_proxy_current}]}->{_key}. "\n";
+	print STDOUT "pull proxy account " . ${$self->{_proxy_accounts}[$self->{_proxy_current}]}->{_username} .' ' . ${$self->{_proxy_accounts}[$self->{_proxy_current}]}->{_key}. "\n";
 	return ${$self->{_proxy_accounts}[$self->{_proxy_current}++]};#pop(@{$self->{_proxy_accounts}});
 
 }

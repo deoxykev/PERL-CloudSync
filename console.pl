@@ -1616,6 +1616,7 @@ sub syncGoogleFolder($){
 									$proxyAccount[$j] = $services[$drives[$j]]->pullProxyAccount();
 									$useProxy[$j]=1;
 									$retry=1;
+									exit;
 								}
 							}
 							#copy limit reached and proxy list exhausted, download-and-upload

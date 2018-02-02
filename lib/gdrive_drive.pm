@@ -65,31 +65,30 @@ sub new(*$$) {
 	$self->{_folders_dbm} = $self->buildMemoryDBM();
 	#$loginsDBM->openDBMForUpdating( 'gd.'.$self->{_username} . '.folders.db');
 
+	if ($key eq ''){
+		# no token defined
+		if ($token eq '' or  $refreshToken  eq ''){
+			my $code;
+			my  $URL = 'https://accounts.google.com/o/oauth2/auth?scope=https://www.googleapis.com/auth/drive&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id='.pDrive::Config->CLIENT_ID;
+			print STDOUT "visit $URL\n";
+			print STDOUT 'Input Code:';
+			$code = <>;
+			print STDOUT "code = $code\n";
+	 	  	($token,$refreshToken) = $self->{_serviceapi}->getToken($code);
+		  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
+		}else{
+			$self->{_serviceapi}->setToken($token,$refreshToken);
+		}
 
-	# no token defined
-	if ($token eq '' or  $refreshToken  eq ''){
-		my $code;
-		my  $URL = 'https://accounts.google.com/o/oauth2/auth?scope=https://www.googleapis.com/auth/drive&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id='.pDrive::Config->CLIENT_ID;
-		print STDOUT "visit $URL\n";
-		print STDOUT 'Input Code:';
-		$code = <>;
-		print STDOUT "code = $code\n";
- 	  	($token,$refreshToken) = $self->{_serviceapi}->getToken($code);
-	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
+		# token expired?
+		if (!($skipTest) and !($self->{_serviceapi}->testAccess())){
+			# refresh token
+	 	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
+			$self->{_serviceapi}->setToken($token,$refreshToken);
+		  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
+		  	$self->{_serviceapi}->testAccess();
+		}
 	}else{
-		$self->{_serviceapi}->setToken($token,$refreshToken);
-	}
-
-	# token expired?
-	if (!($skipTest) and !($self->{_serviceapi}->testAccess())){
-		# refresh token
- 	 	($token,$refreshToken) = $self->{_serviceapi}->refreshToken();
-		$self->{_serviceapi}->setToken($token,$refreshToken);
-	  	$self->{_login_dbm}->writeLogin($self->{_username},$token,$refreshToken);
-	  	$self->{_serviceapi}->testAccess();
-	}
-
-	if ($key ne ''){
 		$self->setService($key);
 		$self->setServiceUsername($self->{_username});
 	}

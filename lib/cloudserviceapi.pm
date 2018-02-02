@@ -58,6 +58,12 @@ sub getToken(*$){
 sub refreshToken(*){
 	my $self = shift;
 
+	if (refreshToken eq ''){
+		return $self->getServiceToken();
+
+	}
+
+
 	my  $URL =  $self->{_oauthURL} .'/token';
 
 	my $retryCount = 2;

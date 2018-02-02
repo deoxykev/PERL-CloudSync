@@ -1430,6 +1430,8 @@ sub setServiceToken(*$){
 
 	$self->{_serviceToken} = $serviceToken;
 	$self->{_token} = $serviceToken;
+	$self->{_refreshToken} = '';
+
 
 }
 
@@ -1518,7 +1520,7 @@ sub getServiceToken(*$){
 		($token) = $block =~ m%\"access_token\"\s?\:\s?\"([^\"]+)\"%;
 		if ($token ne ''){
 			$self->{_serviceToken} = $token;
-			return $self->{_serviceToken};
+			return ($self->{_serviceToken},'');
 		}
 
 	}else{

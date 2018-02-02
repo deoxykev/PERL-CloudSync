@@ -91,6 +91,7 @@ sub new(*$$) {
 	}else{
 		$self->setService($key);
 		$self->setServiceUsername($self->{_username});
+		$self->{_username} = $self->{_username}
 	}
 
 	return $self;
@@ -186,23 +187,20 @@ sub setServiceUsername(*$){
 		$self->{_serviceapi}->setUsername($username);
 	}
 
-  	my ($token) = $self->{_login_dbm}->readServiceLogin($username);
+  	#my ($token) = $self->{_login_dbm}->readServiceLogin($username);
 
 	# no token defined
-	if ($token eq ''){
- 	  	$token = $self->{_serviceapi}->getServiceToken($username);
+ 	  	my ($token,$refreshToken) = $self->{_serviceapi}->getServiceToken($username);
  	  	print STDERR "TOKEN = $token\n";
-	  	$self->{_login_dbm}->writeServiceLogin($username,$token);
-	}else{
+#	  	$self->{_login_dbm}->writeServiceLogin($username,$token);
 		$self->{_serviceapi}->setServiceToken($token);
-	}
 
 	# token expired?
 	if (!($self->{_serviceapi}->testServiceAccess())){
 		# refresh token
- 	 	($token) = $self->{_serviceapi}->getServiceToken($username);
+ 	 	($token, $refreshToken) = $self->{_serviceapi}->getServiceToken($username);
 		$self->{_serviceapi}->setServiceToken($token);
-	  	$self->{_login_dbm}->writeServiceLogin($username,$token);
+	  	#$self->{_login_dbm}->writeServiceLogin($username,$token);
 	  	$self->{_serviceapi}->testServiceAccess();
 	}
 }
@@ -1631,7 +1629,7 @@ sub pullProxyAccount(*){
 	my $self = shift;
 
 	#$self->{_proxy_current}++;
-	print STDOUT "pull proxy account " . ${$self->{_proxy_accounts}[$self->{_proxy_current}]}->{_username} . "\n";
+	print STDOUT "pull proxy account " . ${$self->{_proxy_accounts}[$self->{_proxy_current}]}->{_username} ' ' . ${$self->{_proxy_accounts}[$self->{_proxy_current}]}->{_key}. "\n";
 	return ${$self->{_proxy_accounts}[$self->{_proxy_current}++]};#pop(@{$self->{_proxy_accounts}});
 
 }

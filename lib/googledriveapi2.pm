@@ -1453,7 +1453,7 @@ sub getServiceToken(*$){
 
 	my $jwt;
 	if ($username ne 'self'){
-	my $jwt = JSON::WebToken->encode(
+	 $jwt = JSON::WebToken->encode(
     {
         # your service account id here
         iss   => $self->{_iss},
@@ -1473,7 +1473,7 @@ sub getServiceToken(*$){
     { typ => 'JWT' }
 );
 	}else{
-			my $jwt = JSON::WebToken->encode(
+			$jwt = JSON::WebToken->encode(
     {
         # your service account id here
         iss   => $self->{_iss},

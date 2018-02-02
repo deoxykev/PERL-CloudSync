@@ -1146,8 +1146,8 @@ sub getFirstTeamDrive(*){
 	while (1){
 		$driveListings = $self->{_serviceapi}->getListTeamDrives($nextURL);
   		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
-  		if ($driveListings =~ m%"id": "([^"]+)"%){
-  			($teamID) = $driveListings =~ m%"id": "([^"]+)"%;
+  		if ($$driveListings =~ m%\"id\"\: \"[^\"]+\"%){
+  			my ($teamID) = $$driveListings =~ m%\"id\"\: \"([^\"]+)\"%;
   			print STDOUT "team drive id $teamID\n" if (pDrive::Config->DEBUG);
   			return;
   		}

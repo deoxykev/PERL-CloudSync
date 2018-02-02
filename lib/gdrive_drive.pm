@@ -34,7 +34,7 @@ sub new(*$$) {
   			  _paths => undef,
   			  _db_fisi => undef,
   			  _proxy_accounts => undef,
-  			  _proxy_current => 0,
+  			  _proxy_current => -1,
   			  _realtime_updates => 0};
 
   	my $class = shift;

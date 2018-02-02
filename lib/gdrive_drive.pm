@@ -159,7 +159,7 @@ sub setService(*$){
 			print STDOUT "client_email = $value\n" if (pDrive::Config->DEBUG);
 			$IIS = $value;
 		}elsif ($key eq 'private_key'){
-			$value =~ s%\\n%\n%;
+			$value =~ s%\\n%\n%g;
 			print STDOUT "private_key = $value\n" if (pDrive::Config->DEBUG);
 			$KEY = $value;
 		}

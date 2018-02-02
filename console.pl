@@ -533,7 +533,9 @@ while (my $input = <$userInput>){
 
   	}elsif($input =~ m%^move local to teamdrive%i){
     	my ($teamID) = $services[$currentService]->getFirstTeamDrive();
-    	fullMoveFolderStructure('root', $teamID, $services[$currentService]);
+    	if ($teamID ne ''){
+    		fullMoveFolderStructure('root', $teamID, $services[$currentService]);
+    	}
 
 	# load MD5 with all changes
   	}elsif($input =~ m%^get changes teamdrive%i){

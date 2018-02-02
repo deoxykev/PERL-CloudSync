@@ -1395,9 +1395,13 @@ sub setService(*$$){
 	my $self = shift;
 	my $ISS = shift;
 	my $KEY = shift;
-	my $username = shift;
 	$self->{_iss} = $ISS;
 	$self->{_key} = $KEY;
+}
+
+sub setUsername(*$$){
+	my $self = shift;
+	my $username = shift;
 	$self->{_username} = $username;
 }
 

@@ -276,6 +276,10 @@ while (my $input = <$userInput>){
 		#my ($dbase,$folders) = $dbm->readHash();
 		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login,1));
 
+  	}elsif($input =~ m%^load gdsa\s([^\s]+)%i){
+    	my ($JSON) = $input =~ m%^load gdsa\s([^\s]+)%i;
+		$services[$currentService]->addProxyService(pDrive::gDrive->new($JSON));
+
 
   	}elsif($input =~ m%^override checksum\s([^\s]+)%i){
     	my ($dbname) = $input =~ m%^override checksum\s([^\s]+)%i;
@@ -318,12 +322,14 @@ while (my $input = <$userInput>){
 
 			}
 		}
-	}elsif($input =~ m%^set service username\s([^\s]+)%i){
+	}elsif($input =~ m%^set username\s([^\s]+)%i){
 
-    	my ($login) = $input =~ m%^set service username\s([^\s]+)%i;
-		$services[$currentService]->setService($login);
-	}elsif($input =~ m%^set account\s(\d+)%i){
-    	 ($currentService) = $input =~ m%^set account\s(\d+)%i;
+    	my ($login) = $input =~ m%^set username\s([^\s]+)%i;
+		$services[$currentService]->setUsername($login);
+	}elsif($input =~ m%^set service\s([^\s]+)%i){
+
+    	my ($JSON) = $input =~ m%^set service\s([^\s]+)%i;
+		$services[$currentService]->setService($JSON);
 
   	}elsif($input =~ m%^load acd\s\d+\s([^\s]+)%i){
     	my ($account,$login) = $input =~ m%^load acd\s(\d+)\s([^\s]+)%i;

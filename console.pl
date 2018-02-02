@@ -525,6 +525,9 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^get list of teamdrives%i){
     	($driveListings) = $services[$currentService]->getListTeamDrives();
 
+  	}elsif($input =~ m%^get first teamdrive%i){
+    	($driveListings) = $services[$currentService]->getFirstTeamDrive();
+
 	# load MD5 with all changes
   	}elsif($input =~ m%^get changes teamdrive%i){
     	my ($teamdrive) = $input =~ m%^get changes teamdrive\s+(\S+)%i;

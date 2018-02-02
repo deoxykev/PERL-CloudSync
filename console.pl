@@ -281,7 +281,8 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^load gdsa\s[^\s]+\skey\s[^\s]+%i){
     	my ($login,$JSON) = $input =~ m%^load gdsa\s([^\s]+)\skey\s([^\s]+)%i;
 		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login,1,$JSON));
-
+		print STDERR "proxy = " . $services[$currentService]->hasProxyAccount() . "\n";
+exit(0);
   	}elsif($input =~ m%^empty trash%i){
 		$services[$currentService]->emptyTrash();
 
@@ -1612,12 +1613,10 @@ sub syncGoogleFolder($){
 								$retry=0;
 								#user limited exceeed in copy, try proxy then download and manually upload
 								# OR fle not accessible?  manually upload
-								print STDERR "proxy = " . $services[$drives[$j]]->hasProxyAccount() . "\n";
 								if ($result == -1 and $services[$drives[$j]]->hasProxyAccount()){
 									$proxyAccount[$j] = $services[$drives[$j]]->pullProxyAccount();
 									$useProxy[$j]=1;
 									$retry=1;
-									exit;
 								}
 							}
 							#copy limit reached and proxy list exhausted, download-and-upload

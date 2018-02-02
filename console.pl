@@ -281,6 +281,8 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^load gdsa\s[^\s]+\skey\s[^\s]+%i){
     	my ($login,$JSON) = $input =~ m%^load gdsa\s([^\s]+)\skey\s([^\s]+)%i;
 		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login,1,$JSON));
+		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login,1,$JSON));
+
 		print STDERR "proxy = " . $services[$currentService]->hasProxyAccount() . "\n";
 exit(0);
   	}elsif($input =~ m%^empty trash%i){

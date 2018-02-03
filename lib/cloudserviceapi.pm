@@ -58,7 +58,7 @@ sub getToken(*$){
 sub refreshToken(*){
 	my $self = shift;
 
-	if (refreshToken eq ''){
+	if ($self->{_refreshToken} eq ''){
 		return $self->getServiceToken();
 
 	}

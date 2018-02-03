@@ -260,14 +260,15 @@ sub traverseFolder($){
 }
 
 
-sub updateChange(**){
+sub updateChange(**$){
 
 	my $self = shift;
 	my $changeID = shift;
 	my $URL = shift;
+	my $teamdrive = shift;
 
 	tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDWR|O_CREAT, 0666) or die "can't open checksum: $!";
-	$dbase{'LAST_CHANGE'} = $changeID unless  (not defined ($changeID) or $changeID eq '');
+	$dbase{'LAST_CHANGE'.$teamdrive} = $changeID unless  (not defined ($changeID) or $changeID eq '');
 	$dbase{'URL'} = $URL;
 	untie(%dbase);
 

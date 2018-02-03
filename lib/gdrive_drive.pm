@@ -1000,7 +1000,7 @@ sub getChangesTeamDrive(*$){
 
 	my $nextURL;
     tie(my %dbase, pDrive::Config->DBM_TYPE, $self->{_db_checksum} ,O_RDONLY|O_CREAT, 0666) or die "can't open md5: $!";
-    my $changeID = $dbase{'LAST_CHANGE'};
+    my $changeID = $dbase{'LAST_CHANGE'.$teamdrive};
     $nextURL = $dbase{'URL'} if $changeID eq '';
 
     print STDOUT "changeID = " . $changeID . "\n";
@@ -1025,7 +1025,7 @@ sub getChangesTeamDrive(*$){
 	}
 	#print STDOUT $$driveListings . "\n";
 	$changeID = $self->{_serviceapi}->getChangeID($driveListings);
-	$self->updateChange($changeID, $lastURL);
+	$self->updateChange($changeID, $lastURL, $teamdrive);
 
 }
 

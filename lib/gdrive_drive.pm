@@ -90,7 +90,7 @@ sub new(*$$) {
 		}
 	}else{
 		$self->setService($key);
-		$self->setServiceUsername($self->{_username});
+		$self->setServiceUsername($self->{_username},$skipTest);
 		$self->{_username} = $self->{_username}
 	}
 
@@ -180,14 +180,16 @@ sub setService(*$){
 
 
 
-sub setServiceUsername(*$){
+sub setServiceUsername(*$$){
 	my $self = shift;
 	my $username = shift;
+	my $skipTest = shift;
 	if ($username ne 'self'){
 		$self->{_serviceapi}->setUsername($username);
 	}
 
   	#my ($token) = $self->{_login_dbm}->readServiceLogin($username);
+	return if $skipTest;
 
 	# no token defined
  	  	my ($token,$refreshToken) = $self->{_serviceapi}->getServiceToken($username);
@@ -195,7 +197,6 @@ sub setServiceUsername(*$){
 #	  	$self->{_login_dbm}->writeServiceLogin($username,$token);
 		$self->{_serviceapi}->setServiceToken($token);
 
-	return;
 	# token expired?
 	if (!($self->{_serviceapi}->testServiceAccess())){
 		# refresh token

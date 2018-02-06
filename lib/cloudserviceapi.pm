@@ -59,7 +59,7 @@ sub refreshToken(*){
 	my $self = shift;
 
 	if ($self->{_refreshToken} eq ''){
-		return $self->getServiceToken();
+		return $self->getServiceToken($self->{_username},0);
 
 	}
 

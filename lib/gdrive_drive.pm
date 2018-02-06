@@ -195,6 +195,7 @@ sub setServiceUsername(*$){
 #	  	$self->{_login_dbm}->writeServiceLogin($username,$token);
 		$self->{_serviceapi}->setServiceToken($token);
 
+	return;
 	# token expired?
 	if (!($self->{_serviceapi}->testServiceAccess())){
 		# refresh token

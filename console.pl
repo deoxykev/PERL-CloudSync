@@ -206,17 +206,16 @@ my @commands;
 my @accounts;
 my $currentCommand=0;
 my $account = '';
-my $command = '';
 while (my $input = <$userInput> or ($#accounts >= 0 or $currentCommand <= $#commands) ){
 
 	#first account, first command
-	if ($#accounts >= 0 and $currentCommand =0){
+	if ($#accounts >= 0 and $currentCommand ==0){
 		$account = pop(@accounts);
-		$command = $commands[$currentCommand++];
+		my $command = $commands[$currentCommand++];
 		$command =~ s^\%1\%^$account^g;
 		$input = $command;
 	}elsif ($currentCommand <= $#commands){
-		$command = $commands[$currentCommand++];
+		my $command = $commands[$currentCommand++];
 		$command =~ s^\%1\%^$account^g;
 		$input = $command;
 		$currentCommand = 0 if $currentCommand > $#commands;

@@ -313,6 +313,7 @@ while (my $input = <$userInput> or ($#accounts >= 0 or $currentCommand <= $#comm
 		open (ACCOUNTS, $accounts) or  die ('cannot read file '.$accounts);
     	while (my $line = <ACCOUNTS>){
 			push(@accounts, $line);
+			print "loaded account $line";
     	}
     	close(ACCOUNTS);
 

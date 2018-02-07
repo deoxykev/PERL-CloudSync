@@ -206,7 +206,7 @@ my @commands;
 my @accounts;
 my $currentCommand=0;
 my $account = '';
-while (my $input = <$userInput> or ($#accounts >= 0 or $currentCommand <= $#commands) ){
+while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $currentCommand <= $#commands)) ){
 
 	#first account, first command
 	if ($#accounts >= 0 and $currentCommand ==0){
@@ -220,6 +220,7 @@ while (my $input = <$userInput> or ($#accounts >= 0 or $currentCommand <= $#comm
 		$command =~ s^\%1\%^$account^g;
 		$input = $command;
 		$currentCommand = 0 if $currentCommand > $#commands;
+		$account = '';
 		print $input;
 	}
 

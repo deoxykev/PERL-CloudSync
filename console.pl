@@ -302,7 +302,7 @@ while (my $input = <$userInput> or ($#accounts >= 0 or $currentCommand <= $#comm
 		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login,1,$JSON));
 
   	}elsif($input =~ m%^batch accounts\s[^\s]+\scommands\s[^\s]+%i){
-		my ($accounts,$commands) = $input =~ m%^batch accounts\s[^\s]+\scommands\s[^\s]+%;
+		my ($accounts,$commands) = $input =~ m%^batch accounts\s([^\s]+)\scommands\s([^\s]+)%;
 
 		my $count=0;
 		open (COMMANDS, $commands) or  die ('cannot read file '.$commands);

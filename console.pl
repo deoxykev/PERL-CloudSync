@@ -202,7 +202,26 @@ if ($opt{c} ne ''){
 print STDERR '>';
 my $AUDIT = 0;
 
-while (my $input = <$userInput>){
+my @commands;
+my @accounts;
+my $currentCommand=0;
+my $account = '';
+my $command = '';
+while (my $input = <$userInput> or ($#accounts >= 0 or $currentCommand <= $#commands) ){
+
+	#first account, first command
+	if ($#accounts >= 0 and $currentCommand =0){
+		$account = pop(@accounts);
+		$command = $commands[$currentCommand++];
+		$command =~ s^\%1\%^$account^g;
+		$input = $command;
+	}elsif ($currentCommand <= $#commands){
+		$command = $commands[$currentCommand++];
+		$command =~ s^\%1\%^$account^g;
+		$input = $command;
+		$currentCommand = 0 if $currentCommand > $#commands;
+	}
+
 
 	if($input =~ m%^exit%i or$input =~ m%^quit%i){
   		last;
@@ -281,6 +300,22 @@ while (my $input = <$userInput>){
   	}elsif($input =~ m%^load gdsa\s[^\s]+\skey\s[^\s]+%i){
     	my ($login,$JSON) = $input =~ m%^load gdsa\s([^\s]+)\skey\s([^\s]+)%i;
 		$services[$currentService]->addProxyAccount(pDrive::gDrive->new($login,1,$JSON));
+
+  	}elsif($input =~ m%^batch accounts\s[^\s]+\scommands\s[^\s]+%i){
+		my ($accounts,$commands) = $input =~ m%^batch accounts\s[^\s]+\scommands\s[^\s]+%;
+
+		my $count=0;
+		open (COMMANDS, $commands) or  die ('cannot read file '.$commands);
+		while (my $line = <COMMANDS>){
+			$commands[$count++] = $line;
+		}
+		close(COMMANDS);
+		open (ACCOUNTS, $accounts) or  die ('cannot read file '.$accounts);
+    	while (my $line = <ACCOUNTS>){
+			push(@accounts, $line);
+    	}
+    	close(ACCOUNTS);
+
 
   	}elsif($input =~ m%^empty trash%i){
 		$services[$currentService]->emptyTrash();

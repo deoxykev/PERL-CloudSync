@@ -190,8 +190,29 @@ sub emptyTrash(*){
 
 	my $URL =  API_URL . 'files/trash';
 
+	my $req = HTTP::Request->new(DELETE => $URL);
 
-	return $self->generalGETdata($URL);
+	$req->protocol('HTTP/1.1');
+	$req->header('Authorization' => 'Bearer '.$self->{_token});
+	my $res = $self->{_ua}->request($req);
+
+	if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+  		print LOG $req->as_string;
+  		print LOG $res->as_string;
+  		close(LOG);
+	}
+
+	if($res->is_success){
+  		print STDOUT "emptied trashn";
+  		return;
+
+	}else{
+		print STDOUT $req->as_string;
+		print STDOUT $res->as_string;
+		return;}
+
+
 
 
 }

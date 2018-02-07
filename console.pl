@@ -214,11 +214,13 @@ while (my $input = <$userInput> or ($#accounts >= 0 or $currentCommand <= $#comm
 		my $command = $commands[$currentCommand++];
 		$command =~ s^\%1\%^$account^g;
 		$input = $command;
+		print $input;
 	}elsif ($currentCommand <= $#commands){
 		my $command = $commands[$currentCommand++];
 		$command =~ s^\%1\%^$account^g;
 		$input = $command;
 		$currentCommand = 0 if $currentCommand > $#commands;
+		print $input;
 	}
 
 

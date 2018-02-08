@@ -572,7 +572,7 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
 
   	}elsif($input =~ m%^get list of teamdrives%i){
     	($driveListings) = $services[$currentService]->getListTeamDrives();
-
+		print $$driveListings . "\n";
   	}elsif($input =~ m%^move local to teamdrive%i){
     	my ($teamID) = $services[$currentService]->getFirstTeamDrive();
     	if ($teamID ne ''){

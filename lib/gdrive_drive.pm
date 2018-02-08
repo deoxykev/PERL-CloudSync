@@ -1225,6 +1225,7 @@ sub getListTeamDrives(*){
   		$lastURL = $nextURL if $nextURL ne '';
 	}
 	print STDOUT "last url " . $lastURL . "\n";
+	return $driveListings;
 
 }
 

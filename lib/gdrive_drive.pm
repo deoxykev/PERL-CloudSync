@@ -1219,13 +1219,13 @@ sub getListTeamDrives(*){
 		$driveListings = $self->{_serviceapi}->getListTeamDrives($nextURL);
   		$nextURL = $self->{_serviceapi}->getNextURL($driveListings);
   		my $newDocuments = $self->{_serviceapi}->readDriveListings($driveListings);
+		return $newDocuments;
 
 		#print STDOUT "next url " . $nextURL . "\n";
   		last if $nextURL eq '';
   		$lastURL = $nextURL if $nextURL ne '';
 	}
 	print STDOUT "last url " . $lastURL . "\n";
-	return $driveListings;
 
 }
 

@@ -1571,7 +1571,8 @@ sub downloadFolder($$$){
 ##
 sub syncGoogleFolder($){
 	my @destinationRoot;
-	my ($folder, $folderID, $pathTarget, $isMock, $isInbound, $destinationRoot[0],$destinationRoot[1], $trashDuplicates, @drives) = @_;
+	my ($folder, $folderID, $pathTarget, $isMock, $isInbound, $trashDuplicates, @drives);
+	($folder, $folderID, $pathTarget, $isMock, $isInbound, $destinationRoot[0],$destinationRoot[1], $trashDuplicates, @drives) = @_;
 	my @dbase;
 
 	my $maxSize = pDrive::Config->MAXSIZE;

@@ -572,7 +572,7 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
 
   	}elsif($input =~ m%^get list of teamdrives%i){
     	($driveListings) = $services[$currentService]->getListTeamDrives();
-		print $$driveListings . "\n";
+		print $documents . "\n";
   	}elsif($input =~ m%^move local to teamdrive%i){
     	my ($teamID) = $services[$currentService]->getFirstTeamDrive();
     	if ($teamID ne ''){
@@ -684,7 +684,9 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
 		}
     	syncGoogleFolder('',$folderID,$pathTarget,0,0, '', 0,@drives);
   	}elsif($input =~ m%^copy folderid\s+\S+\s+folderid\s+\S+\s+path\s+\S+%i){
-    	my ($folderID, $destinationRoot,$pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)\s+path\s+(\S+)%i;
+  		my @destinationRoot;
+    	my ($folderID, $destinationRoot[0],$pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)\s+path\s+(\S+)%i;
+    	$destinationRoot[1] = '';
 		$input =~ s%^copy folderid\s+\S+\s+folderid\s+\S+\s+path\s+\S+%%;
 		my @drives;
 		my $count=0;
@@ -694,9 +696,25 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
 			$drives[$count++] = $service;
 			print STDOUT "service path = $service $pathTarget \n";
 		}
-    	syncGoogleFolder('',$folderID,$pathTarget,0,0, $destinationRoot,0,@drives);
+    	syncGoogleFolder('',$folderID,$pathTarget,0,0, @destinationRoot,0,@drives);
+  	}elsif($input =~ m%^copy folderid\s+\S+\s+folderid\s+\S+\s+folderid\s+\S+%i){
+		my @destinationRoot;
+    	my ($folderID, $destinationRoot[0],$destinationRoot[1]) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)\s+folderid\s+(\S+)%i;
+		$input =~ s%^copy folderid\s+\S+\s+folderid\s+\S+\s+folderid\s+\S+%%;
+		my @drives;
+		my $count=0;
+		while ($input =~ m%^\s+\S+%){
+			my ($service) = $input =~ m%^\s+(\S+)%;
+			$input =~ s%^\s+\S+%%;
+			$drives[$count++] = $service;
+			print STDOUT "service path = $service $destinationRoot[0] $destinationRoot[1] \n";
+		}
+    	syncGoogleFolder('',$folderID,'',0,0, @destinationRoot,0,@drives);
+
   	}elsif($input =~ m%^copy folderid\s+\S+\s+folderid\s+\S+%i){
-    	my ($folderID, $pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)%i;
+		my @destinationRoot;
+    	my ($folderID, $destinationRoot[0]) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)%i;
+    	$destinationRoot[1] = '';
 		$input =~ s%^copy folderid\s+\S+\s+folderid\s+\S+%%;
 		my @drives;
 		my $count=0;
@@ -704,9 +722,9 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
 			my ($service) = $input =~ m%^\s+(\S+)%;
 			$input =~ s%^\s+\S+%%;
 			$drives[$count++] = $service;
-			print STDOUT "service path = $service $pathTarget \n";
+			print STDOUT "service path = $service $destinationRoot[0] \n";
 		}
-    	syncGoogleFolder('',$folderID,'',0,0, $pathTarget,0,@drives);
+    	syncGoogleFolder('',$folderID,'',0,0, @destinationRoot,0,@drives);
   	}elsif($input =~ m%^move folderid\s+\S+\s+folderid\s+\S+%i){
     	my ($sourceID, $targetID) = $input =~ m%^move folderid\s+(\S+)\s+folderid\s+(\S+)%i;
     	fullMoveFolderStructure($sourceID, $targetID, $services[$currentService]);
@@ -1548,7 +1566,8 @@ sub downloadFolder($$$){
 # params: folder name OR folder ID, isMock (perform mock operation -- don't download/upload), list of services [first position is source, remaining are target]
 ##
 sub syncGoogleFolder($){
-	my ($folder, $folderID, $pathTarget, $isMock, $isInbound, $destinationRoot, $trashDuplicates, @drives) = @_;
+	my @destinationRoot;
+	my ($folder, $folderID, $pathTarget, $isMock, $isInbound, $destinationRoot[0],$destinationRoot[1], $trashDuplicates, @drives) = @_;
 	my @dbase;
 
 	my $maxSize = pDrive::Config->MAXSIZE;
@@ -1630,11 +1649,13 @@ sub syncGoogleFolder($){
 
   							#for inbound, remove Inbound from path when creating on target
 							$path =~ s%\/[^\/]+%% if ($isInbound);
-							$path = $pathTarget . '/' . $path if ($pathTarget ne '' and $destinationRoot ne '');
-							if ($mypath[$j] eq '' and $j > 1){
+							$path = $pathTarget . '/' . $path if ($pathTarget ne '' and $destinationRoot[0] ne '');
+							if ($mypath[$j] eq '' and $j > 1 and $pathTarget eq ''){
+								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1, $destinationRoot[1]) if ($path ne '' and $path ne  '/' and !($isMock));
+							}elsif ($mypath[$j] eq '' and $j > 1){
 								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1, $pathTarget) if ($path ne '' and $path ne  '/' and !($isMock));
 							}elsif ($mypath[$j] eq ''){
-								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1, $destinationRoot) if ($path ne '' and $path ne  '/' and !($isMock));
+								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1, $destinationRoot[0]) if ($path ne '' and $path ne  '/' and !($isMock));
 							}
 							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
 					    	pDrive::masterLog('copy to service '.Scalar::Util::blessed($services[$drives[$j]]).' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");

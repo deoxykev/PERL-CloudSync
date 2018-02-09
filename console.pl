@@ -684,7 +684,9 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
     	syncGoogleFolder('',$folderID,$pathTarget,0,0, '', 0,@drives);
   	}elsif($input =~ m%^copy folderid\s+\S+\s+folderid\s+\S+\s+path\s+\S+%i){
   		my @destinationRoot;
-    	my ($folderID, $destinationRoot[0],$pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)\s+path\s+(\S+)%i;
+  		my $folderID;
+  		my $pathTarget;
+    	($folderID, $destinationRoot[0],$pathTarget) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)\s+path\s+(\S+)%i;
     	$destinationRoot[1] = '';
 		$input =~ s%^copy folderid\s+\S+\s+folderid\s+\S+\s+path\s+\S+%%;
 		my @drives;
@@ -698,7 +700,8 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
     	syncGoogleFolder('',$folderID,$pathTarget,0,0, @destinationRoot,0,@drives);
   	}elsif($input =~ m%^copy folderid\s+\S+\s+folderid\s+\S+\s+folderid\s+\S+%i){
 		my @destinationRoot;
-    	my ($folderID, $destinationRoot[0],$destinationRoot[1]) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)\s+folderid\s+(\S+)%i;
+  		my $folderID;
+    	($folderID, $destinationRoot[0],$destinationRoot[1]) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)\s+folderid\s+(\S+)%i;
 		$input =~ s%^copy folderid\s+\S+\s+folderid\s+\S+\s+folderid\s+\S+%%;
 		my @drives;
 		my $count=0;
@@ -712,7 +715,9 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
 
   	}elsif($input =~ m%^copy folderid\s+\S+\s+folderid\s+\S+%i){
 		my @destinationRoot;
-    	my ($folderID, $destinationRoot[0]) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)%i;
+ 		my $folderID;
+
+    	($folderID, $destinationRoot[0]) = $input =~ m%^copy folderid\s+(\S+)\s+folderid\s+(\S+)%i;
     	$destinationRoot[1] = '';
 		$input =~ s%^copy folderid\s+\S+\s+folderid\s+\S+%%;
 		my @drives;

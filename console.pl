@@ -25,6 +25,7 @@ package pDrive::Config;
 
 
 # must change these
+use constant ALLOW_SERVICE => 0;
 use constant RETRY_COUNT => 5;
 use constant LOCAL_PATH => '.'; #where to download / upload from
 use constant USERNAME => '';
@@ -273,6 +274,9 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
 		$services[$currentService]->test();
 	}elsif($input =~ m%^audit off%i){
 		$AUDIT = 0;
+
+	}elsif($input =~ m%^rename files%i){
+
 
   	}elsif($input =~ m%^load gd\s\d+\s([^\s]+)%i){
     	my ($account,$login) = $input =~ m%^load gd\s(\d+)\s([^\s]+)%i;
@@ -544,6 +548,7 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
 
 
 
+
   	}elsif($input =~ m%^get folderid details%i){
     	my ($folderID) = $input =~ m%^get folderid details\s([^\s]+)%i;
 
@@ -572,7 +577,9 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
 
   	}elsif($input =~ m%^get list of teamdrives%i){
     	($driveListings) = $services[$currentService]->getListTeamDrives();
+
   	}elsif($input =~ m%^move local to teamdrive%i){
+
     	my ($teamID) = $services[$currentService]->getFirstTeamDrive();
     	if ($teamID ne ''){
     		fullMoveFolderStructure('root', $teamID, $services[$currentService]);

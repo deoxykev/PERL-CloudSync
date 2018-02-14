@@ -800,9 +800,9 @@ sub cleanNames(*$){
 
 	my $nextURL='';
 
-	#last run failed to finish, attempt to continue where left
 	while (1){
   		my $newDocuments = $self->getSubFolderIDList($folderID, $nextURL);
+
 
 
   		foreach my $resourceID (keys %{$newDocuments}){

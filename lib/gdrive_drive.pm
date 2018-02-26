@@ -453,9 +453,9 @@ sub uploadFolder(*$$){
 					#my $results;
 
 					if ($self->{_use_proxy}){
-						$results = $self->uploadFile($fileList[$i], $folderID);
+						$results = $self->{_proxy_service}->uploadFile($fileList[$i], $folderID);
 					}else{
-						$results = ${self->{_proxy_service}}->uploadFile($fileList[$i], $folderID);
+						$results = $self->uploadFile($fileList[$i], $folderID);
 					}
 					$retry=0;
 					#user limited exceeed in copy, try proxy then download and manually upload

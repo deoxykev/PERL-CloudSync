@@ -35,6 +35,8 @@ sub new(*$$) {
   			  _db_fisi => undef,
   			  _proxy_accounts => undef,
   			  _proxy_current => -1,
+  			  _proxy_service => undef,
+  			  _use_proxy => 0,
   			  _realtime_updates => 0};
 
   	my $class = shift;
@@ -446,7 +448,25 @@ sub uploadFolder(*$$){
     		untie(%dbase);
 			if ($process){
 				print STDOUT "Upload $fileList[$i]\n";
-		  		my $results = $self->uploadFile($fileList[$i], $folderID);
+				my $retry = 1;
+				while($retry){
+					#my $results;
+
+					if ($self->{_use_proxy}){
+						$results = $self->uploadFile($fileList[$i], $folderID);
+					}else{
+						$results = $self->{_proxy_service}->uploadFile($fileList[$i], $folderID);
+					}
+					$retry=0;
+					#user limited exceeed in copy, try proxy then download and manually upload
+					# OR fle not accessible?  manually upload
+					if ($results[0] == -1 and $self->hasProxyAccount()){
+						$self->{_proxy_service} = $self->pullProxyAccount();
+						$self->{_use_proxy} =1;
+						$retry=1;
+					}
+				}
+		  		#my $results = $self->uploadFile($fileList[$i], $folderID);
 		  		 my $newDocuments = $self->getFileMeta($$results[0]);
 		  		   		foreach my $resourceID (keys %{$newDocuments}){
 		  		   			my $filename = $$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}];
@@ -715,7 +735,7 @@ sub uploadFile(*$$){
 
 		$results = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
 		if ($results eq '-1'){
-			return -1;
+			return [-1];
 		}
 
 

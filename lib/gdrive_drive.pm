@@ -458,8 +458,7 @@ sub uploadFolder(*$$){
 						$results = $self->uploadFile($fileList[$i], $folderID);
 					}
 					$retry=0;
-					#user limited exceeed in copy, try proxy then download and manually upload
-					# OR fle not accessible?  manually upload
+					#user limited exceeed in upload, switch proxy accounts
 					if ($results[0] == -1 and $self->hasProxyAccount()){
 						$self->{_proxy_service} = $self->pullProxyAccount();
 						$self->{_use_proxy} =1;

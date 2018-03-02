@@ -627,7 +627,7 @@ sub uploadFile(*$$$$){
 			print STDOUT "...refresh token and retrying...\n";
 			$retryCount++;
 		}elsif ($res->code == 403){
-			print STDOUT "Daily limit exceeded\n";
+			print STDOUT "Daily limit exceeded ".__LINE__."\n";
 			return -1;
 		}elsif ($res->code == 404){
 			print STDOUT "...file not found, skipping... ".__LINE__."\n";
@@ -713,7 +713,7 @@ sub createFile(*$$$$$){
 			print STDOUT "...file not found, skipping... ".__LINE__."\n";
 			return '';
 		}elsif ($res->code == 403){
-			print STDOUT "Daily limit exceeded\n";
+			print STDOUT "Daily limit exceeded ".__LINE__."\n";
 			return -1;
 		}elsif ($res->code >= 500 and $res->code <= 505){
 			print STDOUT $res->as_string;
@@ -815,7 +815,7 @@ sub copyFile(*$$$){
 			$retryCount++;
 		#daily limit exceeded
 		}elsif ($res->code == 403){
-			print STDOUT "Daily limit exceeded\n";
+			print STDOUT "Daily limit exceeded  ".__LINE__."\n";
 			print STDOUT "...refresh token and retrying...\n";
 			return -1;
 		#not accessible to user

@@ -459,8 +459,9 @@ sub uploadFolder(*$$){
 						$results = $self->uploadFile($fileList[$i], $folderID);
 					}
 					$retry=0;
+
 					#user limited exceeed in upload, switch proxy accounts
-					if ($results[0] == -1 and $self->hasProxyAccount()){
+					if ($results == -1 and $self->hasProxyAccount()){
 						$self->{_proxy_service} = $self->pullProxyAccount();
 						$self->{_use_proxy} =1;
 						$retry=1;
@@ -709,7 +710,7 @@ sub uploadFile(*$$){
 
   	my $uploadURL = $self->{_serviceapi}->createFile('https://www.googleapis.com/upload/drive/v2/files?includeTeamDriveItems=true&supportsTeamDrives=true&fields=id&convert=false&uploadType=resumable',$fileSize,$fileName,$filetype, $folder);
 	if ($uploadURL eq '-1'){
-			return [-1];
+			return -1;
 	}
 
   	my $chunkNumbers = int($fileSize/(pDrive::Config->CHUNKSIZE))+1;
@@ -735,7 +736,7 @@ sub uploadFile(*$$){
 
 		$results = $self->{_serviceapi}->uploadFile($uploadURL,\$chunk,$chunkSize,'bytes '.$pointerInFile.'-'.($i == $chunkNumbers-1? $fileSize-1: ($pointerInFile+$chunkSize-1)).'/'.$fileSize,$filetype);
 		if ($results eq '-1'){
-			return [-1];
+			return -1;
 		}
 
 

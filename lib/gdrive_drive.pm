@@ -765,7 +765,7 @@ sub copyFile(*$$$$){
 			$status =  $self->{_serviceapi}->copyFile($fileID,$fileName, $folder,$createDate);
       		print STDOUT "\r"  . $status;
 	      	if ($status eq '0'){
-	       		print STDERR "...retrying\n";
+	       		print STDERR "...retrying: ".__LINE__."\n";
 	       		#some other instance may have updated the tokens already, refresh with the latest
 	       		if ($retrycount == 0){
 	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($self->{_username});
@@ -872,7 +872,7 @@ sub renameFile(*$$){
    	while ($status eq '0' and $retrycount < RETRY_COUNT){
 			$status =  $self->{_serviceapi}->renameFile($fileID,$fileName);
 	      	if ($status eq '0'){
-	       		print STDERR "...retrying\n";
+	       		print STDERR "...retrying: ".__LINE__."\n";
 	       		#some other instance may have updated the tokens already, refresh with the latest
 	       		if ($retrycount == 0){
 	       			my ($token,$refreshToken) = $self->{_login_dbm}->readLogin($self->{_username});

@@ -267,7 +267,7 @@ sub getFolderInfo(*$){
 		}else{
 			print STDOUT $res->as_string;
 
-			print STDOUT "...retrying (condition unknown)...\n";
+			print STDOUT "...retrying (condition unknown)...: ".__LINE__."\n";
 			$retryCount++;
 
 			#		print STDOUT $res->as_string;
@@ -323,7 +323,7 @@ sub getListRoot(*$){
 			$retryCount++;
 
 		}else{
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...: ".__LINE__."\n";
 			$retryCount++;
 			#die($res->as_string."error in loading page");
 		}
@@ -431,7 +431,7 @@ sub generalGETdata(*$){
 			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
 		}else{
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...: ".__LINE__."\n";
 			$retryCount++;
 
 		}
@@ -542,7 +542,7 @@ sub downloadFile(*$$$){
 			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
   		}  else {
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...: ".__LINE__."\n";
 			$retryCount++;
   		}
 	}
@@ -638,7 +638,7 @@ sub uploadFile(*$$$$){
 			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
 		}else{
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...: ".__LINE__."\n";
 			$retryCount++;
 		}
 	}
@@ -720,7 +720,7 @@ sub createFile(*$$$$$){
 			print STDOUT "...retrying... [50x error]\n";
 			$retryCount++;
 		}else{
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...: ".__LINE__."\n";
 			$retryCount++;
 
 		}
@@ -831,7 +831,7 @@ sub copyFile(*$$$){
 			print STDOUT "...retrying......[50x error]\n";
 			$retryCount++;
 		}else{
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...: ".__LINE__."\n";
 			$retryCount++;
 
 		}
@@ -894,7 +894,7 @@ sub renameFile(*$$){
 			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
 		}else{
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...: ".__LINE__."\n";
 			$retryCount++;
 
 		}
@@ -967,7 +967,7 @@ sub createFolder(*$$$){
 			print STDOUT "...retrying...[50x error]\n";
 			$retryCount++;
 		}else{
-			print STDOUT "...retrying...\n";
+			print STDOUT "...retrying...: ".__LINE__."\n";
 			$retryCount++;
 		}
 	}
@@ -1048,7 +1048,7 @@ sub moveFile(*$$$){
 				print STDOUT "...retrying...[50x error]\n";
 				$retryCount++;
 			}else{
-				print STDOUT "...retrying...\n";
+				print STDOUT "...retrying...: ".__LINE__."\n";
 				$retryCount++;
 			}
 		}

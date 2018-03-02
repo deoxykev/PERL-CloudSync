@@ -5,6 +5,7 @@ PERL-CloudSync
 A PERL implementation of Google Drive for cross-platform
 
 
+
 FOR USAGE and help, see the WIKI -- https://github.com/ddurdle/PERL-CloudSync/wiki
 
 Amazon Cloud Drive -
@@ -33,15 +34,16 @@ service accounts are supported
 for service account support:
 requires: JSON
 to install JSON, two different methods:
-method 1)
-sudo cpan install JSON
-sudo cpan install JSON::WebToken
-sudo apt-get install libssl-dev
-sudo perl -MCPAN -e 'install Crypt::OpenSSL::RSA'
-or method 2)
-sudo apt-get install libjson-pp-perl
-sudo apt-get install libcrypt-openssl-rsa-perl
-sudo cpan install JSON::WebToken
+ method 1)
+  sudo cpan install JSON
+  sudo cpan install JSON::WebToken
+  sudo apt-get install libssl-dev
+  sudo perl -MCPAN -e 'install Crypt::OpenSSL::RSA'
+ or method 2)
+  sudo apt-get install libjson-pp-perl
+  sudo apt-get install libcrypt-openssl-rsa-perl
+  sudo cpan install JSON::WebToken
+
 
 for non-service account:
 - no requirements

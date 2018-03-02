@@ -1515,6 +1515,7 @@ sub getServiceToken(*$){
     { typ => 'JWT' }
 );
 	}
+
 	my $req = HTTP::Request->new(POST => $URL);
 
 	$req->content_type("application/x-www-form-urlencoded");

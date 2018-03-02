@@ -202,7 +202,8 @@ sub backoffDelay(*$){
 	}elsif ($retryCount == -1){
 		return 0;
 	}else{
-		sleep(10);
+		#sleep(10);
+		return 0
 		#return 0;
 	}
 	return 1;

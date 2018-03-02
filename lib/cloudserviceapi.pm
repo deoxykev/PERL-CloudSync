@@ -60,8 +60,8 @@ sub refreshToken(*){
 
 	if ($self->{_refreshToken} eq ''){
 		return $self->getServiceToken($self->{_username},0);
-
 	}
+
 
 
 	my  $URL =  $self->{_oauthURL} .'/token';

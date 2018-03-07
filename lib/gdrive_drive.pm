@@ -464,6 +464,7 @@ sub uploadFolder(*$$){
 					#user limited exceeed in upload, switch proxy accounts
 					if ($results == -1 and $self->hasProxyAccount()){
 						$self->{_proxy_service} = $self->pullProxyAccount();
+						$self->{_username} = $self->{_proxy_service}->{_username};
 						$self->{_use_proxy} =1;
 						$retry=1;
 					}

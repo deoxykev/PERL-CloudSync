@@ -1671,15 +1671,18 @@ sub syncGoogleFolder($){
 								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1, $destinationRoot[0]) if ($path ne '' and $path ne  '/' and !($isMock));
 							}
 							print STDOUT  "copy to service $drives[$j] ". $dbase[$drives[0]][0]{$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].'_'}."\n";
-					    	pDrive::masterLog('copy to service '. $services[$drives[$j]]->{_friendly_name}.' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
 
 							my $retry=1;
 							my $result;
 							while($retry){
 								if ($useProxy[$j]){
 									$result = $proxyAccount[$j]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
+							    	pDrive::masterLog('copy to service '. $proxyAccount[$j]->{_friendly_name}.' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
+
 								}else{
 									$result = $services[$drives[$j]]->copyFile( $resourceID, $mypath[$j], $$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}],$$newDocuments{$resourceID}[pDrive::DBM->D->{'published'}]) if !($isMock);
+							    	pDrive::masterLog('copy to service '. $services[$drives[$j]]->{_friendly_name}.' #' .$drives[$j].' - '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}]. ' - fisi '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}].' - md5 '.$$newDocuments{$resourceID}[pDrive::DBM->D->{'server_md5'}]. ' - size '. $$newDocuments{$resourceID}[pDrive::DBM->D->{'size'}]."\n");
+
 								}
 								$retry=0;
 								#user limited exceeed in copy, try proxy then download and manually upload

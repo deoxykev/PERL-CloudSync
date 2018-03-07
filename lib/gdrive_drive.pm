@@ -37,7 +37,8 @@ sub new(*$$) {
   			  _proxy_current => -1,
   			  _proxy_service => undef,
   			  _use_proxy => 0,
-  			  _realtime_updates => 0};
+  			  _realtime_updates => 0,
+  			  _friendly_name => ''};
 
   	my $class = shift;
   	bless $self, $class;
@@ -69,6 +70,7 @@ sub new(*$$) {
 
 	if ($key eq ''){
 		# no token defined
+		$self->{_friendly_name} = $self->{_username};
 		if ($token eq '' or  $refreshToken  eq ''){
 			my $code;
 			my  $URL = 'https://accounts.google.com/o/oauth2/auth?scope=https://www.googleapis.com/auth/drive&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id='.pDrive::Config->CLIENT_ID;
@@ -91,6 +93,7 @@ sub new(*$$) {
 		  	$self->{_serviceapi}->testAccess();
 		}
 	}else{
+		$self->{_friendly_name} = $key;
 		$self->setService($key);
 		$self->setServiceUsername($self->{_username},$skipTest);
 		$self->{_username} = $self->{_username}
@@ -464,7 +467,7 @@ sub uploadFolder(*$$){
 					#user limited exceeed in upload, switch proxy accounts
 					if ($results == -1 and $self->hasProxyAccount()){
 						$self->{_proxy_service} = $self->pullProxyAccount();
-						$self->{_username} = $self->{_proxy_service}->{_username};
+						#$self->{_username} = $self->{_proxy_service}->{_friendly_name};
 						$self->{_use_proxy} =1;
 						$retry=1;
 					}

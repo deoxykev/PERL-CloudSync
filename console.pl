@@ -586,6 +586,10 @@ while (my $input = <$userInput> or ($#accounts >= 0 or ($account ne '' and $curr
     		fullMoveFolderStructure('root', $teamID, $services[$currentService]);
     	}
 
+  	}elsif($input =~ m%^delete appfolder%i){
+
+  		deleteAppFolder($services[$currentService]);
+
 	# load MD5 with all changes
   	}elsif($input =~ m%^get changes teamdrive%i){
     	my ($teamdrive) = $input =~ m%^get changes teamdrive\s+(\S+)%i;
@@ -2301,6 +2305,43 @@ sub fullMoveFolderStructure(*$$){
 
 }
 
+
+
+sub deleteAppFolder(*){
+	my $service = shift;
+
+	my $nextURL;
+
+	while (1){
+
+		my $newDocuments =  $service->getAppFolderIDList($nextURL);
+  		#my $newDocuments =  $services[$currentService]->readDriveListings($driveListings);
+		$nextURL = $service->{_nextURL};
+
+		#print STDOUT "next url " . $nextURL. "\n";
+
+  		foreach my $resourceID (keys %{$newDocuments}){
+  			#folder - fetch existing in destination (or create) and recursive into directory on source
+  			 if  ($$newDocuments{$resourceID}[pDrive::DBM->D->{'server_fisi'}] eq ''){
+#				my $resultingFolderID = $service->getFolderIDByParentID($$newDocuments{$resourceID}[pDrive::DBM->D->{'title'}], $destinationFolderID, 1);
+
+				print STDERR "resulting = ddd\n";
+#				moveAppFolder($resourceID,$resultingFolderID, $service);
+
+			#file - move all files from source to destination
+			}else{
+				#$service->moveFile($resourceID, $destinationFolderID,$sourceFolderID);
+
+			}
+
+
+	  	}
+
+  		last if  $nextURL eq '';
+
+	}
+
+}
 
 
 sub moveAll($*){

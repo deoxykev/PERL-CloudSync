@@ -748,6 +748,9 @@ sub copyFile(*$$$){
 
 	my $content = '';
 
+	#remove \ from filename
+	$fileName =~ s%\\%%g;
+
 	#copying a file with directory and filename
 	if ($folder ne '' and $fileName ne '' and $createDate ne ''){
   		$content = '{

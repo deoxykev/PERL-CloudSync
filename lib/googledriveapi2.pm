@@ -462,23 +462,6 @@ sub getSubFolderIDList(*$$){
 #
 # get the folderID for a subfolder
 ##
-sub getAppFolderIDList(*$$){
-
-	my $self = shift;
-	my $URL = shift;
-	my $folderName = shift;
-
-	if ($URL eq ''){
-		$URL =  API_URL .'files?includeTeamDriveItems=true&supportsTeamDrives=true&spaces=appDataFolder&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cparents/parentLink%2Cmd5Checksum)';
-	}
-	#my $URL = 'https://www.googleapis.com/drive/v2/files?q=\''. $folderName.'\'+in+parents';
-
-	return $self->generalGETdata($URL);
-
-}
-#
-# get the folderID for a subfolder
-##
 sub getFolderList(*$$){
 
 	my $self = shift;

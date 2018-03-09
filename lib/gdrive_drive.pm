@@ -324,7 +324,7 @@ sub getAppFolderIDList(*$$){
 	my $URL = shift;
 
 	if ($URL eq ''){
-		$URL = 'https://www.googleapis.com/drive/v2/files?includeTeamDriveItems=true&supportsTeamDrives=true&spaces=appDataFolder&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cmd5Checksum%2Cparents/parentLink)';
+		$URL = 'https://www.googleapis.com/drive/v2/files?includeTeamDriveItems=true&supportsTeamDrives=true&q=\'appDataFolder\'+in+parents+and+trashed%3Dfalse&fields=nextLink%2Citems(kind%2Cid%2CmimeType%2Ctitle%2CfileSize%2CmodifiedDate%2CcreatedDate%2CdownloadUrl%2Cmd5Checksum%2Cparents/parentLink)';
 	}
 
 

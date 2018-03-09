@@ -1483,7 +1483,7 @@ sub getServiceToken(*$){
     {
         # your service account id here
         iss   => $self->{_iss},
-        scope => 'https://www.googleapis.com/auth/drive',
+        scope => 'https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/drive.appdata',
         aud   => 'https://accounts.google.com/o/oauth2/token',
         exp   => $time + 3600,
         iat   => $time,
@@ -1503,7 +1503,7 @@ sub getServiceToken(*$){
     {
         # your service account id here
         iss   => $self->{_iss},
-        scope => 'https://www.googleapis.com/auth/drive',
+        scope => 'https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/drive.appdata',
         aud   => 'https://accounts.google.com/o/oauth2/token',
         exp   => $time + 3600,
         iat   => $time,

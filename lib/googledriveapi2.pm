@@ -1021,6 +1021,12 @@ sub moveFile(*$$$){
 
 			my $res = $self->{_ua}->request($req);
 
+			if (pDrive::Config->DEBUG and pDrive::Config->DEBUG_TRN){
+		  		open (LOG, '>>'.pDrive::Config->DEBUG_LOG);
+		  		print LOG $req->as_string;
+		  		print LOG $res->as_string;
+		  		close(LOG);
+			}
 
 			if($res->is_success or $res->code == 308){
 

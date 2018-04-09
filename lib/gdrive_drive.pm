@@ -408,6 +408,7 @@ sub uploadFolder(*$$){
 
     for (my $i=0; $i <= $#fileList; $i++){
 
+		print STDOUT "KEY SIZE = " .( keys %uploaded )."\n";
 		#temporary return if > 1000
 		if (keys %uploaded > 1000){
 			return \%uploaded;

@@ -1857,6 +1857,7 @@ sub syncGoogleUploadFolder($){
 							if ($path ne $previousPath[$j] or $mypath[$j] eq ''){
 								$mypath[$j] = $services[$drives[$j]]->getFolderIDByPath($path, 1,) if ($path ne '' and $path ne  '/' and !($isMock));
 								$previousPath[$j] = $path;
+								print STDOUT "PATH = $path mypath[$j] = $mypath[$j]\n"
 							}
 
 							print STDOUT  "copy to service $drives[$j] \n";

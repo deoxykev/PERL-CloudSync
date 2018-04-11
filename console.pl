@@ -1832,6 +1832,7 @@ sub syncGoogleUploadFolder($){
   				}
 				}
 
+
 #				my $path;
 
 				if ($doDownload){

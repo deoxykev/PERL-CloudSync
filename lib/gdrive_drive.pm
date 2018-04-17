@@ -408,11 +408,11 @@ sub uploadFolder(*$$){
 
     for (my $i=0; $i <= $#fileList; $i++){
 
-		print STDOUT "KEY SIZE = " .( keys %uploaded )."\n";
+		#print STDOUT "KEY SIZE = " .( keys %uploaded )."\n";
 		#temporary return if > 1000
-		if (keys %uploaded > 1000){
-			return \%uploaded;
-		}
+		#if (keys %uploaded > 1000){
+		#	return \%uploaded;
+		#}
 
     	#empty file; skip (for windows, there are zero byte directories, so don't check if directory)
     	if (!(-d $fileList[$i]) and -z $fileList[$i]){
